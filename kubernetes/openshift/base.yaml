@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pi-forge
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: pi-forge
+  namespace: pi-forge
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pi-forge-workspace
+  namespace: pi-forge
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pi-forge-pi-config
+  namespace: pi-forge
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pi-forge-data
+  namespace: pi-forge
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pi-forge
+  namespace: pi-forge
+spec:
+  ports:
+    - port: 3000
+      targetPort: 3000
+      name: http
+  selector:
+    app: pi-forge
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: pi-forge
+  namespace: pi-forge
+spec:
+  to:
+    kind: Service
+    name: pi-forge
+  port:
+    targetPort: http

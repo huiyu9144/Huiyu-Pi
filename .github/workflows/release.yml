@@ -1,0 +1,308 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+env:
+  REGISTRY: ghcr.io
+  # GHCR rejects mixed-case repository names. `github.repository_owner`
+  # preserves the original casing of the GitHub username (e.g.
+  # `Devin-Marks`), which would push to `ghcr.io/Devin-Marks/...` and
+  # fail with "repository name must be lowercase". Each job sets
+  # IMAGE_NAME to the lowercased value via GITHUB_ENV in a setup step.
+  IMAGE_BASE: pi-forge
+
+jobs:
+  # Gate the release on the tag and the in-tree versions agreeing.
+  # Catches the "tagged v1.0.1 but forgot to bump package.json" mistake
+  # before we spend ~10 minutes building two-arch images that would ship
+  # mislabeled. All three workspace package.json files are checked because
+  # `scripts/bump-version.sh` moves them in lockstep — drift means
+  # someone bumped manually and forgot one.
+  check-version:
+    name: Verify tag matches package.json
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Compare tag against package.json versions
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          echo "Tag version: $tag"
+          fail=0
+          for f in package.json packages/server/package.json packages/client/package.json; do
+            v=$(node -p "require('./$f').version")
+            if [ "$v" != "$tag" ]; then
+              echo "::error file=$f::version $v does not match tag $tag"
+              fail=1
+            else
+              echo "  $f -> $v ✓"
+            fi
+          done
+          if [ "$fail" -ne 0 ]; then
+            echo "::error::Tag/package.json version drift. Re-run scripts/bump-version.sh and re-tag." >&2
+            exit 1
+          fi
+
+  build:
+    name: Build ${{ matrix.platform }}
+    needs: check-version
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-latest
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Compute lowercase image name
+        # GHCR requires lowercase repo names; ${{ github.repository_owner }}
+        # preserves the original casing. Lowercase via bash parameter
+        # expansion and export to GITHUB_ENV so subsequent steps see it
+        # as ${{ env.IMAGE_NAME }}.
+        env:
+          OWNER: ${{ github.repository_owner }}
+        run: echo "IMAGE_NAME=${OWNER,,}/${IMAGE_BASE}" >> "$GITHUB_ENV"
+
+      - name: Prepare platform pair
+        id: prep
+        run: |
+          platform=${{ matrix.platform }}
+          echo "PLATFORM_PAIR=${platform//\//-}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Image labels
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      - name: Build and push by digest
+        id: build
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: docker/Dockerfile
+          platforms: ${{ matrix.platform }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ steps.prep.outputs.PLATFORM_PAIR }}
+          cache-to: type=gha,mode=max,scope=${{ steps.prep.outputs.PLATFORM_PAIR }}
+          outputs: type=image,name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=true
+
+      - name: Export digest
+        run: |
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v7
+        with:
+          name: digests-${{ steps.prep.outputs.PLATFORM_PAIR }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  merge:
+    name: Create multi-arch manifest
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      # contents: write needed by the GitHub Release creation step below;
+      # packages: write needed by the manifest push.
+      contents: write
+      packages: write
+    steps:
+      - name: Checkout
+        # Needed so the changelog-extraction step can read CHANGELOG.md.
+        uses: actions/checkout@v6
+
+      - name: Compute lowercase image name
+        # See the matching step in the build job for rationale.
+        env:
+          OWNER: ${{ github.repository_owner }}
+        run: echo "IMAGE_NAME=${OWNER,,}/${IMAGE_BASE}" >> "$GITHUB_ENV"
+
+      - name: Download digests
+        uses: actions/download-artifact@v8
+        with:
+          path: /tmp/digests
+          pattern: digests-*
+          merge-multiple: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compute image tags
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=raw,value=latest,enable=${{ !contains(github.ref, '-') }}
+
+      - name: Create manifest list and push
+        working-directory: /tmp/digests
+        run: |
+          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@sha256:%s ' *)
+
+      - name: Inspect image
+        run: |
+          docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
+
+      - name: Extract release notes from CHANGELOG
+        # Pulls the section under `## [<version>]` out of CHANGELOG.md and
+        # writes it to /tmp/release-notes.md. If the section is missing or
+        # empty, the next step falls back to GitHub's auto-generated notes.
+        id: notes
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          awk -v ver="$version" '
+            BEGIN { found = 0 }
+            /^## \[/ {
+              if (found) exit
+              if ($0 ~ "^## \\[" ver "\\]") { found = 1; next }
+            }
+            found { print }
+          ' CHANGELOG.md > /tmp/release-notes.md
+          # Trim leading/trailing blank lines.
+          sed -i -e '/./,$!d' -e ':a;/^\n*$/{$d;N;ba' -e '}' /tmp/release-notes.md || true
+          if [ -s /tmp/release-notes.md ]; then
+            echo "have_notes=true" >> "$GITHUB_OUTPUT"
+            echo "Extracted CHANGELOG section for $version ($(wc -l </tmp/release-notes.md) lines)"
+          else
+            echo "have_notes=false" >> "$GITHUB_OUTPUT"
+            echo "No CHANGELOG section for $version — will use auto-generated notes"
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          body_path: ${{ steps.notes.outputs.have_notes == 'true' && '/tmp/release-notes.md' || '' }}
+          generate_release_notes: ${{ steps.notes.outputs.have_notes != 'true' }}
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          fail_on_unmatched_files: false
+
+  npm-publish:
+    name: Publish pi-forge to npm
+    needs: check-version
+    runs-on: ubuntu-latest
+    # Trusted Publisher (npm OIDC) is configured on the npm side to
+    # require this environment claim. The `production` GitHub
+    # Environment must exist under repo Settings → Environments — if
+    # it's missing the workflow fails with "Environment 'production'
+    # not found" before any step runs. Match this name to whatever
+    # was set in the trusted publisher config on npmjs.com.
+    environment: production
+    permissions:
+      # `id-token: write` is what `npm publish` uses to mint a sigstore
+      # OIDC token. With trusted publishers configured, npm exchanges
+      # that token for a short-lived publish credential — no long-lived
+      # NPM_TOKEN secret in the repo. Provenance attestation is the
+      # same mechanism, attached automatically when this permission +
+      # publishConfig.provenance are both set.
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        # Setting registry-url switches the npm CLI's auth flow into
+        # the registry-aware mode required for OIDC. Without this,
+        # `npm publish` would silently use the default user-level
+        # config and fail authentication.
+        #
+        # node-version is pinned (not `22`) because Node 22.22.2 ships
+        # with a broken bundled npm tree — `promise-retry` is missing
+        # from `@npmcli/arborist`'s node_modules, so any
+        # `npm install -g npm@<anything>` crashes with MODULE_NOT_FOUND
+        # before it can do the upgrade. Confirmed regression vs 22.22.1:
+        #   - https://github.com/nodejs/node/issues/62425
+        #   - https://github.com/actions/runner-images/issues/13883
+        # 22.22.1 is the last known-good 22.x. Drop the pin (back to
+        # `22`) once 22.22.3 ships with the fix from nodejs/node#62463.
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.22.1
+          cache: npm
+          registry-url: https://registry.npmjs.org
+
+      - name: Upgrade npm to a version that supports Trusted Publishers
+        # Node 22 LTS ships with npm 10.x by default, which predates
+        # Trusted Publisher OIDC support (added in npm 11.5.1, July
+        # 2025). On npm 10.x, `npm publish` silently ignores the
+        # GitHub OIDC token even with `id-token: write` granted, sends
+        # an unauthenticated PUT, and the registry replies 404
+        # (npm doesn't leak package existence to anonymous requesters,
+        # so "not authorized" surfaces as "not found"). The first
+        # v1.1.2 tag hit exactly this — Docker shipped, npm-publish
+        # 404'd. Upgrading globally before any subsequent npm command
+        # also applies the new version to `npm ci` and `npm publish`.
+        run: npm install -g npm@latest
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build workspace
+        # Produces packages/server/dist/ + packages/client/dist/, the
+        # inputs to the publish-dir assembler.
+        run: npm run build
+
+      - name: Assemble publish/ staging dir
+        # Synthesizes publish/package.json (name=pi-forge, version
+        # from root, server's deps hoisted), copies built server +
+        # client artifacts, copies the bin shim and LICENSE.
+        run: npm run build:publish
+
+      - name: Verify staged version matches tag
+        # Belt-and-suspenders. check-version already verified all three
+        # source package.json files agree with the tag, but the synthetic
+        # publish/package.json is a NEW input — assert it independently
+        # so a bug in build-publish-dir.mjs can't ship a mislabeled
+        # tarball.
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          synth=$(node -p "require('./publish/package.json').version")
+          if [ "$synth" != "$tag" ]; then
+            echo "::error::publish/package.json version $synth does not match tag $tag" >&2
+            exit 1
+          fi
+          echo "publish/package.json version $synth ✓"
+
+      - name: Publish to npm
+        # publishConfig in the synthetic package.json sets access=public
+        # and provenance=true, so this is a one-line invocation. The
+        # OIDC dance happens automatically because of `id-token: write`
+        # and the trusted publisher config on the npm side.
+        working-directory: publish
+        run: npm publish

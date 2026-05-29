@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configuration — pi-forge</title>
+  <meta name="description" content="CLI flags, env vars, Pi SDK config files, per-project overrides.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='1' y='1' width='30' height='30' rx='7' fill='%230d0d10'/><path d='M12 13 H20 M14 13 V21 M18 13 V21' stroke='%23e6e7eb' stroke-width='1.6' stroke-linecap='round' fill='none'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="../index.html" class="logo">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+  <rect x="1" y="1" width="30" height="30" rx="7" fill="#0d0d10"/>
+  <path d="M9 11 L6 16 L9 21" stroke="#10b981" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M23 11 L26 16 L23 21" stroke="#10b981" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M12 13 H20 M14 13 V21 M18 13 V21" stroke="#e6e7eb" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>
+        pi-forge
+      </a>
+      <nav class="nav-links" id="navLinks">
+        <a href="../index.html#features">Features</a>
+        <a href="../index.html#quickstart">Quick Start</a>
+        <a href="architecture.html">Docs</a>
+        <a href="https://github.com/Devin-Marks/pi-forge" class="nav-cta">GitHub</a>
+      </nav>
+      <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle menu">&#9776;</button>
+    </div>
+  </header>
+
+  <div class="docs-layout">
+    <aside class="docs-sidebar" id="docsSidebar">
+      <div class="sidebar-section">
+        <h4>Documentation</h4>
+        <a href="architecture.html">Architecture</a>
+        <a href="configuration.html" class="active">Configuration</a>
+        <a href="containers.html">Containers</a>
+        <a href="deployment.html">Deployment</a>
+        <a href="mobile.html">Mobile</a>
+        <a href="api.html">API Examples</a>
+        <a href="mcp.html">MCP Servers</a>
+        <a href="webhooks.html">Webhooks</a>
+        <a href="orchestration.html">Session Orchestration</a>
+        <a href="processes.html">Background Processes</a>
+        <a href="todo.html">Todo Tool</a>
+        <a href="ask-user-question.html">Ask User Question</a>
+        <a href="quick-actions.html">Quick Actions</a>
+        <a href="sse-events.html">SSE Events</a>
+      </div>
+      <div class="sidebar-section">
+        <h4>Project</h4>
+        <a href="https://github.com/Devin-Marks/pi-forge">GitHub</a>
+        <a href="https://github.com/Devin-Marks/pi-forge/blob/main/CHANGELOG.md">Changelog</a>
+        <a href="https://github.com/Devin-Marks/pi-forge/blob/main/SECURITY.md">Security</a>
+      </div>
+    </aside>
+
+    <main class="docs-main">
+      <h1>Configuration</h1>
+      <p class="docs-subtitle">CLI flags, env vars, Pi SDK config files, per-project overrides.</p>
+<p>pi-forge has four configuration surfaces:</p>
+<ol>
+<li><strong>CLI flags</strong> on the <code>pi-forge</code> command — see below</li>
+<li><strong>Environment variables</strong> — same surface as flags, lower precedence</li>
+<li><strong>Pi SDK config files</strong> under <code>${PI_CONFIG_DIR}</code> — provider keys,
+custom models, agent defaults</li>
+<li><strong>Per-project overrides</strong> under <code>${FORGE_DATA_DIR}</code> — toggle which
+skills, tools, and pi-prompts apply per project</li>
+</ol>
+<h2>CLI flags</h2>
+<p>Every server env var has an equivalent kebab-case flag. <strong>Flags win
+over env when both are set.</strong></p>
+<pre><code class="language-bash">pi-forge --help                            # grouped flag list
+pi-forge --port 4000 --workspace-path ~/Code
+pi-forge --no-expose-docs --minimal-ui
+pi-forge --api-key @/run/secrets/api-key   # @&lt;path&gt; reads from file
+</code></pre>
+<ul>
+<li><strong>Sensitive flags</strong> (<code>--ui-password</code>, <code>--api-key</code>, <code>--jwt-secret</code>)
+accept <code>@&lt;path&gt;</code> to read from a file (keeps secrets out of shell
+history and <code>ps</code>).</li>
+<li><strong>Boolean flags</strong> accept <code>true|false|on|off|1|0|yes|no</code>. Bare
+<code>--flag</code> means <code>true</code>; <code>--no-flag</code> means <code>false</code>.</li>
+</ul>
+<p><a href="../packages/server/src/cli.ts"><code>packages/server/src/cli.ts</code></a> is the
+single source of truth — adding a new env var means adding one row to
+the <code>FLAGS</code> table there.</p>
+<h2>Environment variables</h2>
+<p>The exhaustive list lives in <code>pi-forge --help</code> (and the <code>FLAGS</code> table
+in <code>cli.ts</code>). The most-touched ones:</p>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Default</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>PORT</code></td>
+<td><code>3000</code></td>
+<td>Fastify listen port.</td>
+</tr>
+<tr>
+<td><code>HOST</code></td>
+<td><code>127.0.0.1</code></td>
+<td>Loopback by default — set <code>0.0.0.0</code> to expose to the LAN. The shipped Dockerfile pins <code>0.0.0.0</code> so <code>docker compose up</code> works unchanged.</td>
+</tr>
+<tr>
+<td><code>WORKSPACE_PATH</code></td>
+<td><code>~/.pi-forge/workspace</code></td>
+<td>Where project code lives. Point at an existing dir (e.g. <code>~/Code</code>) to reuse code on disk.</td>
+</tr>
+<tr>
+<td><code>PI_CONFIG_DIR</code></td>
+<td><code>~/.pi/agent</code></td>
+<td>Pi SDK config dir (<code>auth.json</code>, <code>models.json</code>, <code>settings.json</code>).</td>
+</tr>
+<tr>
+<td><code>FORGE_DATA_DIR</code></td>
+<td><code>~/.pi-forge</code></td>
+<td>Pi-forge state — <code>projects.json</code>, override files, <code>jwt-secret</code>, <code>password-hash</code>.</td>
+</tr>
+<tr>
+<td><code>UI_PASSWORD</code></td>
+<td>(unset)</td>
+<td>Enables browser JWT auth. After the user changes it via the UI, a scrypt hash is persisted to <code>${FORGE_DATA_DIR}/password-hash</code> and the env value is ignored.</td>
+</tr>
+<tr>
+<td><code>API_KEY</code></td>
+<td>(unset)</td>
+<td>Static bearer token for programmatic access.</td>
+</tr>
+<tr>
+<td><code>JWT_SECRET</code></td>
+<td>(auto-generated)</td>
+<td>HS256 signing key. Auto-generated and persisted to <code>${FORGE_DATA_DIR}/jwt-secret</code> (mode 0600) when <code>UI_PASSWORD</code> or <code>password-hash</code> is in play. Set explicitly (<code>openssl rand -hex 32</code>) to override; delete the file to rotate.</td>
+</tr>
+<tr>
+<td><code>MINIMAL_UI</code></td>
+<td><code>false</code></td>
+<td>Hide terminal / git / last-turn / providers / agent-settings panels. Frontend gate; server routes unchanged. ALSO hard-disables webhook configuration, session orchestration, and the quick-actions runner.</td>
+</tr>
+<tr>
+<td><code>TRUST_PROXY</code></td>
+<td><code>false</code></td>
+<td>Set when behind a reverse proxy so <code>req.ip</code> is the real client (required for per-user login rate limits).</td>
+</tr>
+<tr>
+<td><code>ORCHESTRATION_ENABLED</code></td>
+<td><code>false</code></td>
+<td>Surface the chat-view <code>Orch</code> toggle so sessions can opt in to supervisor mode (<code>orchestrate_*</code> tool group, worker spawning, inbox). Hard-disabled under <code>MINIMAL_UI</code> regardless. See <a href="./orchestration.md"><code>orchestration.md</code></a>.</td>
+</tr>
+<tr>
+<td><code>ORCHESTRATION_MAX_WORKERS_PER_SUPERVISOR</code></td>
+<td><code>8</code></td>
+<td>Per-supervisor live-worker cap. Bounded to <code>[1, 100]</code>.</td>
+</tr>
+</tbody></table>
+<p>Production-tuning knobs (rate limits, JWT lifetime, TLS / proxy posture)
+are documented in <a href="./deployment.md"><code>deployment.md</code></a>.</p>
+<h2>Pi SDK config files</h2>
+<p>The pi SDK owns three JSON files under <code>${PI_CONFIG_DIR}</code> (default
+<code>~/.pi/agent</code>). Pi-forge reads/writes them through the
+<code>/api/v1/config/*</code> routes; never <code>fs.*</code> them from a route handler.</p>
+<pre><code>${PI_CONFIG_DIR}/
+├── auth.json          — provider API keys + OAuth tokens
+├── models.json        — custom provider definitions
+└── settings.json      — agent defaults (model, thinking level, modes)
+</code></pre>
+<p>In <code>MINIMAL_UI</code> mode all three Settings tabs are hidden. Edit the files
+directly and restart the server.</p>
+<h3><code>auth.json</code> — provider API keys</h3>
+<pre><code class="language-json">{
+  &quot;anthropic&quot;: { &quot;apiKey&quot;: &quot;sk-ant-...&quot; },
+  &quot;openai&quot;:    { &quot;apiKey&quot;: &quot;sk-...&quot; }
+}
+</code></pre>
+<p>Surfaced in <strong>Settings → Providers</strong> as a presence-only list (green
+dot = configured, &quot;Add key&quot; otherwise). Key values <strong>never</strong> leave the
+server — <code>config-manager.ts</code>&#39;s <code>readAuthSummary()</code> enforces this. Adding
+a key: <code>PUT /api/v1/config/auth/:provider</code> with <code>{ apiKey }</code>. Removing:
+<code>DELETE</code>. Writes are atomic (<code>tmp + rename</code>).</p>
+<h3><code>models.json</code> — custom provider definitions</h3>
+<p>Built-in providers (Anthropic, OpenAI, Google, OpenRouter, Bedrock,
+Vertex, etc.) are baked into pi-ai. Use <code>models.json</code> only for <strong>custom
+OpenAI-compatible endpoints</strong> — vLLM, LiteLLM, Ollama, llama.cpp, an
+internal proxy.</p>
+<pre><code class="language-json">{
+  &quot;providers&quot;: {
+    &quot;vllm-local&quot;: {
+      &quot;api&quot;: &quot;openai-completions&quot;,
+      &quot;url&quot;: &quot;http://localhost:8000/v1&quot;,
+      &quot;models&quot;: [
+        {
+          &quot;id&quot;: &quot;Qwen/Qwen2.5-Coder-32B-Instruct&quot;,
+          &quot;name&quot;: &quot;Qwen 2.5 Coder 32B (vLLM)&quot;,
+          &quot;contextWindow&quot;: 32000,
+          &quot;maxTokens&quot;: 8000,
+          &quot;input&quot;: [&quot;text&quot;],
+          &quot;reasoning&quot;: false,
+          &quot;cost&quot;: { &quot;input&quot;: 0, &quot;output&quot;: 0, &quot;cacheRead&quot;: 0, &quot;cacheWrite&quot;: 0 }
+        }
+      ]
+    }
+  }
+}
+</code></pre>
+<p><strong>Per-model fields:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>id</code></td>
+<td>string</td>
+<td>Exact <code>model</code> value the provider expects in API requests</td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td>string</td>
+<td>Display name in the model picker</td>
+</tr>
+<tr>
+<td><code>contextWindow</code></td>
+<td>number</td>
+<td>Input-token budget; drives the Context Inspector bar</td>
+</tr>
+<tr>
+<td><code>maxTokens</code></td>
+<td>number</td>
+<td>Output cap; pi clamps <code>max_tokens</code> to this</td>
+</tr>
+<tr>
+<td><code>input</code></td>
+<td><code>(&quot;text&quot; | &quot;image&quot;)[]</code></td>
+<td>Image-capable models accept multipart attachments</td>
+</tr>
+<tr>
+<td><code>reasoning</code></td>
+<td>boolean</td>
+<td>True for thinking-block models (o1, Claude w/ thinking, …); surfaces the thinking-level selector</td>
+</tr>
+<tr>
+<td><code>cost</code></td>
+<td><code>{ input, output, cacheRead, cacheWrite }</code> USD per 1M tokens</td>
+<td>Required. Set to <code>0</code> for self-hosted endpoints; copy upstream rates for commercial ones</td>
+</tr>
+</tbody></table>
+<p><strong>Per-provider <code>api</code> field</strong> picks the protocol adapter:</p>
+<ul>
+<li><code>openai-completions</code> — <code>/v1/chat/completions</code> (OpenAI, vLLM, LiteLLM, Ollama, llama.cpp)</li>
+<li><code>openai-responses</code> — OpenAI Responses API</li>
+<li><code>anthropic-messages</code> — Anthropic Messages API</li>
+<li><code>google-generative-ai</code> — Google Generative Language API</li>
+<li><code>bedrock-converse-stream</code> — AWS Bedrock Converse (streaming)</li>
+</ul>
+<p>Surfaced in <strong>Settings → Providers</strong> under a collapsible &quot;Custom
+providers&quot; section with a raw-JSON editor (gated behind <code>&lt;details&gt;</code> so
+casual users don&#39;t clobber it). Reads via <code>GET /api/v1/config/models</code>,
+writes via <code>PUT</code> (full-document replace; pi-ai validates per-provider
+schemas at session create).</p>
+<h3><code>settings.json</code> — agent defaults</h3>
+<p>Defaults applied to new sessions:</p>
+<pre><code class="language-json">{
+  &quot;defaultProvider&quot;: &quot;anthropic&quot;,
+  &quot;defaultModel&quot;: &quot;claude-sonnet-4-5-20250929&quot;,
+  &quot;defaultThinkingLevel&quot;: &quot;medium&quot;,
+  &quot;steeringMode&quot;: &quot;all&quot;,
+  &quot;followUpMode&quot;: &quot;all&quot;
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Values</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>defaultProvider</code></td>
+<td>provider key</td>
+<td>Picked by new sessions when no per-session model is set</td>
+</tr>
+<tr>
+<td><code>defaultModel</code></td>
+<td>model id from the chosen provider</td>
+<td>Same</td>
+</tr>
+<tr>
+<td><code>defaultThinkingLevel</code></td>
+<td><code>minimal</code> / <code>low</code> / <code>medium</code> / <code>high</code> / <code>xhigh</code></td>
+<td>Reasoning-capable models only</td>
+</tr>
+<tr>
+<td><code>steeringMode</code></td>
+<td><code>all</code> / <code>one-at-a-time</code></td>
+<td>How the SDK delivers queued steering messages — flush-all vs wait-between</td>
+</tr>
+<tr>
+<td><code>followUpMode</code></td>
+<td><code>all</code> / <code>one-at-a-time</code></td>
+<td>Same, for follow-up (post-idle) delivery</td>
+</tr>
+</tbody></table>
+<p>Other SDK keys are accepted by <code>PUT /api/v1/config/settings</code> and persist
+verbatim. Pi-forge&#39;s typed form covers the common ones; an &quot;Edit as
+JSON&quot; toggle exposes the long tail. The route shallow-merges so unknown
+fields the SDK adds in future versions don&#39;t get clobbered.</p>
+<p><strong>Per-session model override.</strong> The chat-input model picker overrides
+the default for one session, persisted in browser localStorage
+(<code>pi-forge/model/&lt;sessionId&gt;</code>). It does NOT touch <code>settings.json</code> — the
+SDK&#39;s <code>setModel</code> would mutate the global default, but <code>routes/control.ts</code>
+snapshot-and-restores around the call to keep the override scoped.</p>
+<h2>Per-project overrides</h2>
+<p>Pi-forge keeps three forge-private override files in <code>${FORGE_DATA_DIR}</code>
+that gate which skills, tools, and pi-prompt templates apply per
+project. Each follows the same pattern: a JSON map keyed by <code>projectId</code>,
+with values using pi&#39;s pattern syntax (<code>!name</code> excludes, <code>+name</code>
+force-includes; absence of <code>!name</code> means enabled by default).</p>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Surface</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>skills-overrides.json</code></td>
+<td>Settings → Skills</td>
+<td>Per-project skill enable/disable. Skills themselves live in <code>&lt;project&gt;/.pi/skills/*.md</code> and <code>~/.pi/agent/skills/*.md</code>; this file just gates which apply</td>
+</tr>
+<tr>
+<td><code>tool-overrides.json</code></td>
+<td>Settings → Tools</td>
+<td>Per-project enable/disable for built-in tools (<code>bash</code>, <code>edit</code>, <code>read</code>, …) and per-MCP-tool toggles</td>
+</tr>
+<tr>
+<td><code>prompts-overrides.json</code></td>
+<td>Settings → Prompts</td>
+<td>Per-project pi-prompt-template enable/disable. Templates live in <code>&lt;project&gt;/.pi/prompts/*.md</code> and <code>~/.pi/agent/prompts/*.md</code></td>
+</tr>
+</tbody></table>
+<p>The merged effective list is rebuilt at every <code>createAgentSession</code> call
+via <code>agent-resource-loader.ts</code>. Toggling in Settings refreshes the chat
+input&#39;s slash palette without a project switch (cross-tab signal via
+<code>ui-store</code>).</p>
+<p>These files are <strong>forge-private</strong>, not pi-side state — pi has no native
+concept of per-project skill/tool toggles. Backups via Settings → Backup
+include them so a restore preserves per-project preferences.</p>
+<h2>MCP servers</h2>
+<p>MCP server definitions live in <code>${FORGE_DATA_DIR}/mcp.json</code> (global)
+and <code>&lt;project&gt;/.mcp.json</code> (project-scoped). Manage via <strong>Settings →
+MCP</strong> or edit the files directly. See <a href="./mcp.md"><code>mcp.md</code></a> for the
+field reference, transport options, auth model, and troubleshooting.</p>
+<h2>Pi plugins</h2>
+<p>The pi CLI installs community plugins with <code>pi install npm:&lt;package&gt;</code>.
+Plugin sources land under <code>${PI_CONFIG_DIR}/packages/&lt;name&gt;</code> and
+register additional tools at session-creation time. Because
+<code>PI_CONFIG_DIR</code> is bind-mounted into the container, host-side
+<code>pi install</code> automatically exposes the plugin to the container too.</p>
+<p>The most common community plugin is
+<a href="https://github.com/nicobailon/pi-subagents" target="_blank" rel="noopener noreferrer"><code>pi-subagents</code></a>, which
+adds a <code>subagent</code> tool for delegating to spawned child sessions.
+Install with <code>pi install npm:pi-subagents</code>; pi-forge picks it up with
+no extra config and renders the result as a rich card in the chat
+(integration detail in <code>CLAUDE.md</code> if you&#39;re modifying the discovery
+or render path).</p>
+<h2>Docker bind mounts</h2>
+<p>The shipped <code>docker-compose.yml</code> mounts these paths by default:</p>
+<table>
+<thead>
+<tr>
+<th>Container path</th>
+<th>Default host path</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>/home/pi/.pi/agent</code></td>
+<td><code>${PI_CONFIG_HOST_PATH:-~/.pi/agent}</code></td>
+<td>Shared with host pi CLI by default — same provider keys, custom providers, agent defaults</td>
+</tr>
+<tr>
+<td><code>/home/pi/.pi-forge</code></td>
+<td><code>${FORGE_DATA_HOST_PATH:-~/.pi-forge-docker}</code></td>
+<td><strong>Separate</strong> from the host&#39;s <code>~/.pi-forge</code> so the container has its own project list — host project paths wouldn&#39;t resolve inside the container anyway</td>
+</tr>
+<tr>
+<td><code>/workspace</code></td>
+<td><code>${WORKSPACE_HOST_PATH:-../workspace}</code></td>
+<td>User code; sessions under <code>.pi/sessions/</code> here</td>
+</tr>
+</tbody></table>
+<p>See <a href="./containers.md"><code>containers.md</code></a> for UID/GID handling, image
+internals, and override env vars.</p>
+<h2>See also</h2>
+<ul>
+<li><a href="./deployment.md"><code>deployment.md</code></a> — production deploy with TLS at a
+reverse proxy</li>
+<li><a href="./mobile.md"><code>mobile.md</code></a> — mobile / PWA install</li>
+<li><a href="./containers.md"><code>containers.md</code></a> — container internals + bind mounts</li>
+<li><a href="./mcp.md"><code>mcp.md</code></a> — MCP server config reference (remote + stdio)</li>
+<li><a href="./webhooks.md"><code>webhooks.md</code></a> — HTTPS POSTs on agent/session events</li>
+<li><a href="./orchestration.md"><code>orchestration.md</code></a> — supervisor sessions that
+spawn and coordinate worker sessions</li>
+<li><a href="./processes.md"><code>processes.md</code></a> — background-process tool the
+agent uses for dev servers, watchers, builds</li>
+<li><a href="./todo.md"><code>todo.md</code></a> — browser-native <code>todo</code> tool</li>
+<li><a href="./ask-user-question.md"><code>ask-user-question.md</code></a> — browser-native
+<code>ask_user_question</code> tool</li>
+<li><a href="./quick-actions.md"><code>quick-actions.md</code></a> — operator-defined chat
+toolbar chips (shell commands + prompt templates)</li>
+<li><a href="../SECURITY.md"><code>SECURITY.md</code></a> — <code>auth.json</code> key safety + threat model</li>
+</ul>
+
+    </main>
+  </div>
+
+  <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">&#9776;</button>
+
+  <script>
+    document.getElementById('mobileToggle').addEventListener('click', () => {
+      document.getElementById('navLinks').classList.toggle('open');
+    });
+    document.getElementById('sidebarToggle').addEventListener('click', () => {
+      document.getElementById('docsSidebar').classList.toggle('open');
+    });
+  </script>
+</body>
+</html>

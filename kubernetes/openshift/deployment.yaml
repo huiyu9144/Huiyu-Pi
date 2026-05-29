@@ -1,0 +1,186 @@
+apiVersion: apps.openshift.io/v1
+kind: DeploymentConfig
+metadata:
+  name: pi-forge
+  namespace: pi-forge
+spec:
+  replicas: 1
+  selector:
+    app: pi-forge
+  template:
+    metadata:
+      labels:
+        app: pi-forge
+    spec:
+      serviceAccountName: pi-forge
+      # Pod-level security context. OpenShift's `restricted-v2` SCC will
+      # typically inject a UID for you, but specifying these here gives
+      # a stable, audit-friendly baseline that works on clusters with
+      # looser SCC defaults too. Verify your cluster's SCC binding
+      # accepts these (see kubernetes/DEPLOY.md).
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        - name: volume-permissions
+          # Replaces the previous `chmod -R 777` with the narrower
+          # `chown 1000:1000` + `chmod 700`. See kubernetes/kube/deployment.yaml
+          # for the rationale (security review 2026-04-30).
+          image: busybox:1.36
+          command:
+            [
+              "sh",
+              "-c",
+              "mkdir -p /workspace /home/pi/.pi/agent /home/pi/.pi-forge && chown -R 1000:1000 /workspace /home/pi/.pi/agent /home/pi/.pi-forge && chmod 700 /workspace /home/pi/.pi/agent /home/pi/.pi-forge || true",
+            ]
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+              add: ["CHOWN", "FOWNER"]
+            readOnlyRootFilesystem: true
+          resources:
+            requests:
+              memory: 32Mi
+              cpu: 10m
+            limits:
+              memory: 64Mi
+              cpu: 100m
+          volumeMounts:
+            - name: workspace
+              mountPath: /workspace
+            - name: pi-config
+              mountPath: /home/pi/.pi/agent
+            - name: pi-forge-data
+              mountPath: /home/pi/.pi-forge
+      containers:
+        - name: pi-forge
+          image: image-registry.openshift-image-registry.svc:5000/pi-forge/pi-forge:latest
+          imagePullPolicy: Always
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+          ports:
+            - containerPort: 3000
+              name: http
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: HOME
+              value: /home/pi
+            - name: HOST
+              value: 0.0.0.0
+            - name: PORT
+              value: "3000"
+            - name: WORKSPACE_PATH
+              value: /workspace
+            - name: PI_CONFIG_DIR
+              value: /home/pi/.pi/agent
+            - name: FORGE_DATA_DIR
+              value: /home/pi/.pi-forge
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "1000"
+            - name: LOG_LEVEL
+              value: info
+            - name: TRUST_PROXY
+              value: "false"
+            - name: CORS_ORIGIN
+              value: ""
+            - name: MINIMAL_UI
+              value: "false"
+            # When `true` (default) and the user logs in with the
+            # secret-supplied UI_PASSWORD AND no on-disk hash exists
+            # yet, the issued token is scoped to POST /auth/change-
+            # password — the UI forces the user to pick a new password
+            # before any other API call works. The new password's
+            # scrypt hash is persisted to
+            # ${FORGE_DATA_DIR}/password-hash on the data-dir PVC
+            # and the secret-supplied UI_PASSWORD is ignored on
+            # subsequent logins. Set to "false" to keep the
+            # secret-supplied password as the canonical credential
+            # (e.g. when it's rotated by an external operator).
+            - name: REQUIRE_PASSWORD_CHANGE
+              value: "true"
+            # JWT_SECRET is OPTIONAL. When UI_PASSWORD is set and
+            # JWT_SECRET is unset, the server generates one on first
+            # boot and persists it to ${FORGE_DATA_DIR}/jwt-secret
+            # on the data-dir PVC, so issued tokens survive restarts.
+            # Set it explicitly only if you want to manage rotation
+            # out-of-band.
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: pi-forge-secret
+                  key: JWT_SECRET
+                  optional: true
+            - name: UI_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pi-forge-secret
+                  key: UI_PASSWORD
+                  optional: true
+            - name: API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: pi-forge-secret
+                  key: API_KEY
+                  optional: true
+          livenessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 3000
+            initialDelaySeconds: 10
+            timeoutSeconds: 5
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 3000
+            initialDelaySeconds: 5
+            timeoutSeconds: 3
+            periodSeconds: 10
+          startupProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 3000
+            initialDelaySeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 30
+          resources:
+            requests:
+              memory: 512Mi
+              cpu: 250m
+            limits:
+              memory: 2Gi
+              cpu: "1"
+          volumeMounts:
+            - name: workspace
+              mountPath: /workspace
+            - name: pi-config
+              mountPath: /home/pi/.pi/agent
+            - name: pi-forge-data
+              mountPath: /home/pi/.pi-forge
+            # /tmp emptyDir because readOnlyRootFilesystem:true on the
+            # container blocks writes there. The agent's bash tool needs
+            # /tmp for `mktemp`, `pip install`, `npm install`, `git clone`.
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: workspace
+          persistentVolumeClaim:
+            claimName: pi-forge-workspace
+        - name: pi-config
+          persistentVolumeClaim:
+            claimName: pi-forge-pi-config
+        - name: pi-forge-data
+          persistentVolumeClaim:
+            claimName: pi-forge-data
+        - name: tmp
+          emptyDir:
+            sizeLimit: 256Mi

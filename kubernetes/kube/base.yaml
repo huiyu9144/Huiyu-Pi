@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pi-forge
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pi-forge-workspace
+  namespace: pi-forge
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pi-forge-pi-config
+  namespace: pi-forge
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pi-forge-data
+  namespace: pi-forge
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pi-forge
+  namespace: pi-forge
+spec:
+  type: NodePort
+  ports:
+    - port: 3000
+      targetPort: 3000
+      name: http
+  selector:
+    app: pi-forge
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pi-forge
+  namespace: pi-forge
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: pi-forge.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: pi-forge
+                port:
+                  number: 3000

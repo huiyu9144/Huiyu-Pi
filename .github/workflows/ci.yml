@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    name: check + build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Typecheck + lint + format
+        run: npm run check
+
+      - name: Integration tests
+        # Loops every tests/test-*.ts. The runner skips test-docker
+        # (long Docker image build, run locally before releases) and
+        # the live-LLM gated branches inside test-session/sse/api skip
+        # themselves because PI_TEST_LIVE_PROMPT isn't set. Native
+        # ubuntu-latest provides node-pty/ripgrep/git out of the box —
+        # no extra setup needed.
+        run: npm run test:ci

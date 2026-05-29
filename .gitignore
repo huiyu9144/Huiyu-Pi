@@ -1,0 +1,95 @@
+# Dependencies
+node_modules/
+.pnp.*
+
+# Build outputs
+dist/
+packages/*/dist/
+*.tgz
+
+# npm publish staging (assembled by scripts/build-publish-dir.mjs)
+publish/
+
+# TypeScript incremental build info
+*.tsbuildinfo
+
+# Environment / secrets
+.env
+.env.local
+.env.*.local
+.envrc
+
+# Logs
+*.log
+npm-debug.log*
+
+# Pi session data
+*.jsonl
+.pi/sessions/
+
+# Linter / build caches
+.eslintcache
+.stylelintcache
+.cache/
+.turbo/
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Vite cache
+.vite/
+packages/client/.vite/
+*.local
+
+# PWA dev build
+packages/client/dev-dist/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Editor backups & swap files
+*.swp
+*.swo
+*~
+*.orig
+*.rej
+
+# Editors / IDEs
+.vscode/
+.idea/
+.fleet/
+.history/
+*.iml
+
+# Process / runtime files
+*.pid
+*.seed
+*.pid.lock
+
+# Tempdirs
+tmp/
+.tmp/
+
+# Git worktrees (in-tree convention: `git worktree add .worktrees/<branch>`)
+.worktrees/
+
+# Claude Code harness state (auto-created worktrees, transcripts, etc.)
+.claude/
+
+# Local working notes (not committed)
+notes/
+pi-webui-dev-plan.md
+
+# User data created by running the app locally.
+workspace/
+forge/
+pi-forge/

@@ -1,0 +1,461 @@
+@import "tailwindcss";
+
+/* Custom Tailwind variant: `light:` applies when the active theme is
+   the Light theme (data-theme="light" on <html>). The dark themes
+   remap only the neutral scale via CSS vars (see the `[data-theme]`
+   blocks below), but semantic-colored utilities like `text-red-300`,
+   `bg-sky-900/40`, `text-blue-400` are raw Tailwind palette values
+   that don't change between themes — so on a light background they
+   collapse into low-contrast washes. Use `light:` to attach a
+   higher-contrast counterpart, e.g.
+   `text-red-300 light:text-red-700` or
+   `bg-sky-900/40 light:bg-sky-100`. */
+@custom-variant light (&:where([data-theme="light"] *));
+
+/* ----------------------------- themes -----------------------------
+   Tailwind v4 emits `bg-neutral-950` etc. as
+   `background-color: var(--color-neutral-950)`. We retheme the app
+   by re-declaring the neutral scale per `data-theme=...` on the
+   <html> element — every existing utility class picks up the new
+   palette at runtime, no rebuild and no per-component refactor.
+
+   `--pi-editor-bg` / `--pi-terminal-*` are app-level hooks the
+   non-Tailwind surfaces (CodeMirror host, xterm) read via JS; the
+   list of themes here is the source of truth for both. Add a new
+   theme by adding a `[data-theme="..."]` block plus an entry in
+   `lib/theme.ts`.
+*/
+
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+  --color-neutral-50: #fafafa;
+  --color-neutral-100: #f5f5f5;
+  --color-neutral-200: #e5e5e5;
+  --color-neutral-300: #d4d4d4;
+  --color-neutral-400: #a3a3a3;
+  --color-neutral-500: #737373;
+  --color-neutral-600: #525252;
+  --color-neutral-700: #404040;
+  --color-neutral-800: #262626;
+  --color-neutral-900: #171717;
+  --color-neutral-950: #0a0a0a;
+  --pi-editor-bg: #0a0a0a;
+  --pi-terminal-bg: #0a0a0a;
+  --pi-terminal-fg: #e5e5e5;
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  /* Inverted scale — Tailwind classes that previously meant "very
+     dark surface" resolve to "very light surface" now, and so on.
+     Tuned by hand for adequate text-on-bg contrast at every step. */
+  --color-neutral-50: #0a0a0a;
+  --color-neutral-100: #171717;
+  --color-neutral-200: #1f2937;
+  --color-neutral-300: #374151;
+  --color-neutral-400: #6b7280;
+  --color-neutral-500: #9ca3af;
+  --color-neutral-600: #cbd5e1;
+  --color-neutral-700: #e2e8f0;
+  --color-neutral-800: #e5e7eb;
+  --color-neutral-900: #f3f4f6;
+  --color-neutral-950: #ffffff;
+  --pi-editor-bg: #ffffff;
+  --pi-terminal-bg: #1f2937;
+  --pi-terminal-fg: #e5e7eb;
+}
+
+[data-theme="dracula"] {
+  color-scheme: dark;
+  --color-neutral-50: #f8f8f2;
+  --color-neutral-100: #f1f1ec;
+  --color-neutral-200: #e6e6df;
+  --color-neutral-300: #c8c8c0;
+  --color-neutral-400: #9c9ca0;
+  --color-neutral-500: #6272a4;
+  --color-neutral-600: #44475a;
+  --color-neutral-700: #353748;
+  --color-neutral-800: #2a2c3d;
+  --color-neutral-900: #21222c;
+  --color-neutral-950: #191a21;
+  --pi-editor-bg: #282a36;
+  --pi-terminal-bg: #21222c;
+  --pi-terminal-fg: #f8f8f2;
+}
+
+[data-theme="solarized-dark"] {
+  color-scheme: dark;
+  --color-neutral-50: #fdf6e3;
+  --color-neutral-100: #eee8d5;
+  --color-neutral-200: #d8d2c1;
+  --color-neutral-300: #93a1a1;
+  --color-neutral-400: #839496;
+  --color-neutral-500: #657b83;
+  --color-neutral-600: #586e75;
+  --color-neutral-700: #073642;
+  --color-neutral-800: #052b36;
+  --color-neutral-900: #04212a;
+  --color-neutral-950: #002b36;
+  --pi-editor-bg: #002b36;
+  --pi-terminal-bg: #002b36;
+  --pi-terminal-fg: #93a1a1;
+}
+
+[data-theme="catppuccin-mocha"] {
+  color-scheme: dark;
+  --color-neutral-50: #cdd6f4;
+  --color-neutral-100: #bac2de;
+  --color-neutral-200: #a6adc8;
+  --color-neutral-300: #9399b2;
+  --color-neutral-400: #7f849c;
+  --color-neutral-500: #6c7086;
+  --color-neutral-600: #585b70;
+  --color-neutral-700: #45475a;
+  --color-neutral-800: #313244;
+  --color-neutral-900: #1e1e2e;
+  --color-neutral-950: #11111b;
+  --pi-editor-bg: #1e1e2e;
+  --pi-terminal-bg: #11111b;
+  --pi-terminal-fg: #cdd6f4;
+}
+
+/* react-diff-view dark-theme overrides. The library declares its
+   color variables on `:root` via `style/index.css`. We re-declare
+   them on `.pi-diff-block` (one specificity tier higher than :root,
+   AND scoped so they don't leak to anything else on the page) so
+   our values win regardless of stylesheet bundle order. CSS
+   variables cascade, so child cells (.diff-code-insert / -delete /
+   .diff-gutter-* etc.) pick up our values automatically.
+
+   If the page-level diff palette ever needs to differ from the
+   chat's inline diff palette, fork this scope into separate classes
+   on the wrapping div. */
+.pi-diff-block {
+  --diff-background-color: transparent;
+  --diff-text-color: #e5e5e5;
+  --diff-font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  --diff-selection-background-color: #525252;
+  --diff-gutter-insert-background-color: #14532d;
+  --diff-gutter-insert-text-color: #86efac;
+  --diff-gutter-delete-background-color: #7f1d1d;
+  --diff-gutter-delete-text-color: #fca5a5;
+  --diff-code-insert-background-color: #052e16;
+  --diff-code-insert-text-color: #bbf7d0;
+  --diff-code-insert-edit-background-color: #166534;
+  --diff-code-insert-edit-text-color: #dcfce7;
+  --diff-code-delete-background-color: #450a0a;
+  --diff-code-delete-text-color: #fecaca;
+  --diff-code-delete-edit-background-color: #991b1b;
+  --diff-code-delete-edit-text-color: #fee2e2;
+  --diff-omit-gutter-line-color: #404040;
+}
+.pi-diff-block .diff {
+  background: transparent;
+  color: #e5e5e5;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  /* react-diff-view defaults to `table-layout: fixed` + `width:
+     100%`, which combined with its `word-break: break-all` on
+     `.diff-code` crams code into 2-3 character columns inside our
+     narrow right-pane / inline chat layouts. Switch to natural-
+     width sizing: the table grows to fit content, falls back to the
+     panel width when content is short, and the parent
+     `overflow-auto` adds a horizontal scroll bar when needed. */
+  table-layout: auto;
+  width: max-content;
+  min-width: 100%;
+}
+.pi-diff-block .diff-code {
+  /* Disable react-diff-view's aggressive word-break-all — code
+     should stay on one line and scroll horizontally, not wrap mid-
+     token. */
+  white-space: pre;
+  word-break: normal;
+  overflow-wrap: normal;
+  /* Make the code column claim all remaining width inside the table.
+     With `table-layout: auto` the code cell would otherwise size to
+     its longest line of content, leaving empty space to the right
+     when lines are short — visible as un-tinted gaps after `+` / `-`
+     line backgrounds. `width: 100%` on a table cell is the standard
+     "take the rest" idiom; the gutter cells keep their intrinsic
+     widths because they have content. */
+  width: 100%;
+}
+.pi-diff-block .diff-gutter,
+.pi-diff-block .diff-line {
+  background: transparent;
+}
+.pi-diff-block .diff-gutter {
+  color: #737373;
+  /* Sticky gutter: line number stays pinned to the left edge as the
+     user scrolls a long line horizontally. */
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: #0a0a0a;
+  /* Keep multi-digit line numbers on one line. With `table-layout:
+     auto` (set on `.diff` above) the gutter cell shrinks to its
+     content's break-points; without an explicit `nowrap`, browsers
+     can break "16" into "1" / "6" stacked vertically when the cell
+     is sticky-positioned and the table is laid out in a narrow
+     pane. `tabular-nums` keeps the digit widths consistent so the
+     gutter column doesn't jiggle as line numbers cross digit-count
+     boundaries (9→10, 99→100). */
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.pi-diff-block .diff-decoration {
+  background: #171717;
+  color: #a3a3a3;
+}
+
+/* Light-mode overrides for the diff renderer. The dark-mode defaults
+   above are hardcoded hex values (not `var(--color-neutral-*)`)
+   because they have to compose with react-diff-view's own internal
+   variable scheme, and the green/red diff swatches don't belong on
+   the neutral scale. To support light mode we re-declare the same
+   variables and direct properties under the light-theme scope so
+   text stays readable on white, the sticky gutter blends into the
+   page background, and added/deleted line highlights use light
+   tinted backgrounds instead of near-black dark ones. */
+[data-theme="light"] .pi-diff-block {
+  --diff-text-color: #0a0a0a;
+  --diff-selection-background-color: #cbd5e1;
+  --diff-gutter-insert-background-color: #bbf7d0;
+  --diff-gutter-insert-text-color: #14532d;
+  --diff-gutter-delete-background-color: #fecaca;
+  --diff-gutter-delete-text-color: #7f1d1d;
+  --diff-code-insert-background-color: #dcfce7;
+  --diff-code-insert-text-color: #14532d;
+  --diff-code-insert-edit-background-color: #86efac;
+  --diff-code-insert-edit-text-color: #052e16;
+  --diff-code-delete-background-color: #fee2e2;
+  --diff-code-delete-text-color: #7f1d1d;
+  --diff-code-delete-edit-background-color: #fca5a5;
+  --diff-code-delete-edit-text-color: #450a0a;
+  --diff-omit-gutter-line-color: #cbd5e1;
+}
+[data-theme="light"] .pi-diff-block .diff {
+  color: #0a0a0a;
+}
+[data-theme="light"] .pi-diff-block .diff-gutter {
+  color: #525252;
+  background: #ffffff;
+}
+[data-theme="light"] .pi-diff-block .diff-decoration {
+  background: #f3f4f6;
+  color: #525252;
+}
+/* Syntax token colors re-tuned for white backgrounds — keep the
+   hue family (orange/green/cyan/pink/indigo/yellow) from dark mode
+   for muscle-memory continuity, drop the lightness so AA contrast
+   holds against the light tinted diff backgrounds. */
+[data-theme="light"] .pi-diff-block .token.comment,
+[data-theme="light"] .pi-diff-block .token.prolog,
+[data-theme="light"] .pi-diff-block .token.doctype,
+[data-theme="light"] .pi-diff-block .token.cdata {
+  color: #6b7280;
+}
+[data-theme="light"] .pi-diff-block .token.punctuation {
+  color: #475569;
+}
+[data-theme="light"] .pi-diff-block .token.property,
+[data-theme="light"] .pi-diff-block .token.tag,
+[data-theme="light"] .pi-diff-block .token.boolean,
+[data-theme="light"] .pi-diff-block .token.number,
+[data-theme="light"] .pi-diff-block .token.constant,
+[data-theme="light"] .pi-diff-block .token.symbol,
+[data-theme="light"] .pi-diff-block .token.deleted {
+  color: #b45309;
+}
+[data-theme="light"] .pi-diff-block .token.selector,
+[data-theme="light"] .pi-diff-block .token.attr-name,
+[data-theme="light"] .pi-diff-block .token.string,
+[data-theme="light"] .pi-diff-block .token.char,
+[data-theme="light"] .pi-diff-block .token.builtin,
+[data-theme="light"] .pi-diff-block .token.inserted {
+  color: #15803d;
+}
+[data-theme="light"] .pi-diff-block .token.operator,
+[data-theme="light"] .pi-diff-block .token.entity,
+[data-theme="light"] .pi-diff-block .token.url,
+[data-theme="light"] .pi-diff-block .language-css .token.string,
+[data-theme="light"] .pi-diff-block .style .token.string {
+  color: #0e7490;
+}
+[data-theme="light"] .pi-diff-block .token.atrule,
+[data-theme="light"] .pi-diff-block .token.attr-value,
+[data-theme="light"] .pi-diff-block .token.keyword {
+  color: #be185d;
+}
+[data-theme="light"] .pi-diff-block .token.function,
+[data-theme="light"] .pi-diff-block .token.class-name {
+  color: #4338ca;
+}
+[data-theme="light"] .pi-diff-block .token.regex,
+[data-theme="light"] .pi-diff-block .token.important,
+[data-theme="light"] .pi-diff-block .token.variable {
+  color: #a16207;
+}
+
+/* Single-column gutter (UNIFIED ONLY). react-diff-view's unified
+   mode renders TWO `<col class="diff-gutter-col">` elements + two
+   `<td.diff-gutter>` per row (old + new line number). Our
+   `renderUnifiedGutter` callback in `DiffBlock.tsx` returns null
+   for the `side: "old"` slot, so the first cell in each row is
+   empty; we collapse the column entirely to recover the visual
+   real-estate. Scope to `.pi-diff-unified` so split-mode diffs
+   keep both gutters visible. */
+.pi-diff-unified .diff-gutter-col:first-of-type {
+  width: 0;
+}
+.pi-diff-unified td.diff-gutter:first-of-type {
+  display: none;
+}
+
+/* Syntax-highlighting palette for `react-diff-view`'s tokenized
+   output. We feed it Prism (via `refractor`) tokens; refractor emits
+   `<span className="token <kind>">` for each token, so the rules
+   below are scoped to `.pi-diff-block` to avoid bleeding into any
+   other code-block rendering on the page. Palette is hand-picked
+   to read well on the diff's existing red/green backgrounds —
+   mid-saturation, mid-luminance, no pure white/black. */
+.pi-diff-block .token.comment,
+.pi-diff-block .token.prolog,
+.pi-diff-block .token.doctype,
+.pi-diff-block .token.cdata {
+  color: #6b7280;
+  font-style: italic;
+}
+.pi-diff-block .token.punctuation {
+  color: #94a3b8;
+}
+.pi-diff-block .token.namespace {
+  opacity: 0.7;
+}
+.pi-diff-block .token.property,
+.pi-diff-block .token.tag,
+.pi-diff-block .token.boolean,
+.pi-diff-block .token.number,
+.pi-diff-block .token.constant,
+.pi-diff-block .token.symbol,
+.pi-diff-block .token.deleted {
+  color: #f59e0b;
+}
+.pi-diff-block .token.selector,
+.pi-diff-block .token.attr-name,
+.pi-diff-block .token.string,
+.pi-diff-block .token.char,
+.pi-diff-block .token.builtin,
+.pi-diff-block .token.inserted {
+  color: #a3e635;
+}
+.pi-diff-block .token.operator,
+.pi-diff-block .token.entity,
+.pi-diff-block .token.url,
+.pi-diff-block .language-css .token.string,
+.pi-diff-block .style .token.string {
+  color: #67e8f9;
+}
+.pi-diff-block .token.atrule,
+.pi-diff-block .token.attr-value,
+.pi-diff-block .token.keyword {
+  color: #f472b6;
+}
+.pi-diff-block .token.function,
+.pi-diff-block .token.class-name {
+  color: #a5b4fc;
+}
+.pi-diff-block .token.regex,
+.pi-diff-block .token.important,
+.pi-diff-block .token.variable {
+  color: #fde047;
+}
+.pi-diff-block .token.important,
+.pi-diff-block .token.bold {
+  font-weight: 600;
+}
+.pi-diff-block .token.italic {
+  font-style: italic;
+}
+
+/* ----------------------------- chat selection -----------------------------
+   Constrain text selection so each message bubble is its own selection
+   root. Without these rules, dragging a selection from inside one
+   message into the next picks up everything in between (including the
+   raw/copy/toggle controls and the visible gap), and on Safari the
+   selection highlight visually extends past the bubble's rounded
+   border. The combo below keeps selection cleanly within a single
+   bubble:
+   - The chat scroll container disables selection by default.
+   - Each `.message-bubble` re-enables it, and `isolation: isolate`
+     forces a new stacking / paint context so Safari draws the
+     selection highlight inside the bubble rather than bleeding it
+     across siblings.
+*/
+.chat-message-list {
+  user-select: none;
+  -webkit-user-select: none;
+}
+.message-bubble {
+  user-select: text;
+  -webkit-user-select: text;
+  isolation: isolate;
+  /* Long unbroken tokens (URLs, hashes, code snippets) wrap inside
+     the bubble instead of pushing the selection rectangle out past
+     the right edge. */
+  overflow-wrap: anywhere;
+}
+
+/* ----------------------------- thinking indicator -----------------------------
+   Three-dot ellipsis with staggered opacity pulse, used by the chat
+   "Thinking…" placeholder while the agent is busy. Independent of
+   Tailwind's `animate-pulse` because we want each dot offset by 200ms
+   so the eye reads it as motion, not a synchronized fade. Keeps the
+   user oriented that the stream is alive vs. silently disconnected. */
+@keyframes pi-thinking-dot {
+  0%,
+  80%,
+  100% {
+    opacity: 0.2;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+.pi-thinking-dots {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.15em;
+  margin-left: 0.25em;
+}
+.pi-thinking-dots > span {
+  animation: pi-thinking-dot 1.4s infinite ease-in-out both;
+}
+.pi-thinking-dots > span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.pi-thinking-dots > span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pi-thinking-dots > span {
+    animation: none;
+    opacity: 0.6;
+  }
+}
+
+/* ----------------------------- logo recolor -----------------------------
+   The app logo at `/icons/icon.svg` is a pure-white-on-transparent
+   shape, picked to read against the default dark chrome. In light
+   mode it disappears against the white page surface. Inverting the
+   image with `filter: invert(1)` turns pure-white pixels into pure
+   black, which is exactly the black variant we need for the light
+   theme. Avoids shipping a parallel asset file or threading a
+   theme-aware `src` swap through every `<img>` usage. Scoped to
+   the existing icon src attribute so it can't accidentally invert
+   any other image. */
+[data-theme="light"] img[src="/icons/icon.svg"] {
+  filter: invert(1);
+}
