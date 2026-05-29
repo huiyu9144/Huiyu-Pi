@@ -838,7 +838,8 @@ function MessageRow({
             <p className="line-clamp-2 text-[11px] text-neutral-400">{preview}</p>
           )}
         </div>
-        <button
+        <span
+          role="button"
           onClick={(e) => {
             e.stopPropagation();
             onViewRaw();
@@ -847,7 +848,7 @@ function MessageRow({
           title="View raw AgentMessage JSON"
         >
           <Code2 size={11} />
-        </button>
+        </span>
       </button>
       {expanded && (
         <div className="space-y-1 border-t border-neutral-800/70 px-3 py-2">
