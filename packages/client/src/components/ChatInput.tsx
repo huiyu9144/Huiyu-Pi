@@ -6,13 +6,20 @@ import {
   type KeyboardEvent,
   type PointerEvent as ReactPointerEvent,
 } from "react";
+import { createPortal } from "react-dom";
 import {
   Activity,
+  ArrowUp,
   AtSign,
+  Bot,
+  Brain,
+  Download,
+  GitBranch,
   Image as ImageIcon,
   ListChecks,
   Paperclip,
   RotateCcw,
+  Square,
   X,
 } from "lucide-react";
 import { api, ApiError, type ProvidersListing } from "../lib/api-client";
@@ -1603,7 +1610,7 @@ export function ChatInput({ sessionId }: Props) {
   }, [text, isMobile]);
 
   return (
-    <div className="bg-neutral-950">
+    <div className="bg-neutral-950 overflow-y-hidden px-6" style={{ scrollbarGutter: "stable" }}>
       {/*
         Drag handle that lives where the composer's top border used to
         be. Plain visual: a 1-px hairline matching the rest of the
@@ -1623,7 +1630,7 @@ export function ChatInput({ sessionId }: Props) {
         aria-orientation="horizontal"
         aria-label="Resize chat input"
         onPointerDown={startDividerDrag}
-        className="group relative hidden h-px cursor-row-resize bg-neutral-800 hover:bg-neutral-600 active:bg-neutral-500 md:block"
+        className="group relative hidden h-px cursor-row-resize md:block"
       >
         <div className="absolute inset-x-0 -top-1 h-2" />
       </div>
@@ -1634,9 +1641,158 @@ export function ChatInput({ sessionId }: Props) {
           instead of being clipped by them. Desktop keeps the
           original `px-6 py-3` breathing room. */}
       <div
-        className="mx-auto max-w-3xl space-y-2 px-3 pt-2 md:px-6 md:py-3"
+        className="mx-auto max-w-3xl space-y-1 pt-1 md:py-1.5"
         style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
       >
+        <div>
+          {error !== undefined && <p className="text-xs text-red-400">Error: {error}</p>}
+          {attachmentError !== undefined && (
+            <p className="text-xs text-amber-400">{attachmentError}</p>
+          )}
+          {attachments.length > 0 && (
+            <AttachmentPreview
+              attachments={attachments}
+              previewUrls={previewUrlsRef.current}
+              onRemove={removeAttachment}
+            />
+          )}
+        </div>
+        <div className="relative">
+          {slashOpen && slashFiltered.length > 0 && (
+            <div className="absolute bottom-full left-0 right-0 z-10 mb-1 overflow-hidden rounded-md border border-neutral-700 bg-neutral-900 shadow-lg">
+              <div className="max-h-[60vh] overflow-y-auto py-1 md:max-h-64">
+                {slashFiltered.map((cmd, i) => (
+                  <button
+                    key={cmd.name}
+                    onMouseDown={(ev) => {
+                      ev.preventDefault();
+                      if (!cmd.available) return;
+                      setSlashSelectedIdx(i);
+                      slashRunSelected(i);
+                    }}
+                    onMouseEnter={() => setSlashSelectedIdx(i)}
+                    disabled={!cmd.available}
+                    className={`block w-full px-3 py-2.5 text-left text-[14px] md:py-1 md:text-[12px] ${
+                      i === slashSelectedIdx && cmd.available
+                        ? "text-white"
+                        : "text-neutral-400"
+                    } ${cmd.available ? "" : "opacity-40"}`}
+                    title={
+                      cmd.available
+                        ? cmd.description
+                        : `${cmd.description} — unavailable right now`
+                    }
+                  >
+                    <div className="flex flex-col md:block">
+                      <span className="font-mono text-neutral-200">{cmd.name}</span>
+                      <span className="text-[12px] text-neutral-500 md:ml-2 md:text-[10px]">
+                        {cmd.description}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+              <div className="hidden border-t border-neutral-800 px-3 py-1 text-[10px] text-neutral-500 md:block">
+                ↑↓ navigate · Enter/Tab run · Esc cancel
+              </div>
+            </div>
+          )}
+          {acToken !== undefined && acSuggestions.length > 0 && (
+            <div className="absolute bottom-full left-0 right-0 z-10 mb-1 overflow-hidden rounded-md border border-neutral-700 bg-neutral-900 shadow-lg">
+              <div className="max-h-[60vh] overflow-y-auto py-1 md:max-h-64">
+                {acSuggestions.map((path, i) => (
+                  <button
+                    key={path}
+                    onMouseDown={(ev) => {
+                      ev.preventDefault();
+                      acInsert(path);
+                    }}
+                    onMouseEnter={() => setAcSelectedIdx(i)}
+                    className={`block w-full truncate px-3 py-2.5 text-left font-mono text-[14px] md:py-1 md:text-[12px] ${
+                      i === acSelectedIdx
+                        ? "text-white"
+                        : "text-neutral-400"
+                    }`}
+                    title={path}
+                  >
+                    {path}
+                  </button>
+                ))}
+              </div>
+              <div className="hidden border-t border-neutral-800 px-3 py-1 text-[10px] text-neutral-500 md:block">
+                ↑↓ navigate · Enter/Tab insert · Esc close
+              </div>
+            </div>
+          )}
+          <textarea
+            ref={textareaRef}
+            value={text}
+            onChange={(e) => handleTextChange(e.target.value)}
+            onKeyDown={onKeyDown}
+            onBlur={() => {
+              setTimeout(() => {
+                if (textareaRef.current !== document.activeElement) acClose();
+              }, 0);
+            }}
+            placeholder="Ask Huiyu PiwebUI Forge ..."
+            title={
+              isAutoRetrying
+                ? "The agent is auto-retrying after a provider error. New messages are queued and delivered when the retry succeeds."
+                : undefined
+            }
+            rows={isMobile ? 2 : 2}
+            style={
+              isMobile && autoHeight !== undefined
+                ? { height: `${autoHeight}px`, maxHeight: "30vh" }
+                : !isMobile && textareaHeight !== undefined
+                  ? { height: `${textareaHeight}px` }
+                  : undefined
+            }
+            className={`block w-full resize-none rounded-md border-[0.5px] border-[#1f1f1f] bg-neutral-900 px-3 py-2 pr-12 pb-10 text-sm text-neutral-100 outline-none ${
+              "min-h-11 md:min-h-0 "
+            }${
+              bangMode === "local"
+                ? "border-amber-500 focus:border-amber-400"
+                : bangMode === "context"
+                  ? "border-emerald-500 focus:border-emerald-400"
+                  : "border-[#212121] focus:border-neutral-500"
+            }`}
+          />
+          {bangMode !== undefined && (
+            <span
+              className={`pointer-events-none absolute right-2 top-2 select-none rounded px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wide ${
+                bangMode === "local"
+                  ? "bg-amber-500/15 text-amber-300"
+                  : "bg-emerald-500/15 text-emerald-300"
+              }`}
+              title={
+                bangMode === "local"
+                  ? "!! — runs bash; output stays local (excluded from LLM context)"
+                  : "! — runs bash; output is added to the next turn's LLM context"
+              }
+            >
+              {bangMode === "local" ? "bash · local" : "bash · context"}
+            </span>
+          )}
+          {isStreaming ? (
+            <button
+              onClick={() => void abortSession(sessionId)}
+              className="absolute bottom-2 right-2 z-10 flex h-8 w-8 items-center justify-center rounded-md bg-red-950/50 text-red-300 hover:bg-red-900/60 hover:text-red-100"
+              title="Stop the agent (or press Esc twice in the textbox)"
+            >
+              <Square size={14} />
+            </button>
+          ) : (
+            <button
+              onClick={() => void submit()}
+              disabled={(text.trim().length === 0 && attachments.length === 0) || submitting}
+              className="absolute bottom-2 right-2 z-10 flex h-8 w-8 cursor-pointer items-center justify-center rounded-md bg-neutral-100 text-neutral-900 disabled:cursor-not-allowed disabled:opacity-50"
+              title="Send (Enter)"
+            >
+              <ArrowUp size={16} />
+            </button>
+          )}
+        </div>
         <div className="flex flex-wrap items-center gap-2">
           <ModelPicker
             providers={providers}
@@ -1653,6 +1809,98 @@ export function ChatInput({ sessionId }: Props) {
                 onChange={(v) => void onThinkingLevelChange(v)}
               />
             )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            className="hidden"
+            onChange={(e) => {
+              if (e.target.files !== null) addAttachments(e.target.files);
+              e.target.value = "";
+            }}
+          />
+          {isMobile && (
+            <input
+              ref={imageInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => {
+                if (e.target.files !== null) addAttachments(e.target.files);
+                e.target.value = "";
+              }}
+            />
+          )}
+          {isMobile ? (
+            <div className="relative" ref={attachMenuRef}>
+              <button
+                onClick={() => setAttachMenuOpen((o) => !o)}
+                disabled={submitting || isStreaming}
+                aria-label="Attach"
+                aria-expanded={attachMenuOpen}
+                className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[12px] text-neutral-400 disabled:cursor-not-allowed disabled:opacity-50"
+                title={
+                  isStreaming
+                    ? "Attachments aren't sent on steer (mid-turn)."
+                    : "Attach a photo or a file"
+                }
+              >
+                <Paperclip size={12} />
+                <span>Attach</span>
+              </button>
+              {attachMenuOpen && (
+                <div className="absolute bottom-full left-0 z-20 mb-1 flex flex-col overflow-hidden rounded-md border border-neutral-700 bg-neutral-900 shadow-lg">
+                  <button
+                    onClick={() => {
+                      imageInputRef.current?.click();
+                      setAttachMenuOpen(false);
+                    }}
+                    className="flex min-h-11 items-center gap-2 px-3 text-left text-[14px] text-neutral-400"
+                  >
+                    <ImageIcon size={16} className="shrink-0 text-neutral-400" />
+                    Photo
+                  </button>
+                  <button
+                    onClick={() => {
+                      fileInputRef.current?.click();
+                      setAttachMenuOpen(false);
+                    }}
+                    className="flex min-h-11 items-center gap-2 px-3 text-left text-[14px] text-neutral-400"
+                  >
+                    <Paperclip size={16} className="shrink-0 text-neutral-400" />
+                    File
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={submitting || isStreaming}
+              aria-label="Attach files"
+              className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-[12px] text-neutral-400 disabled:cursor-not-allowed disabled:opacity-50"
+              title={
+                isStreaming
+                  ? "Attachments aren't sent on steer (mid-turn). Wait for the current run to finish."
+                  : "Attach files (images go into model context; text files are prepended to the prompt)"
+              }
+            >
+              <Paperclip size={12} />
+              <span>Attach</span>
+            </button>
+          )}
+          <div className="ml-auto flex items-center gap-1">
+            <ExportMenuButton sessionId={sessionId} />
+            <button
+              onClick={() => useUiStore.getState().setTreeModalOpen(true)}
+              className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-neutral-400"
+              title="Open session tree (navigate / fork from any prior point)"
+            >
+              <GitBranch size={11} />
+              Tree
+            </button>
+          </div>
           {fileRefs.length > 0 && (
             <div className="flex flex-wrap items-center gap-1">
               {fileRefs.map((path, i) => (
@@ -1687,29 +1935,17 @@ export function ChatInput({ sessionId }: Props) {
               {thinkingError !== undefined && (
                 <span className="text-[11px] text-red-400">{thinkingError}</span>
               )}
-              {/* Reset is paired with the drag handle; hide on
-                  mobile since the handle is hidden there too and the
-                  textarea ignores the persisted height. */}
               {!isMobile && textareaHeight !== undefined && (
                 <button
                   type="button"
                   onClick={resetTextareaHeight}
-                  className="rounded p-1 text-neutral-500 hover:bg-neutral-800 hover:text-neutral-200"
+                  className="rounded p-1 text-neutral-400"
                   title="Reset chat input height to default"
                   aria-label="Reset chat input height to default"
                 >
                   <RotateCcw size={12} />
                 </button>
               )}
-              {/* Processes shortcut. Desktop: clicking opens the
-                  right-pane Processes tab (auto-expands the pane
-                  if collapsed via App.tsx). Mobile: clicking
-                  opens a small floating popover anchored to the
-                  button — the right pane is usually collapsed
-                  there and routing to it would mean a full
-                  navigation away from the chat input. The
-                  popover's "Open full panel →" footer link
-                  preserves access to the deeper view. */}
               {runningProcesses > 0 && (
                 <div className="relative">
                   <button
@@ -1721,8 +1957,8 @@ export function ChatInput({ sessionId }: Props) {
                     }}
                     className={`flex items-center gap-1 rounded px-1.5 py-1 text-[11px] ${
                       isMobile && processesPopoverOpen
-                        ? "bg-neutral-800 text-neutral-100 light:bg-neutral-200 light:text-neutral-900"
-                        : "text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200 light:text-neutral-600 light:hover:bg-neutral-200 light:hover:text-neutral-900"
+                        ? "text-white"
+                        : "text-neutral-400"
                     }`}
                     title={
                       isMobile
@@ -1745,11 +1981,6 @@ export function ChatInput({ sessionId }: Props) {
                   )}
                 </div>
               )}
-              {/* Todo toggle. Desktop: clicking toggles the
-                  bottom-strip todo panel in the right pane.
-                  Mobile: clicking opens the popover with the
-                  task list. Same rationale as processes — see
-                  the comment above. */}
               {todoCounts.total > 0 && (
                 <div className="relative">
                   <button
@@ -1801,332 +2032,6 @@ export function ChatInput({ sessionId }: Props) {
             </div>
           )}
         </div>
-        {error !== undefined && <p className="text-xs text-red-400">Error: {error}</p>}
-        {attachmentError !== undefined && (
-          <p className="text-xs text-amber-400">{attachmentError}</p>
-        )}
-        {attachments.length > 0 && (
-          <AttachmentPreview
-            attachments={attachments}
-            previewUrls={previewUrlsRef.current}
-            onRemove={removeAttachment}
-          />
-        )}
-        <div className="flex items-end gap-2">
-          {/* Files input — accepts everything. On desktop this is
-              the only attach affordance (the file dialog handles
-              browsing anywhere, including image folders, fine).
-              On mobile it's the "any file" companion to the image
-              button below. */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            className="hidden"
-            onChange={(e) => {
-              if (e.target.files !== null) addAttachments(e.target.files);
-              // Reset so re-selecting the same file fires onChange.
-              e.target.value = "";
-            }}
-          />
-          {/* Image input — mobile-only. `accept="image/*"` is what
-              both iOS Safari and Android Chrome use to surface the
-              gallery + camera picker. Reached from the attach
-              popover below; the popover is what hides the two
-              attach surfaces behind a single button so the composer
-              keeps its width on a phone. */}
-          {isMobile && (
-            <input
-              ref={imageInputRef}
-              type="file"
-              accept="image/*"
-              multiple
-              className="hidden"
-              onChange={(e) => {
-                if (e.target.files !== null) addAttachments(e.target.files);
-                e.target.value = "";
-              }}
-            />
-          )}
-          {/* Attach affordance.
-              - Mobile: single Paperclip that opens a small popover
-                with Photo + File entries (Slack/Discord style).
-                One button = one tap target's worth of horizontal
-                space, instead of the ~90 px two side-by-side
-                buttons would steal from the textarea on a 360 px
-                phone.
-              - Desktop: the same Paperclip directly opens the
-                file picker (no popover, since the desktop file
-                dialog already handles browsing anywhere). */}
-          {isMobile ? (
-            <div className="relative" ref={attachMenuRef}>
-              <button
-                onClick={() => setAttachMenuOpen((o) => !o)}
-                disabled={submitting || isStreaming}
-                aria-label="Attach"
-                aria-expanded={attachMenuOpen}
-                className="inline-flex min-h-11 min-w-11 items-center justify-center self-stretch rounded-md border border-neutral-700 bg-neutral-900 px-2 text-neutral-300 hover:border-neutral-500 hover:text-neutral-100 disabled:cursor-not-allowed disabled:opacity-50"
-                title={
-                  isStreaming
-                    ? "Attachments aren't sent on steer (mid-turn)."
-                    : "Attach a photo or a file"
-                }
-              >
-                <Paperclip size={16} />
-              </button>
-              {attachMenuOpen && (
-                <div className="absolute bottom-full left-0 z-20 mb-1 flex flex-col overflow-hidden rounded-md border border-neutral-700 bg-neutral-900 shadow-lg">
-                  <button
-                    onClick={() => {
-                      imageInputRef.current?.click();
-                      setAttachMenuOpen(false);
-                    }}
-                    className="flex min-h-11 items-center gap-2 px-3 text-left text-[14px] text-neutral-200 hover:bg-neutral-800"
-                  >
-                    <ImageIcon size={16} className="shrink-0 text-neutral-400" />
-                    Photo
-                  </button>
-                  <button
-                    onClick={() => {
-                      fileInputRef.current?.click();
-                      setAttachMenuOpen(false);
-                    }}
-                    className="flex min-h-11 items-center gap-2 border-t border-neutral-800 px-3 text-left text-[14px] text-neutral-200 hover:bg-neutral-800"
-                  >
-                    <Paperclip size={16} className="shrink-0 text-neutral-400" />
-                    File
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={submitting || isStreaming}
-              aria-label="Attach files"
-              className="inline-flex items-center justify-center self-stretch rounded-md border border-neutral-700 bg-neutral-900 px-2 text-neutral-300 hover:border-neutral-500 hover:text-neutral-100 disabled:cursor-not-allowed disabled:opacity-50"
-              title={
-                isStreaming
-                  ? "Attachments aren't sent on steer (mid-turn). Wait for the current run to finish."
-                  : "Attach files (images go into model context; text files are prepended to the prompt)"
-              }
-            >
-              <Paperclip size={14} />
-            </button>
-          )}
-          <div className="relative flex-1">
-            {/* /-command palette — opens whenever the input starts
-                with `/` and has no newline. Listed top-to-bottom in
-                catalog order; filtered by `slashQuery` (chars after
-                the `/` up to the first whitespace). Disabled
-                commands (e.g. /abort when not streaming) render
-                grayed and don't accept Enter. */}
-            {slashOpen && slashFiltered.length > 0 && (
-              <div className="absolute bottom-full left-0 right-0 z-10 mb-1 overflow-hidden rounded-md border border-neutral-700 bg-neutral-900 shadow-lg">
-                {/* Taller list with more breathing room on mobile so
-                    each item is a comfortable tap target. md:max-h-64
-                    restores the desktop popover size. */}
-                <div className="max-h-[60vh] overflow-y-auto py-1 md:max-h-64">
-                  {slashFiltered.map((cmd, i) => (
-                    <button
-                      key={cmd.name}
-                      onMouseDown={(ev) => {
-                        ev.preventDefault();
-                        if (!cmd.available) return;
-                        setSlashSelectedIdx(i);
-                        // Pass `i` directly — see the slashRunSelected
-                        // doc-comment for why state isn't safe here.
-                        slashRunSelected(i);
-                      }}
-                      onMouseEnter={() => setSlashSelectedIdx(i)}
-                      disabled={!cmd.available}
-                      className={`block w-full px-3 py-2.5 text-left text-[14px] md:py-1 md:text-[12px] ${
-                        i === slashSelectedIdx && cmd.available
-                          ? "bg-neutral-800 text-neutral-100"
-                          : "text-neutral-300 hover:bg-neutral-900/80"
-                      } ${cmd.available ? "" : "opacity-40"}`}
-                      title={
-                        cmd.available
-                          ? cmd.description
-                          : `${cmd.description} — unavailable right now`
-                      }
-                    >
-                      {/* Stack name/description on phones — descriptions
-                          are too wide to fit on one line at 360 px and
-                          would either truncate or push the row taller
-                          than its tap-target sweet spot. md:flex
-                          restores the desktop side-by-side layout. */}
-                      <div className="flex flex-col md:block">
-                        <span className="font-mono text-neutral-200">{cmd.name}</span>
-                        <span className="text-[12px] text-neutral-500 md:ml-2 md:text-[10px]">
-                          {cmd.description}
-                        </span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-                {/* Hint footer — keyboard hints aren't useful on a
-                    touchscreen, hide on mobile to save vertical space. */}
-                <div className="hidden border-t border-neutral-800 px-3 py-1 text-[10px] text-neutral-500 md:block">
-                  ↑↓ navigate · Enter/Tab run · Esc cancel
-                </div>
-              </div>
-            )}
-            {/* @-completion popover — anchored above the textarea.
-                Hidden when there's no @ token at the caret OR no
-                matching files. Bottom-up listing so the highlighted
-                item is closest to the input. */}
-            {acToken !== undefined && acSuggestions.length > 0 && (
-              <div className="absolute bottom-full left-0 right-0 z-10 mb-1 overflow-hidden rounded-md border border-neutral-700 bg-neutral-900 shadow-lg">
-                <div className="max-h-[60vh] overflow-y-auto py-1 md:max-h-64">
-                  {acSuggestions.map((path, i) => (
-                    <button
-                      key={path}
-                      onMouseDown={(ev) => {
-                        // mouseDown (not click) so the textarea
-                        // doesn't lose focus + close the popover
-                        // before our handler fires.
-                        ev.preventDefault();
-                        acInsert(path);
-                      }}
-                      onMouseEnter={() => setAcSelectedIdx(i)}
-                      className={`block w-full truncate px-3 py-2.5 text-left font-mono text-[14px] md:py-1 md:text-[12px] ${
-                        i === acSelectedIdx
-                          ? "bg-neutral-800 text-neutral-100"
-                          : "text-neutral-300 hover:bg-neutral-900/80"
-                      }`}
-                      title={path}
-                    >
-                      {path}
-                    </button>
-                  ))}
-                </div>
-                <div className="hidden border-t border-neutral-800 px-3 py-1 text-[10px] text-neutral-500 md:block">
-                  ↑↓ navigate · Enter/Tab insert · Esc close
-                </div>
-              </div>
-            )}
-            <textarea
-              ref={textareaRef}
-              value={text}
-              onChange={(e) => handleTextChange(e.target.value)}
-              onKeyDown={onKeyDown}
-              onBlur={() => {
-                // Close on blur — but only on the next tick so a
-                // mousedown on a popover item still fires its handler
-                // first. mouseDown.preventDefault on the buttons
-                // avoids the blur entirely in practice; this is
-                // belt-and-suspenders for tab-out / click-out paths.
-                setTimeout(() => {
-                  if (textareaRef.current !== document.activeElement) acClose();
-                }, 0);
-              }}
-              placeholder={
-                isAutoRetrying
-                  ? "Auto-retry in progress — your message will be queued and sent after the retry completes…"
-                  : isStreaming
-                    ? isMobile
-                      ? "Steer the agent…"
-                      : "Steer the agent (Enter to send, Shift+Enter for newline)…"
-                    : isMobile
-                      ? minimalUi
-                        ? "Ask pi — `/` runs commands, `@path` references files…"
-                        : "Ask pi — `/` runs commands, `!` runs bash, `@path` references files…"
-                      : minimalUi
-                        ? "Ask pi (Enter to send, Shift+Enter for newline) — `/` runs commands, `@path` references files…"
-                        : "Ask pi (Enter to send, Shift+Enter for newline) — `/` runs commands, `!` runs bash, `@path` references files…"
-              }
-              title={
-                isAutoRetrying
-                  ? "The agent is auto-retrying after a provider error. New messages are queued and delivered when the retry succeeds."
-                  : undefined
-              }
-              // Mobile: starts at 2 lines, then auto-grows with the
-              // user's input via the useEffect above (capped at
-              // 30vh; scrolls internally past that). Desktop keeps
-              // its 3-row default and uses the drag handle for
-              // explicit resizing — autoHeight is undefined on
-              // desktop so the inline style only applies the
-              // user-dragged value.
-              rows={isMobile ? 2 : 3}
-              style={
-                isMobile && autoHeight !== undefined
-                  ? { height: `${autoHeight}px`, maxHeight: "30vh" }
-                  : !isMobile && textareaHeight !== undefined
-                    ? { height: `${textareaHeight}px` }
-                    : undefined
-              }
-              className={`block w-full resize-none rounded-md border bg-neutral-900 px-3 py-2 text-sm text-neutral-100 outline-none ${
-                // Match attach + send button min-height on mobile so
-                // every child of the row renders at the same baseline
-                // height. Without this the textarea collapses to its
-                // intrinsic scrollHeight (~37 px when empty) and sits
-                // visibly higher than the 44 px buttons.
-                "min-h-11 md:min-h-0 "
-              }${
-                bangMode === "local"
-                  ? "border-amber-500 focus:border-amber-400"
-                  : bangMode === "context"
-                    ? "border-emerald-500 focus:border-emerald-400"
-                    : "border-neutral-700 focus:border-neutral-500"
-              }`}
-            />
-            {bangMode !== undefined && (
-              <span
-                className={`pointer-events-none absolute right-2 top-2 select-none rounded px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wide ${
-                  bangMode === "local"
-                    ? "bg-amber-500/15 text-amber-300"
-                    : "bg-emerald-500/15 text-emerald-300"
-                }`}
-                title={
-                  bangMode === "local"
-                    ? "!! — runs bash; output stays local (excluded from LLM context)"
-                    : "! — runs bash; output is added to the next turn's LLM context"
-                }
-              >
-                {bangMode === "local" ? "bash · local" : "bash · context"}
-              </span>
-            )}
-          </div>
-          {/*
-            Send + Abort. On mobile they stack vertically (Abort
-            above Send via flex-col-reverse, DOM order Send-then-
-            Abort so desktop's `md:flex-row` reads correctly left-
-            to-right). Crucially the wrapper is `self-stretch`, so
-            its height matches the parent row's height (the auto-
-            grown textarea). Each button takes `flex-1`, splitting
-            that height evenly. Net result: composer overall height
-            stays constant whether streaming or not — model picker
-            row above doesn't shift when Abort appears.
-
-            On desktop (md:) we revert to a row of natural-height
-            buttons; the desktop composer is taller and there's
-            plenty of room, so stretching looks weird there.
-          */}
-          <div className="flex flex-col-reverse gap-1 self-stretch md:flex-row md:items-end md:self-auto">
-            <button
-              onClick={() => void submit()}
-              disabled={(text.trim().length === 0 && attachments.length === 0) || submitting}
-              className="flex-1 rounded-md bg-neutral-100 px-4 text-sm font-medium text-neutral-900 disabled:cursor-not-allowed disabled:opacity-50 md:flex-none md:py-2"
-              title={
-                isStreaming
-                  ? "Send (Pi queues at the next agent break — steer or follow-up depending on agent state)"
-                  : "Send (Enter)"
-              }
-            >
-              Send
-            </button>
-            {isStreaming && (
-              <button
-                onClick={() => void abortSession(sessionId)}
-                className="flex-1 rounded-md border border-red-700/60 bg-red-950/30 px-3 text-sm font-medium text-red-300 hover:bg-red-900/40 hover:text-red-100 md:flex-none md:py-2"
-                title="Stop the agent (or press Esc twice in the textbox)"
-              >
-                Abort
-              </button>
-            )}
-          </div>
-        </div>
         {isStreaming && (
           <p className="text-[10px] text-neutral-600">
             Send queues at the next agent break — Pi picks steer or follow-up. Abort: stop the agent
@@ -2134,6 +2039,87 @@ export function ChatInput({ sessionId }: Props) {
           </p>
         )}
       </div>
+    </div>
+  );
+}
+
+function ExportMenuButton({ sessionId }: { sessionId: string }) {
+  const [open, setOpen] = useState(false);
+  const [error, setError] = useState<string | undefined>(undefined);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent): void => {
+      if (ref.current === null) return;
+      if (!ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [open]);
+
+  const doExport = async (format: "markdown" | "jsonl"): Promise<void> => {
+    setOpen(false);
+    setError(undefined);
+    try {
+      const { blob, filename } = await api.exportSession(sessionId, format);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      const message =
+        err instanceof ApiError
+          ? `${err.code} (${err.status})`
+          : err instanceof Error
+            ? err.message
+            : String(err);
+      setError(message);
+    }
+  };
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-neutral-400"
+        title="Export this conversation"
+      >
+        <Download size={11} />
+        Export
+      </button>
+      {error !== undefined && (
+        <span className="text-[10px] text-amber-400" role="status">
+          Export failed: {error}
+        </span>
+      )}
+      {open && (
+        <div
+          role="menu"
+          className="absolute right-0 bottom-full z-30 mb-1 min-w-[12rem] rounded-md border border-neutral-700 bg-neutral-900 py-1 shadow-xl"
+        >
+          <button
+            role="menuitem"
+            onClick={() => void doExport("markdown")}
+            className="block w-full px-3 py-1.5 text-left text-xs text-neutral-400"
+          >
+            Markdown <span className="text-neutral-500">(.md)</span>
+          </button>
+          <button
+            role="menuitem"
+            onClick={() => void doExport("jsonl")}
+            className="block w-full px-3 py-1.5 text-left text-xs text-neutral-400"
+          >
+            Raw JSONL <span className="text-neutral-500">(.jsonl)</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -2193,24 +2179,42 @@ function ModelPicker({
     defaultModel !== undefined &&
     defaultModel.provider.length > 0 &&
     defaultModel.modelId.length > 0
-      ? `${defaultModel.provider} / ${defaultModel.modelId}`
+      ? defaultModel.modelId
       : "";
   const triggerLabel =
     selected !== undefined
-      ? `${selected.provider} / ${selected.name}`
+      ? selected.name
       : defaultLabel.length > 0
-        ? `${defaultLabel} (default)`
+        ? defaultLabel
         : "default model";
 
   // Close on outside click.
+  // Two-phase: mousedown records the target, click decides whether to
+  // close.  This avoids a race with the portaled dropdown — a plain
+  // mousedown listener would synchronously unmount the dropdown before
+  // the button's onClick fires.  Using click (not mouseup) because
+  // the event order is mousedown → mouseup → click; closing on mouseup
+  // would still unmount before the button's onClick executes.
+  const mousedownTargetRef = useRef<EventTarget | null>(null);
   useEffect(() => {
     if (!open) return;
-    const onDocClick = (e: MouseEvent): void => {
-      if (wrapperRef.current === null) return;
-      if (!wrapperRef.current.contains(e.target as Node)) setOpen(false);
+    const onDown = (e: MouseEvent): void => {
+      mousedownTargetRef.current = e.target;
     };
-    window.addEventListener("mousedown", onDocClick);
-    return () => window.removeEventListener("mousedown", onDocClick);
+    const onClick = (e: MouseEvent): void => {
+      if (e.button !== 0) return;
+      if (wrapperRef.current === null) return;
+      if (mousedownTargetRef.current !== null && !wrapperRef.current.contains(mousedownTargetRef.current as Node)) {
+        setOpen(false);
+      }
+      mousedownTargetRef.current = null;
+    };
+    window.addEventListener("mousedown", onDown);
+    window.addEventListener("click", onClick);
+    return () => {
+      window.removeEventListener("mousedown", onDown);
+      window.removeEventListener("click", onClick);
+    };
   }, [open]);
 
   useEffect(() => {
@@ -2262,15 +2266,21 @@ function ModelPicker({
       <button
         onClick={() => setOpen((o) => !o)}
         disabled={providers === undefined}
-        className="flex max-w-[260px] items-center gap-1 truncate rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-left text-[11px] text-neutral-200 disabled:opacity-50"
+        className="flex max-w-[260px] items-center gap-1 truncate rounded px-2 py-1 text-left text-[11px] text-neutral-400 disabled:opacity-50"
         title="Override the model for this session (click to search)"
       >
-        <span className="text-neutral-500">model:</span>
+        <Bot size={12} className="shrink-0 text-neutral-500" />
         <span className="truncate">{triggerLabel}</span>
         <span className="ml-1 text-neutral-500">▾</span>
       </button>
-      {open && (
-        <div className="absolute bottom-full left-0 z-10 mb-1 w-[360px] rounded border border-neutral-700 bg-neutral-950 shadow-xl">
+      {open && createPortal(
+        <div
+          className="fixed z-[9999] w-[360px] rounded border border-neutral-700 bg-neutral-950"
+          style={{
+            bottom: window.innerHeight - (wrapperRef.current?.getBoundingClientRect().top ?? 0) + 4,
+            left: wrapperRef.current?.getBoundingClientRect().left ?? 0,
+          }}
+        >
           <input
             ref={inputRef}
             value={query}
@@ -2288,7 +2298,7 @@ function ModelPicker({
               onMouseEnter={() => setActiveIdx(-1)}
               onClick={() => commit(-1)}
               className={`flex w-full items-center justify-between px-3 py-1.5 text-left text-xs ${
-                activeIdx === -1 ? "bg-neutral-800 text-neutral-100" : "text-neutral-400"
+                activeIdx === -1 ? "text-white" : "text-neutral-400"
               }`}
             >
               <span className="flex min-w-0 items-baseline gap-2">
@@ -2313,7 +2323,7 @@ function ModelPicker({
                   onMouseEnter={() => setActiveIdx(i)}
                   onClick={() => commit(i)}
                   className={`flex w-full items-center justify-between px-3 py-1.5 text-left text-xs ${
-                    i === activeIdx ? "bg-neutral-800 text-neutral-100" : "text-neutral-300"
+                    i === activeIdx ? "text-white" : "text-neutral-400"
                   }`}
                 >
                   <span className="flex min-w-0 items-baseline gap-2">
@@ -2328,7 +2338,8 @@ function ModelPicker({
           <div className="border-t border-neutral-800 px-3 py-1.5 text-[10px] text-neutral-600">
             {filtered.length} of {options.length} models — ↑↓ to move, Enter to pick, Esc to close
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   );
@@ -2371,10 +2382,10 @@ function ThinkingLevelPicker({
     <div ref={wrapperRef} className="relative">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-1 rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-left text-[11px] text-neutral-200"
+        className="flex items-center gap-1 rounded px-2 py-1 text-left text-[11px] text-neutral-400"
         title="Override the thinking level for this session"
       >
-        <span className="text-neutral-500">thinking:</span>
+        <Brain size={12} className="shrink-0 text-neutral-500" />
         <span className="truncate">{value}</span>
         <span className="ml-1 text-neutral-500">▾</span>
       </button>
@@ -2388,7 +2399,7 @@ function ThinkingLevelPicker({
                 setOpen(false);
               }}
               className={`flex w-full items-center justify-between px-3 py-1.5 text-left text-xs ${
-                level === value ? "bg-neutral-800 text-neutral-100" : "text-neutral-300"
+                level === value ? "text-white" : "text-neutral-400"
               }`}
             >
               <span>{level}</span>
@@ -2449,7 +2460,7 @@ function AttachmentPreview({
             </span>
             <button
               onClick={() => onRemove(f)}
-              className="ml-1 rounded p-1 text-neutral-500 hover:bg-neutral-800 hover:text-red-300"
+              className="ml-1 rounded p-1 text-neutral-400"
               title={`Remove ${f.name}`}
             >
               <X size={16} />

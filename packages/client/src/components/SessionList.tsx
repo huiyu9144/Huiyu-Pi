@@ -5,7 +5,7 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
 } from "react";
-import { ChevronDown, ChevronRight, X } from "lucide-react";
+import { ChevronDown, ChevronRight, MessageSquare, X } from "lucide-react";
 import { EMPTY_SESSIONS, useSessionStore } from "../store/session-store";
 import { useProjectStore } from "../store/project-store";
 import { ConfirmDialog } from "./Modal";
@@ -254,12 +254,12 @@ export function SessionList({ projectId }: Props) {
     // `mt-1` separates the first session row from the project row
     // above; without it, the active-row highlight backgrounds (both
     // are `bg-neutral-800`) touch and read as one continuous block.
-    <div className="ml-6 mt-1 space-y-0.5">
+    <div className="mt-1 space-y-0.5">
       {/* "New session" lives on the parent project row in
           ProjectSidebar (the + button on hover). Avoids stacking
           a second action button per project. */}
       {sessions.length === 0 && (
-        <p className="px-2 py-1 text-xs italic text-neutral-600">No sessions yet.</p>
+        <p className="ml-[42px] py-1 text-xs font-semibold italic text-[#545454]">No sessions yet.</p>
       )}
       {selectedIds.size > 0 && (
         <div className="flex items-center justify-between gap-2 rounded bg-neutral-900/60 px-2 py-1 text-[11px] text-neutral-300">
@@ -417,10 +417,10 @@ function SessionRow(props: SessionRowProps) {
       // success / drop affordances on these rows.
       className={`group flex items-center gap-1 rounded border-l-2 ${isChild ? "ml-4" : ""} px-2 py-0.5 text-xs ${
         isSelected
-          ? "border-blue-400 bg-blue-500/15 text-neutral-100 hover:bg-blue-500/25"
+          ? "border-blue-400 bg-blue-500/15 font-semibold text-neutral-100 hover:bg-blue-500/25"
           : isActive
-            ? "border-transparent bg-neutral-800 text-neutral-100"
-            : "border-transparent text-neutral-400 hover:bg-neutral-900 hover:text-neutral-200"
+            ? "border-transparent bg-neutral-800 font-semibold text-neutral-100"
+            : "border-transparent font-semibold text-[#545454] hover:bg-neutral-900 hover:text-neutral-100"
       }`}
     >
       {/* Chevron column. Only parents with children get an interactive
@@ -429,7 +429,7 @@ function SessionRow(props: SessionRowProps) {
       {childCount > 0 ? (
         <button
           onClick={() => onToggleExpanded(s.sessionId, isExpanded)}
-          className="inline-flex h-4 w-4 shrink-0 items-center justify-center text-neutral-500 hover:text-neutral-200"
+          className="inline-flex h-4 w-4 shrink-0 items-center justify-center text-[#545454] hover:text-neutral-200"
           title={`${childCount} sub-agent session${childCount === 1 ? "" : "s"}`}
           aria-label={isExpanded ? "Collapse sub-agents" : "Expand sub-agents"}
         >
@@ -459,10 +459,10 @@ function SessionRow(props: SessionRowProps) {
             onSelect(s.sessionId);
           }}
           onDoubleClick={() => onStartRename(s.sessionId, s.name ?? "")}
-          className="flex-1 truncate text-left"
+          className="flex flex-1 items-center gap-1 truncate text-left"
           title={`${s.sessionId} — double-click to rename, Cmd/Ctrl+click to select for bulk delete`}
         >
-          {s.isLive && <span className="mr-1 text-emerald-500 light:text-emerald-700">●</span>}
+          {s.isLive && <MessageSquare size={10} className={`mr-1 shrink-0 ${isSelected || isActive ? "text-white" : "text-[#545454]"}`} />}
           {isChild && (
             <span className="mr-1 text-purple-400 light:text-purple-700" title="sub-agent">
               ↳
@@ -492,7 +492,7 @@ function SessionRow(props: SessionRowProps) {
             // visually identical from a layout standpoint.
             isArmedForDelete
               ? "inline-flex h-6 items-center rounded border border-red-500 px-1.5 text-[11px] font-medium uppercase leading-none tracking-wide text-red-300 hover:bg-red-500/10 light:border-red-600 light:text-red-700 light:hover:bg-red-100"
-              : "inline-flex h-6 w-6 items-center justify-center rounded text-neutral-500 hover:text-red-400 light:hover:text-red-700"
+              : "inline-flex h-6 w-6 items-center justify-center rounded text-[#545454] opacity-0 hover:text-white group-hover:opacity-100 transition-opacity"
           }
           title={
             isArmedForDelete

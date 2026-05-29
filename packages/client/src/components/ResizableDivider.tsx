@@ -105,7 +105,7 @@ export function ResizableDivider({
   };
 
   const baseCls =
-    "group relative shrink-0 bg-neutral-800 hover:bg-neutral-600 active:bg-neutral-500";
+    "group relative shrink-0";
   const sizeCls = horizontal ? "h-1 w-full cursor-row-resize" : "w-1 h-full cursor-col-resize";
   const hitboxCls = horizontal
     ? "absolute inset-x-0 -top-1 -bottom-1"

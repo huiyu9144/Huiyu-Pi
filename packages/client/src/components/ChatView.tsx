@@ -30,12 +30,10 @@ import { ChatMarkdown } from "./ChatMarkdown";
 import { CompactionCard } from "./CompactionCard";
 import { DiffBlock } from "./DiffBlock";
 import { SessionTreePanel } from "./SessionTreePanel";
-import { QuickActionsMenu } from "./QuickActionsMenu";
 import { QuickActionRunCard } from "./QuickActionRunCard";
 import { useQuickActionRunsStore } from "../store/quick-actions-store";
 import { parseSubagentDetails, type SubagentResult } from "../lib/subagent-parser";
-import { OrchestrationPanel } from "./OrchestrationPanel";
-import { useUiConfigStore } from "../store/ui-config-store";
+import { useUiStore } from "../store/ui-store";
 
 /**
  * Per-ChatView diff view-type preference. Each diff-rendering surface
@@ -130,9 +128,8 @@ export function ChatView({ sessionId }: Props) {
   // toolbar above the scroll container so it's always visible
   // regardless of how far the user has scrolled.
   const project = useActiveProject();
-  const [treeOpen, setTreeOpen] = useState(false);
-  const [orchOpen, setOrchOpen] = useState(false);
-  const orchestrationEnabled = useUiConfigStore((s) => s.orchestrationEnabled);
+  const treeOpen = useUiStore((s) => s.treeModalOpen);
+  const setTreeOpen = useUiStore((s) => s.setTreeModalOpen);
 
   // Conversation export menu (Markdown / Raw JSONL). Hidden on mobile —
   // the file-download flow is desktop-shaped (browser save dialog,
@@ -258,91 +255,6 @@ export function ChatView({ sessionId }: Props) {
       value={{ viewType: chatViewType, setViewType: setAndPersistChatViewType }}
     >
       <div className="flex flex-1 flex-col overflow-hidden">
-        {/* Chat-level toolbar. Per-session controls (export, session
-            tree, etc.) — pinned above the scroll container so the
-            affordances stay reachable from any scroll position. */}
-        <div className="flex items-center justify-between gap-1 border-b border-neutral-800 bg-neutral-900/30 px-3 py-1">
-          {/* Left cluster — quick-action chips. Empty when no actions
-              are defined, in minimal mode with only command chips,
-              or while the store is still loading. The container is
-              always rendered so the right cluster stays anchored
-              right via flex justify-between. */}
-          <div className="flex items-center gap-1">
-            {project !== undefined && (
-              <QuickActionsMenu sessionId={sessionId} projectId={project.id} />
-            )}
-          </div>
-          <div className="flex items-center gap-1">
-            {!isMobile && (
-              <div ref={exportMenuRef} className="relative">
-                <button
-                  onClick={() => setExportMenuOpen((v) => !v)}
-                  aria-haspopup="menu"
-                  aria-expanded={exportMenuOpen}
-                  className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200"
-                  title="Export this conversation"
-                >
-                  <Download size={11} />
-                  Export
-                </button>
-                {exportMenuOpen && (
-                  <div
-                    role="menu"
-                    className="absolute right-0 top-full z-30 mt-1 min-w-[12rem] rounded-md border border-neutral-700 bg-neutral-900 py-1 shadow-xl"
-                  >
-                    <button
-                      role="menuitem"
-                      onClick={() => void doExport("markdown")}
-                      className="block w-full px-3 py-1.5 text-left text-xs text-neutral-200 hover:bg-neutral-800"
-                    >
-                      Markdown <span className="text-neutral-500">(.md)</span>
-                    </button>
-                    <button
-                      role="menuitem"
-                      onClick={() => void doExport("jsonl")}
-                      className="block w-full px-3 py-1.5 text-left text-xs text-neutral-200 hover:bg-neutral-800"
-                    >
-                      Raw JSONL <span className="text-neutral-500">(.jsonl)</span>
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-            {exportError !== undefined && (
-              <span className="text-[10px] text-amber-400 light:text-amber-700" role="status">
-                Export failed: {exportError}
-              </span>
-            )}
-            <button
-              onClick={() => setTreeOpen(true)}
-              className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200"
-              title="Open session tree (navigate / fork from any prior point)"
-            >
-              <GitBranch size={11} />
-              Tree
-            </button>
-            {orchestrationEnabled && (
-              <button
-                onClick={() => setOrchOpen((v) => !v)}
-                aria-pressed={orchOpen}
-                className={`flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] uppercase tracking-wider hover:bg-neutral-800 ${
-                  orchOpen
-                    ? "bg-neutral-800 text-violet-300"
-                    : "text-neutral-400 hover:text-neutral-200"
-                }`}
-                title="Orchestration — supervisor / worker controls"
-              >
-                <Users size={11} />
-                Orch
-              </button>
-            )}
-          </div>
-        </div>
-        {orchOpen && orchestrationEnabled && (
-          <div className="border-b border-neutral-800 bg-neutral-900/40 px-3 py-2">
-            <OrchestrationPanel sessionId={sessionId} onClose={() => setOrchOpen(false)} />
-          </div>
-        )}
         {/* Banner sits ABOVE the scroll container so it stays pinned to the top
             of the chat view regardless of how far the user has scrolled into a
             long session. Earlier we rendered it inside the scroll container,
@@ -362,11 +274,12 @@ export function ChatView({ sessionId }: Props) {
             </button>
           </div>
         )}
-        <div ref={scrollRef} onScroll={onScroll} className="flex-1 overflow-y-auto px-6 py-4">
+        <div ref={scrollRef} onScroll={onScroll} className="chat-scroll-container flex-1 overflow-y-auto px-6 py-4" style={{ scrollbarGutter: "stable" }}>
           {messages.length === 0 && streamingText.length === 0 && !isStreaming && (
-            <p className="mt-12 text-center text-sm text-neutral-500">
-              No messages yet. Send a prompt to get started.
-            </p>
+            <div className="mt-64 flex flex-col items-center gap-3">
+              <img src="/icons/logo.jpg" alt="" className="h-16 w-16 rounded-xl" />
+              <span className="text-lg font-semibold tracking-tight">Huiyu PiwebUI Forge</span>
+            </div>
           )}
           <div className="chat-message-list mx-auto max-w-3xl space-y-4">
             {(() => {
@@ -572,7 +485,7 @@ export function ChatView({ sessionId }: Props) {
               return out;
             })()}
             {streamingText.length > 0 && (
-              <div className="message-bubble rounded-lg border border-neutral-800 bg-neutral-900 px-4 py-3">
+              <div className="message-bubble rounded-lg border-[0.5px] border-[#1f1f1f] bg-neutral-900 px-4 py-3">
                 <div className="mb-1 text-[10px] uppercase tracking-wider text-neutral-500">
                   assistant (streaming)
                 </div>
@@ -733,7 +646,7 @@ function ChatEditDiff({
             e.stopPropagation();
             setViewType(viewType === "split" ? "unified" : "split");
           }}
-          className="rounded p-0.5 text-neutral-500 hover:bg-neutral-800 hover:text-neutral-200"
+          className="rounded p-0.5 text-neutral-400"
           title={
             viewType === "split"
               ? "Switch chat diffs to unified view"
@@ -830,7 +743,7 @@ function FileRefBadge({ ref: r }: { ref: FileRef }) {
         disabled={!isInline}
         className={`flex min-h-11 w-full items-center gap-1.5 px-2 py-1 text-left text-[11px] md:min-h-0 ${
           isInline
-            ? "text-neutral-200 hover:bg-neutral-800"
+            ? "text-neutral-400"
             : "cursor-default text-emerald-200 light:text-emerald-800"
         }`}
         title={
@@ -885,6 +798,7 @@ function Message({
   // the message level so all text blocks within an assistant message
   // flip together (one click, not one per block).
   const [showRaw, setShowRaw] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   // User text messages — may include image + file attachments per
   // Phase 14. Optimistic shape uses a blob URL on the image block;
@@ -916,11 +830,20 @@ function Message({
     }
     return (
       <div
-        className="message-bubble group rounded-lg bg-neutral-800 px-4 py-3"
+        className="message-bubble group rounded-lg border-[0.5px] border-[#1f1f1f] bg-[#14171f] px-4 py-3"
         data-message-role="user"
       >
         <div className="mb-1 flex items-center justify-between">
           <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setCollapsed((c) => !c)}
+              className="rounded p-0.5 text-neutral-500 hover:text-neutral-300"
+              title={collapsed ? "Expand message" : "Collapse message"}
+              aria-label={collapsed ? "Expand message" : "Collapse message"}
+            >
+              {collapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
+            </button>
             <span className="text-[10px] uppercase tracking-wider text-neutral-400">you</span>
             <MessageTimestamp ts={(message as { timestamp?: unknown }).timestamp} />
           </div>
@@ -931,41 +854,39 @@ function Message({
             </div>
           )}
         </div>
-        {text.length > 0 && (
-          <div className="text-neutral-100">
-            {showRaw ? (
-              <RawText text={text} />
-            ) : (
-              // Chat-style hard breaks for user input only — see
-              // ChatMarkdown's `chatStyleBreaks` prop docstring for
-              // the trade-off (tables in user input need a leading
-              // blank line; this matches what most users type).
-              <ChatMarkdown text={text} chatStyleBreaks />
+        {!collapsed && (
+          <>
+            {text.length > 0 && (
+              <div className="text-neutral-100">
+                {showRaw ? (
+                  <RawText text={text} />
+                ) : (
+                  <ChatMarkdown text={text} chatStyleBreaks />
+                )}
+              </div>
             )}
-          </div>
-        )}
-        {fileRefs.length > 0 && (
-          <div className="mt-2 flex flex-col gap-1">
-            {fileRefs.map((r, i) => (
-              <FileRefBadge key={`fileref-${i}-${r.path}`} ref={r} />
-            ))}
-          </div>
-        )}
-        {images.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-2">
-            {images.map((img) => (
-              <img
-                key={img.key}
-                src={img.src}
-                alt=""
-                className="max-h-48 max-w-full rounded border border-neutral-700"
-              />
-            ))}
-          </div>
-        )}
-        {files.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-2">
-            {files.map((f) => (
+            {fileRefs.length > 0 && (
+              <div className="mt-2 flex flex-col gap-1">
+                {fileRefs.map((r, i) => (
+                  <FileRefBadge key={`fileref-${i}-${r.path}`} ref={r} />
+                ))}
+              </div>
+            )}
+            {images.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {images.map((img) => (
+                  <img
+                    key={img.key}
+                    src={img.src}
+                    alt=""
+                    className="max-h-48 max-w-full rounded border border-neutral-700"
+                  />
+                ))}
+              </div>
+            )}
+            {files.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {files.map((f) => (
               <span
                 key={f.key}
                 className="inline-flex items-center gap-1 rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-[11px] text-neutral-300"
@@ -984,6 +905,8 @@ function Message({
               </span>
             ))}
           </div>
+        )}
+          </>
         )}
       </div>
     );
@@ -1065,6 +988,7 @@ function AssistantMessageBubble({
   showRaw: boolean;
   setShowRaw: (next: boolean) => void;
 }) {
+  const [collapsed, setCollapsed] = useState(false);
   // Show the raw toggle only when the message has at least one
   // text block — toolCall and thinking blocks aren't markdown and
   // the toggle would do nothing useful for them.
@@ -1083,11 +1007,20 @@ function AssistantMessageBubble({
       : undefined;
   return (
     <div
-      className="message-bubble group rounded-lg border border-neutral-800 bg-neutral-900 px-4 py-3"
+      className="message-bubble group rounded-lg border-[0.5px] border-[#1f1f1f] bg-neutral-900 px-4 py-3"
       data-message-role="assistant"
     >
       <div className="mb-1 flex items-center justify-between">
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setCollapsed((c) => !c)}
+            className="rounded p-0.5 text-neutral-500 hover:text-neutral-300"
+            title={collapsed ? "Expand message" : "Collapse message"}
+            aria-label={collapsed ? "Expand message" : "Collapse message"}
+          >
+            {collapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
+          </button>
           <span className="text-[10px] uppercase tracking-wider text-neutral-500">assistant</span>
           <MessageTimestamp ts={(message as { timestamp?: unknown }).timestamp} />
         </div>
@@ -1101,17 +1034,21 @@ function AssistantMessageBubble({
           </div>
         )}
       </div>
-      <div className="space-y-2 text-sm text-neutral-100">
-        {renderAssistantBlocks(content, toolResultsById, showRaw)}
-      </div>
-      {inlineError !== undefined && (
-        <div
-          className="mt-2 rounded border border-amber-700/40 bg-amber-900/20 px-3 py-2 text-xs text-amber-200 light:border-amber-300 light:bg-amber-50 light:text-amber-800"
-          role="alert"
-        >
-          <span className="font-medium">Provider error: </span>
-          {inlineError}
-        </div>
+      {!collapsed && (
+        <>
+          <div className="space-y-2 text-sm text-neutral-100">
+            {renderAssistantBlocks(content, toolResultsById, showRaw)}
+          </div>
+          {inlineError !== undefined && (
+            <div
+              className="mt-2 rounded border border-amber-700/40 bg-amber-900/20 px-3 py-2 text-xs text-amber-200 light:border-amber-300 light:bg-amber-50 light:text-amber-800"
+              role="alert"
+            >
+              <span className="font-medium">Provider error: </span>
+              {inlineError}
+            </div>
+          )}
+        </>
       )}
     </div>
   );
@@ -1583,7 +1520,7 @@ function ToolCallEntry({
 
       {argsText.length > 0 && (
         <details className="border-t border-neutral-800/60">
-          <summary className="cursor-pointer px-3 py-1.5 text-[11px] text-neutral-500 hover:text-neutral-300">
+          <summary className="cursor-pointer px-3 py-1.5 text-[11px] text-neutral-400">
             Input
           </summary>
           <pre className="overflow-auto px-3 pb-2 font-mono text-[11px] text-neutral-400">
@@ -1594,7 +1531,7 @@ function ToolCallEntry({
 
       {result !== undefined && (
         <details className="border-t border-neutral-800/60">
-          <summary className="cursor-pointer px-3 py-1.5 text-[11px] text-neutral-500 hover:text-neutral-300">
+          <summary className="cursor-pointer px-3 py-1.5 text-[11px] text-neutral-400">
             Output
             {editStats !== undefined && (
               <span className="ml-2 font-mono text-[10px]">
@@ -1915,7 +1852,7 @@ function SubagentResultCard({
           surface here as Output content rather than disappearing. */}
       {argsText.length > 0 && (
         <details className="border-t border-sky-900/30">
-          <summary className="cursor-pointer px-2.5 py-1 text-[11px] text-neutral-500 hover:text-neutral-300">
+          <summary className="cursor-pointer px-2.5 py-1 text-[11px] text-neutral-400">
             Input
           </summary>
           <pre className="overflow-auto px-2.5 pb-2 font-mono text-[11px] text-neutral-400">
@@ -1931,7 +1868,7 @@ function SubagentResultCard({
           open={isError}
           className="border-t border-sky-900/30"
         >
-          <summary className="cursor-pointer px-2.5 py-1 text-[11px] text-neutral-500 hover:text-neutral-300">
+          <summary className="cursor-pointer px-2.5 py-1 text-[11px] text-neutral-400">
             Output
           </summary>
           <pre className="overflow-auto px-2.5 pb-2 font-mono text-[11px] text-neutral-300 whitespace-pre-wrap">
@@ -2098,7 +2035,7 @@ function CopyButton({ getText, title }: { getText: () => string; title: string }
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex min-h-11 min-w-11 items-center justify-center rounded px-1.5 py-0.5 text-neutral-500 hover:bg-neutral-700/40 hover:text-neutral-300 md:min-h-0 md:min-w-0"
+      className="inline-flex min-h-11 min-w-11 items-center justify-center rounded px-1.5 py-0.5 text-neutral-400 md:min-h-0 md:min-w-0"
       title={title}
       aria-label={title}
     >
@@ -2128,7 +2065,7 @@ function RawToggle({ showRaw, onToggle }: { showRaw: boolean; onToggle: (next: b
     <button
       type="button"
       onClick={() => onToggle(!showRaw)}
-      className="inline-flex min-h-11 min-w-11 items-center justify-center rounded px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-neutral-500 hover:bg-neutral-700/40 hover:text-neutral-300 md:min-h-0 md:min-w-0"
+      className="inline-flex min-h-11 min-w-11 items-center justify-center rounded px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-neutral-400 md:min-h-0 md:min-w-0"
       title={showRaw ? "Show rendered markdown" : "Show raw text"}
     >
       {showRaw ? "rendered" : "raw"}

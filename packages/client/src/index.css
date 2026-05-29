@@ -50,20 +50,20 @@
   /* Inverted scale — Tailwind classes that previously meant "very
      dark surface" resolve to "very light surface" now, and so on.
      Tuned by hand for adequate text-on-bg contrast at every step. */
-  --color-neutral-50: #0a0a0a;
-  --color-neutral-100: #171717;
-  --color-neutral-200: #1f2937;
-  --color-neutral-300: #374151;
-  --color-neutral-400: #6b7280;
-  --color-neutral-500: #9ca3af;
-  --color-neutral-600: #cbd5e1;
-  --color-neutral-700: #e2e8f0;
-  --color-neutral-800: #e5e7eb;
-  --color-neutral-900: #f3f4f6;
-  --color-neutral-950: #ffffff;
-  --pi-editor-bg: #ffffff;
-  --pi-terminal-bg: #1f2937;
-  --pi-terminal-fg: #e5e7eb;
+  --color-neutral-50: #111111;
+  --color-neutral-100: #222222;
+  --color-neutral-200: #333333;
+  --color-neutral-300: #4a4a4a;
+  --color-neutral-400: #666666;
+  --color-neutral-500: #808080;
+  --color-neutral-600: #999999;
+  --color-neutral-700: #b3b3b3;
+  --color-neutral-800: #cccccc;
+  --color-neutral-900: #d4d4d4;
+  --color-neutral-950: #e0e0e0;
+  --pi-editor-bg: #e0e0e0;
+  --pi-terminal-bg: #d4d4d4;
+  --pi-terminal-fg: #111111;
 }
 
 [data-theme="dracula"] {
@@ -446,16 +446,142 @@
   }
 }
 
-/* ----------------------------- logo recolor -----------------------------
-   The app logo at `/icons/icon.svg` is a pure-white-on-transparent
-   shape, picked to read against the default dark chrome. In light
-   mode it disappears against the white page surface. Inverting the
-   image with `filter: invert(1)` turns pure-white pixels into pure
-   black, which is exactly the black variant we need for the light
-   theme. Avoids shipping a parallel asset file or threading a
-   theme-aware `src` swap through every `<img>` usage. Scoped to
-   the existing icon src attribute so it can't accidentally invert
-   any other image. */
-[data-theme="light"] img[src="/icons/icon.svg"] {
-  filter: invert(1);
+/* The new icon is a full-color PNG with rounded corners — no
+   light-mode inversion needed. */
+
+/* ======================== UI cleanup ========================
+   Remove all structural divider lines, button borders,
+   hover backgrounds, and selected-state backgrounds.
+   Colors: hover/selected → white, unselected → gray. */
+
+/* --- Structural divider borders --- */
+header.border-b { border-bottom-color: transparent; }
+.border-b.border-neutral-800 { border-bottom-color: transparent; }
+.border-t.border-neutral-800 { border-top-color: transparent; }
+.border-t.border-neutral-800\/60 { border-top-color: transparent; }
+.border-l.border-neutral-800 { border-left-color: transparent; }
+.border-r.border-neutral-800 { border-right-color: transparent; }
+.light\:border-neutral-200 { border-color: transparent; }
+.border-b.border-neutral-100 { border-bottom-color: transparent; }
+
+/* --- Button / card borders --- */
+.border.border-neutral-700 { border-color: transparent; }
+.border.border-neutral-800 { border-color: transparent; }
+.border-neutral-500 { border-color: transparent; }
+.border-neutral-700 { border-color: transparent; }
+.hover\:border-neutral-500:hover { border-color: transparent; }
+
+/* --- Hover backgrounds --- */
+.hover\:bg-neutral-800:hover { background-color: transparent !important; }
+.hover\:bg-neutral-900:hover { background-color: transparent !important; }
+.hover\:bg-neutral-900\/80:hover { background-color: transparent !important; }
+.hover\:bg-neutral-900\/60:hover { background-color: transparent !important; }
+.hover\:bg-neutral-700\/40:hover { background-color: transparent !important; }
+.hover\:bg-neutral-600:hover { background-color: transparent !important; }
+.hover\:bg-white:hover { background-color: transparent !important; }
+
+/* --- Selected / active backgrounds --- */
+/* Toggle buttons, dropdown items, sidebar items that use bg-neutral-800
+   as a selected indicator — make transparent so only text color
+   distinguishes the selected state. Decorative bg-neutral-800 on
+   badges/tags/progress-bars is left alone via more specific overrides
+   further down. */
+.bg-neutral-800.text-neutral-100 { background-color: transparent; }
+.bg-neutral-800.text-neutral-300 { background-color: transparent; }
+
+/* --- Color rule: hover/selected → white, unselected → gray --- */
+/* Override the common unselected text color to gray */
+.text-neutral-300 { color: var(--color-neutral-400); }
+.text-neutral-400 { color: var(--color-neutral-400); }
+.text-neutral-500 { color: var(--color-neutral-400); }
+
+/* Hover text → white */
+.hover\:text-neutral-300:hover { color: #fff !important; }
+.hover\:text-neutral-200:hover { color: #fff !important; }
+.hover\:text-neutral-100:hover { color: #fff !important; }
+
+/* ResizableDivider: transparent bg in all states */
+.pi-resizable-divider { background-color: transparent !important; }
+.pi-resizable-divider:hover { background-color: transparent !important; }
+.pi-resizable-divider:active { background-color: transparent !important; }
+
+/* divide-y list separators */
+.divide-y.divide-neutral-800 > :not(:first-child) { border-top-color: transparent; }
+.divide-y.divide-zinc-800 > :not(:first-child) { border-top-color: transparent; }
+.divide-y.divide-neutral-900 > :not(:first-child) { border-top-color: transparent; }
+.light\:divide-neutral-200 > :not(:first-child) { border-top-color: transparent; }
+
+/* --- Chat table borders: preserve borders + add header bg --- */
+.pi-table-cell { border-color: var(--color-neutral-800) !important; }
+
+/* -------- Chat scrollbar: only visible on hover near the right edge -------- */
+.chat-scroll-container {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
 }
+.chat-scroll-container:hover {
+  scrollbar-color: var(--color-neutral-700) #0a0a0a;
+}
+.chat-scroll-container::-webkit-scrollbar {
+  width: 0;
+}
+.chat-scroll-container:hover::-webkit-scrollbar {
+  width: 6px;
+}
+.chat-scroll-container::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+.chat-scroll-container::-webkit-scrollbar-thumb {
+  background: var(--color-neutral-700);
+  border-radius: 3px;
+}
+.chat-scroll-container::-webkit-scrollbar-button {
+  background: #0a0a0a;
+  color: #0a0a0a;
+  height: 0;
+}
+.chat-scroll-container::-webkit-scrollbar-button:vertical:decrement,
+.chat-scroll-container::-webkit-scrollbar-button:vertical:increment {
+  background: #0a0a0a;
+  color: #0a0a0a;
+  -webkit-appearance: none;
+}
+
+/* Light-theme scrollbar — adapt track + thumb to #e0e0e0 bg */
+[data-theme="light"] .chat-scroll-container:hover {
+  scrollbar-color: var(--color-neutral-700) #e0e0e0;
+}
+[data-theme="light"] .chat-scroll-container::-webkit-scrollbar-track {
+  background: #e0e0e0;
+}
+[data-theme="light"] .chat-scroll-container::-webkit-scrollbar-thumb {
+  background: var(--color-neutral-700);
+  border-radius: 3px;
+}
+[data-theme="light"] .chat-scroll-container::-webkit-scrollbar-button {
+  background: #e0e0e0;
+  color: #e0e0e0;
+  height: 0;
+}
+[data-theme="light"] .chat-scroll-container::-webkit-scrollbar-button:vertical:decrement,
+[data-theme="light"] .chat-scroll-container::-webkit-scrollbar-button:vertical:increment {
+  background: #e0e0e0;
+  color: #e0e0e0;
+  -webkit-appearance: none;
+}
+
+/* Light-theme user message bubble */
+[data-theme="light"] .message-bubble[data-message-role="user"] {
+  background-color: #d4d4d4 !important;
+}
+[data-theme="light"] .message-bubble[data-message-role="user"] .text-neutral-100 {
+  color: #222222 !important;
+}
+
+/* Light-theme hover text — dark text instead of white */
+[data-theme="light"] .hover\:text-neutral-300:hover { color: #222222 !important; }
+[data-theme="light"] .hover\:text-neutral-200:hover { color: #222222 !important; }
+[data-theme="light"] .hover\:text-neutral-100:hover { color: #111111 !important; }
+
+/* All enabled buttons → hand cursor */
+button:not(:disabled) { cursor: pointer; }

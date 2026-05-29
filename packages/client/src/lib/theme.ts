@@ -70,7 +70,7 @@ function writePersistedTheme(id: ThemeId): void {
  */
 const THEME_CHROME: Record<ThemeId, string> = {
   dark: "#0a0a0a",
-  light: "#ffffff",
+  light: "#e0e0e0",
   dracula: "#191a21",
   "solarized-dark": "#002b36",
   "catppuccin-mocha": "#11111b",

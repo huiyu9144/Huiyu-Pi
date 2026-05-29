@@ -88,7 +88,7 @@ function PopoverShell({
         <button
           type="button"
           onClick={onClose}
-          className="rounded p-0.5 text-neutral-500 hover:bg-neutral-800 hover:text-neutral-200 light:hover:bg-neutral-100 light:hover:text-neutral-700"
+          className="rounded p-0.5 text-neutral-400"
           aria-label="Close"
         >
           <X size={12} />
@@ -117,7 +117,7 @@ function StatusBadge({ status }: { status: ProcessInfo["status"] }) {
         ? "bg-amber-900/40 text-amber-200 light:bg-amber-100 light:text-amber-800"
         : status === "killed"
           ? "bg-red-900/40 text-red-200 light:bg-red-100 light:text-red-800"
-          : "bg-neutral-800 text-neutral-300 light:bg-neutral-200 light:text-neutral-700";
+          : "text-neutral-400";
   return (
     <span className={`rounded px-1 py-0.5 text-[9px] uppercase tracking-wider ${cls}`}>
       {status}

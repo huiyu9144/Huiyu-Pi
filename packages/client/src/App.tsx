@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { FileCode, FolderTree, Menu, MessageSquare, Terminal as TerminalIcon } from "lucide-react";
+import { ChevronLeft, CircleCheck, Code, Download, FileDown, Globe, Menu, MessageCircle, Monitor, MousePointerClick, Share2, SquareTerminal, Plus, Settings, Coffee, Sparkles } from "lucide-react";
 import { useIsMobile } from "./lib/use-is-mobile";
 import { useAuthStore } from "./store/auth-store";
 import { useActiveProject, useProjectStore } from "./store/project-store";
@@ -31,10 +31,12 @@ import { TurnDiffPanel } from "./components/TurnDiffPanel";
 import { GitPanel } from "./components/GitPanel";
 import { SearchPanel } from "./components/SearchPanel";
 import { ContextInspectorPanel } from "./components/ContextInspectorPanel";
+import { PreviewPanel } from "./components/PreviewPanel";
 import { ResizableDivider } from "./components/ResizableDivider";
 import { useGitStatus } from "./hooks/useGitStatus";
+import { useInstallPrompt } from "./hooks/useInstallPrompt";
 
-type RightPaneTab = "files" | "search" | "changes" | "git" | "context" | "processes";
+type RightPaneTab = "files" | "search" | "changes" | "git" | "context" | "processes" | "preview";
 
 /* Persisted pane widths. Stored in localStorage so the user-tuned
    layout survives reloads. Defaults err on the side of "the chat is the
@@ -83,6 +85,27 @@ export function App() {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [coffeeHover, setCoffeeHover] = useState(false);
+  const coffeeTimerRef = useRef<number | undefined>(undefined);
+  const [activeQR, setActiveQR] = useState<"wechat" | "alipay" | "paypal">("wechat");
+
+  const onCoffeeEnter = (): void => {
+    if (coffeeTimerRef.current !== undefined) {
+      clearTimeout(coffeeTimerRef.current);
+      coffeeTimerRef.current = undefined;
+    }
+    setCoffeeHover(true);
+  };
+  const onCoffeeLeave = (): void => {
+    coffeeTimerRef.current = window.setTimeout(() => {
+      coffeeTimerRef.current = undefined;
+      setCoffeeHover(false);
+    }, 300);
+  };
+
+  const { canInstall, showInstall, install } = useInstallPrompt();
+  const [installTooltip, setInstallTooltip] = useState(false);
+  const installTooltipRef = useRef<HTMLDivElement>(null);
   // Files pane visibility persists across reloads — opening it once is
   // a strong signal the user wants it. localStorage > a session-scoped
   // boolean so a refresh doesn't snap back to "hidden".
@@ -101,7 +124,8 @@ export function App() {
       raw === "changes" ||
       raw === "git" ||
       raw === "context" ||
-      raw === "processes"
+      raw === "processes" ||
+      raw === "preview"
       ? raw
       : "files";
   });
@@ -206,6 +230,14 @@ export function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [openEditorPaneSeq]);
 
+  const previewFilePath = useUiStore((s) => s.previewFilePath);
+  useEffect(() => {
+    if (previewFilePath === undefined) return;
+    if (!filesOpen && !isMobile) setFilesOpenPersisted(true);
+    setRightTabPersisted("preview");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [previewFilePath]);
+
   // Pane widths (px). Persisted on every drag-end via the ref; we keep
   // the live value in state so drags re-render the layout, and mirror
   // it through the ref so the divider can read the start width without
@@ -217,6 +249,7 @@ export function App() {
     readPersistedWidth(EDITOR_WIDTH_KEY, DEFAULT_EDITOR_WIDTH),
   );
   const filesWidthRef = useRef(filesWidth);
+  const filesPanelRef = useRef<HTMLDivElement>(null);
   const editorWidthRef = useRef(editorWidth);
   useEffect(() => {
     filesWidthRef.current = filesWidth;
@@ -287,6 +320,24 @@ export function App() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [settingsOpen]);
+
+  useEffect(() => {
+    if (!installTooltip) return;
+    const onClick = (e: MouseEvent): void => {
+      if (installTooltipRef.current && !installTooltipRef.current.contains(e.target as Node)) {
+        setInstallTooltip(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent): void => {
+      if (e.key === "Escape") setInstallTooltip(false);
+    };
+    window.addEventListener("mousedown", onClick);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("mousedown", onClick);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [installTooltip]);
 
   /* Mobile drawer: close when the user picks something. Watching the
      two active-id values catches every selection path (project click,
@@ -413,7 +464,7 @@ export function App() {
           with `py-2` so we have at least the original 8 px even on
           devices with no inset. */}
       <header
-        className="flex items-center justify-between border-b border-neutral-800 px-4 py-2"
+        className="absolute inset-x-0 top-0 z-50 flex items-center justify-between border-b-[0.5px] border-neutral-800 bg-[#0A0A0A] px-4 py-2"
         style={{ paddingTop: "max(0.5rem, env(safe-area-inset-top))" }}
       >
         <div className="flex items-center gap-3">
@@ -427,17 +478,24 @@ export function App() {
             onClick={() => setDrawerOpen((v) => !v)}
             aria-label={drawerOpen ? "Close project sidebar" : "Open project sidebar"}
             aria-expanded={drawerOpen}
-            className="-ml-1 inline-flex min-h-11 min-w-11 items-center justify-center rounded-md text-neutral-300 hover:bg-neutral-800 md:hidden"
+            className="-ml-1 inline-flex min-h-11 min-w-11 items-center justify-center rounded-md text-neutral-400 md:hidden"
           >
             <Menu size={20} />
           </button>
           {/* Header brand: same SVG as the favicon / PWA icon, served
-              from /icons/icon.svg via the public dir. The inner gap-1.5
+              from /icons/icon-192.png via the public dir. The inner gap-1.5
               keeps the logo + wordmark visually paired (tighter than
               the parent gap-3 used between brand and project picker). */}
           <div className="flex items-center gap-1.5">
-            <img src="/icons/icon.svg" alt="" className="h-8 w-8" aria-hidden="true" />
-            <span className="text-sm font-semibold tracking-tight">pi-forge</span>
+            <img src="/icons/logo.jpg" alt="" className="h-6 w-6 rounded-md" aria-hidden="true" />
+            <span className="text-sm font-semibold tracking-tight">Huiyu PiwebUI Forge</span>
+            <button
+              onClick={() => useUiStore.getState().setProjectPickerOpen(true)}
+              className="ml-1 rounded-md p-0.5 text-neutral-400 hover:text-white transition-colors"
+              title="New project"
+            >
+              <Plus size={14} />
+            </button>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -450,52 +508,31 @@ export function App() {
           <div className="hidden md:contents">
             <button
               onClick={() => setChatOpenPersisted(!chatOpen)}
-              className={`flex items-center gap-1 rounded-md border px-2 py-1 text-xs ${
-                chatOpen
-                  ? "border-neutral-500 bg-neutral-800 text-neutral-100"
-                  : "border-neutral-700 text-neutral-300 hover:border-neutral-500"
+              className={`flex items-center justify-center rounded-md p-1.5 ${
+                chatOpen ? "text-white" : "text-neutral-400"
               }`}
               title="Toggle the chat pane"
             >
-              <MessageSquare size={13} />
-              Chat
+              <MessageCircle size={16} />
             </button>
             <button
               onClick={() => setEditorOpenPersisted(!editorOpen)}
-              className={`flex items-center gap-1 rounded-md border px-2 py-1 text-xs ${
-                editorOpen
-                  ? "border-neutral-500 bg-neutral-800 text-neutral-100"
-                  : "border-neutral-700 text-neutral-300 hover:border-neutral-500"
+              className={`flex items-center justify-center rounded-md p-1.5 ${
+                editorOpen ? "text-white" : "text-neutral-400"
               }`}
               title="Toggle the editor pane (open tabs persist across reloads)"
             >
-              <FileCode size={13} />
-              Editor
-            </button>
-            <button
-              onClick={() => setFilesOpenPersisted(!filesOpen)}
-              className={`flex items-center gap-1 rounded-md border px-2 py-1 text-xs ${
-                filesOpen
-                  ? "border-neutral-500 bg-neutral-800 text-neutral-100"
-                  : "border-neutral-700 text-neutral-300 hover:border-neutral-500"
-              }`}
-              title="Toggle the file browser tree"
-            >
-              <FolderTree size={13} />
-              Files
+              <Code size={16} />
             </button>
             {!minimal && (
               <button
                 onClick={() => setTerminalOpenPersisted(!terminalOpen)}
-                className={`flex items-center gap-1 rounded-md border px-2 py-1 text-xs ${
-                  terminalOpen
-                    ? "border-neutral-500 bg-neutral-800 text-neutral-100"
-                    : "border-neutral-700 text-neutral-300 hover:border-neutral-500"
+                className={`flex items-center justify-center rounded-md p-1.5 ${
+                  terminalOpen ? "text-white" : "text-neutral-400"
                 }`}
                 title="Toggle the integrated terminal"
               >
-                <TerminalIcon size={13} />
-                Terminal
+                <SquareTerminal size={16} />
               </button>
             )}
           </div>
@@ -512,18 +549,104 @@ export function App() {
               they just can't reconfigure them from a locked-down
               deploy (the Settings → MCP tab is hidden separately). */}
           <McpStatusBadge />
+          {!isMobile && showInstall && (
+            <div className="relative" ref={installTooltipRef}>
+              <button
+                onClick={() => {
+                  if (canInstall) {
+                    void install();
+                  } else {
+                    setInstallTooltip((v) => !v);
+                  }
+                }}
+                className="flex items-center justify-center rounded-md p-1.5 text-neutral-400 hover:text-white"
+                title="Install app (PWA)"
+              >
+                <Download size={16} />
+              </button>
+              {installTooltip && !canInstall && (
+                <div className="absolute right-0 top-full z-50 mt-2 w-72 overflow-hidden rounded-xl border border-neutral-700/80 bg-neutral-900 shadow-2xl">
+                  <div className="flex items-center gap-2.5 border-b border-neutral-800 bg-neutral-800/50 px-4 py-3">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-500/15 text-blue-400">
+                      <Monitor size={16} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-neutral-100">Install Huiyu PiwebUI Forge</p>
+                      <p className="text-[11px] text-neutral-500">Add to your desktop for quick access</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 border-b border-neutral-800 px-4 py-2.5">
+                    <div className="flex items-center gap-1.5 text-[11px] text-neutral-400">
+                      <Sparkles size={12} className="text-amber-400" />
+                      <span>Fullscreen</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-[11px] text-neutral-400">
+                      <Globe size={12} className="text-emerald-400" />
+                      <span>Offline</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-[11px] text-neutral-400">
+                      <MousePointerClick size={12} className="text-violet-400" />
+                      <span>One-click</span>
+                    </div>
+                  </div>
+                  <div className="px-4 py-3">
+                    <p className="mb-2.5 text-[11px] font-medium uppercase tracking-wider text-neutral-500">How to install</p>
+                    <div className="space-y-2.5">
+                      <div className="flex items-start gap-2.5">
+                        <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-500/20 text-[10px] font-bold text-blue-400">1</div>
+                        <div className="flex-1 text-xs text-neutral-300">
+                          Look for the <Download size={11} className="mx-0.5 inline text-neutral-400" /> icon in the address bar — click it to install directly
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-2.5">
+                        <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-500/20 text-[10px] font-bold text-blue-400">2</div>
+                        <div className="flex-1 text-xs text-neutral-300">
+                          Or click the <span className="font-medium text-neutral-200">⋮</span> menu in the top-right corner of the browser
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-2.5">
+                        <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-500/20 text-[10px] font-bold text-blue-400">3</div>
+                        <div className="flex-1 text-xs text-neutral-300">
+                          Find and open <FileDown size={11} className="mx-0.5 inline text-neutral-400" /> <span className="font-medium text-neutral-200">Cast, save, and share</span> in the menu
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-2.5">
+                        <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-500/20 text-[10px] font-bold text-blue-400">4</div>
+                        <div className="flex-1 text-xs text-neutral-300">
+                          Click <span className="font-medium text-neutral-200">Install page</span> (Chrome) or <span className="font-medium text-neutral-200">Install this site as an app</span> (Edge)
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between border-t border-neutral-800 bg-neutral-800/30 px-4 py-2.5">
+                    <div className="flex items-center gap-1.5 text-[11px] text-neutral-500">
+                      <CircleCheck size={12} className="text-emerald-500" />
+                      <span>Works on Chrome, Edge & Opera</span>
+                    </div>
+                    <button
+                      onClick={() => setInstallTooltip(false)}
+                      className="rounded px-2 py-0.5 text-[11px] text-neutral-400 hover:bg-neutral-700 hover:text-neutral-200"
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
           <button
             onClick={() => setSettingsOpen(true)}
-            className="rounded-md border border-neutral-700 px-2 py-1 text-xs text-neutral-300 hover:border-neutral-500"
+            className="flex items-center justify-center rounded-md p-1.5 text-neutral-400"
             title="Settings (providers, agent defaults, MCP, skills)"
           >
-            Settings
+            <Settings size={16} />
           </button>
           <button
-            onClick={logout}
-            className="rounded-md border border-neutral-700 px-2 py-1 text-xs text-neutral-300 hover:border-neutral-500"
+            onClick={() => setFilesOpenPersisted(!filesOpen)}
+            className="flex items-center justify-center rounded-md p-1.5 text-neutral-400"
+            title={filesOpen ? "Collapse right panel" : "Expand right panel"}
           >
-            Sign out
+            <ChevronLeft size={16} className={`transition-transform duration-150 ${filesOpen ? "" : "rotate-180"}`} />
           </button>
         </div>
       </header>
@@ -543,7 +666,7 @@ export function App() {
         />
       )}
 
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex flex-1 flex-col overflow-hidden pt-11">
         <div className="flex flex-1 overflow-hidden">
           {/* Mobile drawer chrome (only renders at < md):
               - backdrop dims main content + closes on tap
@@ -755,59 +878,6 @@ export function App() {
                 // fixed-width container (with a divider in front).
                 const filesContent = (
                   <>
-                    {/* Right-pane tabs: file browser vs the turn-diff
-                        "Changes" view. Both share width + position so
-                        they don't compete for screen real estate. */}
-                    <div className="flex border-b border-neutral-800 bg-neutral-900/40">
-                      {(minimal
-                        ? // Minimal mode keeps Files + Search + Context.
-                          // Context (token usage / message inspector) is
-                          // useful even in locked-down deploys — it's
-                          // read-only and helps users debug their own
-                          // sessions without needing the full diff/git
-                          // toolchain. Processes is also surfaced — listing /
-                          // killing existing processes is operator-useful even
-                          // when MINIMAL_UI blocks starting new ones at the
-                          // tool boundary.
-                          (["files", "search", "processes", "context"] as const)
-                        : (["files", "search", "changes", "git", "processes", "context"] as const)
-                      ).map((t) => (
-                        <button
-                          key={t}
-                          onClick={() => setRightTabPersisted(t)}
-                          className={`flex items-center gap-1 px-3 py-1.5 text-[11px] uppercase tracking-wider ${
-                            rightTab === t
-                              ? "border-b border-neutral-100 text-neutral-100"
-                              : "text-neutral-500 hover:text-neutral-300"
-                          }`}
-                        >
-                          {/* Internal key stays "changes" for backwards-compat with
-                              persisted localStorage; user-visible label is "Last turn"
-                              so it's distinct from the Git tab's working-tree changes. */}
-                          {t === "files"
-                            ? "Files"
-                            : t === "search"
-                              ? "Search"
-                              : t === "changes"
-                                ? "Last turn"
-                                : t === "git"
-                                  ? "Git"
-                                  : t === "processes"
-                                    ? "Processes"
-                                    : "Context"}
-                          {t === "git" && gitChangedCount > 0 && (
-                            <span className="rounded bg-amber-900/40 px-1 py-0.5 text-[9px] text-amber-300 light:bg-amber-100 light:text-amber-800">
-                              {gitChangedCount}
-                            </span>
-                          )}
-                          {t === "processes" && runningProcessCount > 0 && (
-                            <span className="rounded bg-emerald-900/40 px-1 py-0.5 text-[9px] text-emerald-300 light:bg-emerald-100 light:text-emerald-800">
-                              {runningProcessCount}
-                            </span>
-                          )}
-                        </button>
-                      ))}
-                    </div>
                     <div className="flex flex-1 flex-col overflow-hidden">
                       <div className="flex-1 overflow-hidden">
                         {rightTab === "files" ? (
@@ -820,30 +890,20 @@ export function App() {
                           <GitPanel />
                         ) : rightTab === "context" ? (
                           <ContextInspectorPanel />
+                        ) : rightTab === "preview" ? (
+                          <PreviewPanel />
                         ) : rightTab === "processes" && activeSessionId !== undefined ? (
                           <ProcessesPanel sessionId={activeSessionId} />
                         ) : (
-                          // minimal mode: stale persisted "changes"/"git"/"context"
-                          // falls back to the file browser rather than rendering
-                          // a tab the user can't even see.
                           <FileBrowserPanel />
                         )}
                       </div>
-                      {/* Bottom-strip todo panel — splits the
-                          right pane's vertical column when the
-                          toggle in ChatInput is on AND a session is
-                          active. Width is whatever the right pane
-                          already has; height is independently
-                          resizable. */}
                       {todoPanelOpen && activeSessionId !== undefined && (
                         <>
                           <ResizableDivider
                             orientation="horizontal"
                             getStartSize={() => todoPanelHeightRef.current}
                             onResize={(next) => setTodoPanelHeight(next)}
-                            // Direction -1: the todo strip is BELOW the
-                            // divider — dragging DOWN (higher clientY)
-                            // shrinks the strip; UP grows it.
                             direction={-1}
                             minSize={MIN_TODO_PANEL_HEIGHT}
                             maxSize={Math.max(MIN_TODO_PANEL_HEIGHT, window.innerHeight * 0.7)}
@@ -860,16 +920,61 @@ export function App() {
                         </>
                       )}
                     </div>
+                    <div className="flex border-t border-neutral-800 bg-[#171717] opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                      {(minimal
+                        ? (["files", "search", "processes", "context"] as const)
+                        : (["files", "search", "changes", "git", "processes", "context", "preview"] as const)
+                      ).map((t) => (
+                        <button
+                          key={t}
+                          onClick={() => setRightTabPersisted(t)}
+                          className={`flex items-center gap-1 px-3 py-1.5 text-[11px] uppercase tracking-wider ${
+                            rightTab === t ? "text-white" : "text-neutral-400"
+                          }`}
+                        >
+                          {t === "files"
+                            ? "Files"
+                            : t === "search"
+                              ? "Search"
+                              : t === "changes"
+                                ? "Turn"
+                                : t === "git"
+                                  ? "Git"
+                                  : t === "processes"
+                                    ? "Processes"
+                                    : t === "preview"
+                                      ? "Preview"
+                                      : "Context"}
+                          {t === "git" && gitChangedCount > 0 && (
+                            <span className="rounded bg-amber-900/40 px-1 py-0.5 text-[9px] text-amber-300 light:bg-amber-100 light:text-amber-800">
+                              {gitChangedCount}
+                            </span>
+                          )}
+                          {t === "processes" && runningProcessCount > 0 && (
+                            <span className="rounded bg-emerald-900/40 px-1 py-0.5 text-[9px] text-emerald-300 light:bg-emerald-100 light:text-emerald-800">
+                              {runningProcessCount}
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
                   </>
                 );
                 if (filesIsLeftmost) {
-                  return <div className="flex flex-1 flex-col overflow-hidden">{filesContent}</div>;
+                  return <div className="flex flex-1 flex-col overflow-hidden bg-[#171717] group">{filesContent}</div>;
                 }
                 return (
                   <>
                     <ResizableDivider
                       getStartSize={() => filesWidthRef.current}
-                      onResize={(next) => setFilesWidth(next)}
+                      onResize={(next) => {
+                        if (filesPanelRef.current) {
+                          filesPanelRef.current.style.width = `${next}px`;
+                        }
+                        filesWidthRef.current = next;
+                        localStorage.setItem(FILES_WIDTH_KEY, String(next));
+                        setFilesWidth(next);
+                      }}
                       direction={-1}
                       minSize={MIN_FILES_WIDTH}
                       maxSize={Math.max(
@@ -881,7 +986,8 @@ export function App() {
                       )}
                     />
                     <div
-                      className="flex shrink-0 flex-col border-l border-neutral-800"
+                      ref={filesPanelRef}
+                      className="group flex shrink-0 flex-col border-l-[0.5px] border-neutral-800 bg-[#171717]"
                       style={{ width: `${filesWidth}px` }}
                     >
                       {filesContent}
@@ -910,6 +1016,102 @@ export function App() {
             </div>
           </>
         )}
+      </div>
+
+      <div className="fixed bottom-4 left-4 z-50">
+        <div
+          className="flex flex-col"
+          onMouseEnter={onCoffeeEnter}
+          onMouseLeave={onCoffeeLeave}
+        >
+          {coffeeHover && (
+            <div
+              className="mb-1"
+              onMouseEnter={onCoffeeEnter}
+              onMouseLeave={onCoffeeLeave}
+            >
+              <div className="rounded-lg border border-neutral-700 bg-neutral-900 p-2.5">
+                <div className="mb-2.5 flex items-center justify-center gap-2.5">
+                  <span
+                    className={`cursor-pointer text-xs transition-colors ${
+                      activeQR === "wechat"
+                        ? "font-medium text-[#75B3CB]"
+                        : "text-neutral-500 hover:text-neutral-300"
+                    }`}
+                    onMouseEnter={() => setActiveQR("wechat")}
+                  >
+                    WeChat
+                  </span>
+                  <span className="text-[10px] text-neutral-700">|</span>
+                  <span
+                    className={`cursor-pointer text-xs transition-colors ${
+                      activeQR === "alipay"
+                        ? "font-medium text-[#75B3CB]"
+                        : "text-neutral-500 hover:text-neutral-300"
+                    }`}
+                    onMouseEnter={() => setActiveQR("alipay")}
+                  >
+                    Alipay
+                  </span>
+                  <span className="text-[10px] text-neutral-700">|</span>
+                  <span
+                    className={`cursor-pointer text-xs transition-colors ${
+                      activeQR === "paypal"
+                        ? "font-medium text-[#75B3CB]"
+                        : "text-neutral-500 hover:text-neutral-300"
+                    }`}
+                    onMouseEnter={() => setActiveQR("paypal")}
+                  >
+                    PayPal
+                  </span>
+                </div>
+                <div className="flex flex-col items-center gap-1.5">
+                  {activeQR === "wechat" && (
+                    <img
+                      src="/images/wechat-qr.jpg"
+                      alt="WeChat Pay"
+                      className="h-32 w-32 rounded border border-neutral-700 bg-neutral-800 object-contain"
+                    />
+                  )}
+                  {activeQR === "alipay" && (
+                    <img
+                      src="/images/alipay-qr.jpg"
+                      alt="Alipay"
+                      className="h-32 w-32 rounded border border-neutral-700 bg-neutral-800 object-contain"
+                    />
+                  )}
+                  {activeQR === "paypal" && (
+                    <img
+                      src="/images/paypal-qr.jpg"
+                      alt="PayPal"
+                      className="h-32 w-32 rounded border border-neutral-700 bg-neutral-800 object-contain"
+                    />
+                  )}
+                  <div className="flex h-[24px] items-center justify-center">
+                    <a
+                      href="https://www.paypal.com/ncp/payment/WBPVVVJRMZNHQ"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-32 rounded-md bg-neutral-100 py-1 text-center text-[10px] font-semibold text-neutral-900 transition-colors hover:bg-neutral-300"
+                    >
+                      PayPal
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          <a
+            href="https://www.buymeacoffee.com/huiyu"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-md border border-neutral-700 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-amber-600/50 hover:text-amber-400"
+            title="Buy me a coffee"
+          >
+            <Coffee size={13} />
+            Buy me a coffee
+          </a>
+        </div>
       </div>
     </div>
   );

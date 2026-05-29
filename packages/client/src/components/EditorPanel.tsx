@@ -209,7 +209,7 @@ function Tabs({
           prompt only when there are unsaved changes. */}
       <button
         onClick={handleCloseAll}
-        className="flex shrink-0 items-center justify-center border-r border-neutral-800 px-2 py-1.5 text-neutral-500 hover:bg-neutral-800 hover:text-neutral-200"
+        className="flex shrink-0 items-center justify-center border-r border-neutral-800 px-2 py-1.5 text-neutral-400"
         title={`Close all ${files.length} tab${files.length === 1 ? "" : "s"}`}
       >
         <XSquare size={14} />
@@ -225,8 +225,8 @@ function Tabs({
           // collision shows up is the banner inside the active tab.
           const extChanged = externallyChanged[f.path] === true;
           const baseClass = active
-            ? "bg-neutral-950 text-neutral-100"
-            : "text-neutral-400 hover:bg-neutral-900 hover:text-neutral-200";
+            ? "bg-neutral-950 text-white"
+            : "text-neutral-400";
           const conflictClass = extChanged
             ? "bg-amber-900/30 text-amber-200 light:bg-amber-100 light:text-amber-800"
             : "";
@@ -260,7 +260,7 @@ function Tabs({
               </button>
               <button
                 onClick={() => onClose(f.path)}
-                className="rounded p-1 text-neutral-600 hover:bg-neutral-800 hover:text-neutral-200"
+                className="rounded p-1 text-neutral-400"
                 title="Close (any unsaved changes are lost)"
               >
                 <X size={16} />
@@ -353,8 +353,8 @@ function StatusBar({
         <span className="font-mono text-neutral-500">{file.language}</span>
         <button
           onClick={onToggleWrap}
-          className={`flex items-center gap-1 rounded px-1 py-0.5 text-[10px] hover:bg-neutral-800 ${
-            wrap ? "text-neutral-300" : "text-neutral-500"
+          className={`flex items-center gap-1 rounded px-1 py-0.5 text-[10px] ${
+            wrap ? "text-white" : "text-neutral-400"
           }`}
           title={
             wrap

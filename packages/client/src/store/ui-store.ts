@@ -114,6 +114,16 @@ interface UiState {
    *  pane made visible, even if the user previously toggled it off. */
   openEditorPaneSeq: number;
   openEditorPane: () => void;
+
+  projectPickerOpen: boolean;
+  setProjectPickerOpen: (open: boolean) => void;
+
+  treeModalOpen: boolean;
+  setTreeModalOpen: (open: boolean) => void;
+
+  previewFilePath: string | undefined;
+  openPreviewFile: (path: string) => void;
+  closePreviewFile: () => void;
 }
 
 export const useUiStore = create<UiState>((set, get) => ({
@@ -160,4 +170,11 @@ export const useUiStore = create<UiState>((set, get) => ({
   openProcessesTab: () => set((s) => ({ openProcessesTabSeq: s.openProcessesTabSeq + 1 })),
   openEditorPaneSeq: 0,
   openEditorPane: () => set((s) => ({ openEditorPaneSeq: s.openEditorPaneSeq + 1 })),
+  projectPickerOpen: false,
+  setProjectPickerOpen: (open) => set({ projectPickerOpen: open }),
+  treeModalOpen: false,
+  setTreeModalOpen: (open) => set({ treeModalOpen: open }),
+  previewFilePath: undefined,
+  openPreviewFile: (path) => set({ previewFilePath: path }),
+  closePreviewFile: () => set({ previewFilePath: undefined }),
 }));

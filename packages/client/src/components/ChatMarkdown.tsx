@@ -39,17 +39,25 @@
  */
 import { Highlight, themes as prismThemes } from "prism-react-renderer";
 import { useState, type HTMLAttributes, type ReactNode } from "react";
-import { Check, Copy } from "lucide-react";
+import { Check, Copy, FileText } from "lucide-react";
 import ReactMarkdown, { type Components } from "react-markdown";
 import rehypeKatex from "rehype-katex";
 import remarkBreaks from "remark-breaks";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import { themeDef, useThemeStore } from "../lib/theme";
-// KaTeX styles — pulled into the bundle by Vite. Without this, the math
-// nodes that rehype-katex emits land in the DOM with no fonts/spacing
-// applied and look like raw HTML.
+import { useUiStore } from "../store/ui-store";
 import "katex/dist/katex.min.css";
+
+const FILE_REF_PREFIX = "forge-preview:";
+
+const FILE_PATH_RE = /📄\s+([^\s`<>]+\.\w+)/g;
+
+function wrapFilePaths(text: string): string {
+  return text.replace(FILE_PATH_RE, (_match, path: string) => {
+    return `[📄 ${path}](${FILE_REF_PREFIX}${path})`;
+  });
+}
 
 /**
  * Small copy-to-clipboard control rendered in the top-right corner of
@@ -177,17 +185,24 @@ const CodeRenderer = ({ className, children, ...rest }: HTMLAttributes<HTMLEleme
   // its <pre> chrome (no token highlighting, just the styling).
   const language = langMatch?.[1] ?? "text";
   const prismTheme = isLight ? prismThemes.vsLight : prismThemes.vsDark;
+  const customTheme = {
+    ...prismTheme,
+    plain: {
+      ...prismTheme.plain,
+      color: isLight ? "#666666" : "#9ab3cb",
+    },
+  };
   // Background tuned to sit one shade off the chat surface so the
   // code block reads as a distinct region without competing with
   // surrounding text contrast.
-  const codeBg = isLight ? "#f8fafc" : "#0d0d0d";
+  const codeBg = isLight ? "#ececec" : "#0d0d0d";
 
   return (
     // `group` enables the hover-revealed copy button positioned via
     // `group-hover:opacity-100` inside CodeCopyButton.
     <div className="group relative">
       <CodeCopyButton code={code} />
-      <Highlight code={code} language={language} theme={prismTheme}>
+      <Highlight code={code} language={language} theme={customTheme}>
         {({ style, tokens, getLineProps, getTokenProps }) => (
           <pre
             className="overflow-x-auto rounded border border-neutral-800 p-2 font-mono text-[12px]"
@@ -210,6 +225,27 @@ const CodeRenderer = ({ className, children, ...rest }: HTMLAttributes<HTMLEleme
     </div>
   );
 };
+
+function FilePreviewLink({
+  filePath,
+  children,
+}: {
+  filePath: string;
+  children: ReactNode;
+}) {
+  const openPreviewFile = useUiStore((s) => s.openPreviewFile);
+  return (
+    <button
+      type="button"
+      onClick={() => openPreviewFile(filePath)}
+      className="inline-flex items-center gap-1 rounded bg-neutral-800/60 px-1.5 py-0.5 text-[#7BB8FF] transition-colors hover:bg-neutral-700/60 hover:text-[#7BB8FF]"
+      title={`Preview ${filePath}`}
+    >
+      <FileText size={12} />
+      <span className="font-mono text-xs">{children}</span>
+    </button>
+  );
+}
 
 const components: Components = {
   // Heading scale — see header comment for why we shrink.
@@ -244,26 +280,32 @@ const components: Components = {
     </div>
   ),
   th: ({ children }) => (
-    <th className="border border-neutral-800 px-2 py-1 text-left font-semibold">{children}</th>
+    <th className="pi-table-cell border border-neutral-800 bg-neutral-950 px-2 py-1 text-left font-semibold">{children}</th>
   ),
   td: ({ children }) => (
-    <td className="border border-neutral-800 px-2 py-1 align-top">{children}</td>
+    <td className="pi-table-cell border border-neutral-800 px-2 py-1 align-top">{children}</td>
   ),
 
-  // Links → new tab + safe rel. Keep the text unchanged.
-  a: ({ children, href }) => (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="text-blue-400 underline hover:text-blue-300 light:text-blue-700 light:hover:text-blue-900"
-    >
-      {children}
-    </a>
-  ),
+  // Links → new tab + safe rel, or file-preview click handler.
+  a: ({ children, href }) => {
+    if (href?.startsWith(FILE_REF_PREFIX)) {
+      const filePath = href.slice(FILE_REF_PREFIX.length);
+      return <FilePreviewLink filePath={filePath}>{children}</FilePreviewLink>;
+    }
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-[#7BB8FF] underline hover:text-[#7BB8FF] light:text-[#7BB8FF] light:hover:text-[#7BB8FF]"
+      >
+        {children}
+      </a>
+    );
+  },
 
   // Horizontal rule — match neutral border palette.
-  hr: () => <hr className="my-3 border-neutral-800" />,
+  hr: () => null,
 
   // Strong / em — defaults are fine; explicit so we own the look.
   strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
@@ -277,32 +319,13 @@ const components: Components = {
 };
 
 export function ChatMarkdown({ text, size = "sm", chatStyleBreaks = false }: Props) {
-  // The outer container holds the typography scale + breaks long
-  // unbroken tokens (URLs, identifiers, base64 dumps) so a single
-  // gigantic word can't blow out the bubble width. Tailwind's
-  // `break-words` covers the common case; `[overflow-wrap:anywhere]`
-  // catches the rare hostile-input case (very long unbroken hex
-  // strings, etc.).
-  //
-  // Line-break dialect is controlled by `chatStyleBreaks` (default
-  // off, on for user messages). Off = standard CommonMark — single
-  // `\n` folds into whitespace, blank line starts a new paragraph,
-  // two trailing spaces before `\n` are a hard break (same dialect
-  // GitHub issue comments use). On = remark-breaks rewrites each
-  // `\n` to a hard break — chat-style, what users expect from
-  // pasted lists. See the prop docstring for the trade-off and why
-  // it's user-only.
   const sizeClass = size === "xs" ? "text-xs" : "text-sm";
-  // remark-math parses `$inline$` and `$$block$$`; rehype-katex turns
-  // those nodes into rendered MathML+HTML using KaTeX. Order matters —
-  // remark-math must run before remark-breaks so a `$\rightarrow$` token
-  // lands as a math node rather than text containing a literal `\n` →
-  // `<br>` rewrite around the dollar signs.
   const plugins = chatStyleBreaks ? [remarkGfm, remarkMath, remarkBreaks] : [remarkGfm, remarkMath];
+  const processed = wrapFilePaths(text);
   return (
     <div className={`${sizeClass} break-words [overflow-wrap:anywhere]`}>
       <ReactMarkdown remarkPlugins={plugins} rehypePlugins={[rehypeKatex]} components={components}>
-        {text}
+        {processed}
       </ReactMarkdown>
     </div>
   );

@@ -599,7 +599,7 @@ export function GitPanel() {
         <div className="flex items-center gap-1">
           <button
             onClick={() => setAndPersistDiffView(diffViewType === "split" ? "unified" : "split")}
-            className="rounded p-1 text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200"
+            className="rounded p-1 text-neutral-400"
             title={
               diffViewType === "split"
                 ? "Switch git diffs to unified view"
@@ -610,7 +610,7 @@ export function GitPanel() {
           </button>
           <button
             onClick={() => void refresh()}
-            className="rounded p-1 text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200"
+            className="rounded p-1 text-neutral-400"
             title="Refresh"
           >
             <RefreshCw size={13} className={busy ? "animate-spin" : ""} />
@@ -859,7 +859,7 @@ export function GitPanel() {
         <div className="border-t border-neutral-800/60">
           <button
             onClick={() => setShowLog((v) => !v)}
-            className="flex w-full items-center justify-between px-3 py-2 text-left text-[10px] uppercase tracking-wider text-neutral-400 hover:bg-neutral-900"
+            className="flex w-full items-center justify-between px-3 py-2 text-left text-[10px] uppercase tracking-wider text-neutral-400"
           >
             <span>Log</span>
             <span>{showLog ? "−" : "+"}</span>
@@ -881,7 +881,7 @@ export function GitPanel() {
         <div className="border-t border-neutral-800/60">
           <button
             onClick={() => setShowBranches((v) => !v)}
-            className="flex w-full items-center justify-between px-3 py-2 text-left text-[10px] uppercase tracking-wider text-neutral-400 hover:bg-neutral-900"
+            className="flex w-full items-center justify-between px-3 py-2 text-left text-[10px] uppercase tracking-wider text-neutral-400"
           >
             <span>Branches</span>
             <span>{showBranches ? "−" : "+"}</span>

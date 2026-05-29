@@ -203,7 +203,7 @@ export function GlobalSearchBar() {
       <div className="relative">
         <Search
           size={13}
-          className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-neutral-500"
+          className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-neutral-300"
           aria-hidden="true"
         />
         <input
@@ -215,9 +215,9 @@ export function GlobalSearchBar() {
             if (results.length > 0) setOpen(true);
           }}
           onKeyDown={onKeyDown}
-          placeholder="Search sessions…  ⌘K"
+          placeholder=""
           aria-label="Search across all sessions"
-          className="w-64 rounded-md border border-neutral-700 bg-neutral-900 py-1 pl-7 pr-7 text-xs text-neutral-200 placeholder-neutral-500 focus:border-neutral-500 focus:outline-none"
+          className="w-40 rounded-md bg-[#171717] py-1 pl-7 pr-7 text-xs text-neutral-200 placeholder-neutral-500 outline-none"
         />
         {query.length > 0 && (
           <button
@@ -229,7 +229,7 @@ export function GlobalSearchBar() {
               inputRef.current?.focus();
             }}
             aria-label="Clear search"
-            className="absolute right-1 top-1/2 -translate-y-1/2 rounded p-0.5 text-neutral-500 hover:bg-neutral-800 hover:text-neutral-200"
+            className="absolute right-1 top-1/2 -translate-y-1/2 rounded p-0.5 text-neutral-400"
           >
             <X size={12} />
           </button>
@@ -278,8 +278,8 @@ export function GlobalSearchBar() {
                         onClick={() => dispatchResult(group, match)}
                         className={`flex w-full items-start gap-2 px-3 py-1.5 text-left text-xs ${
                           isActive
-                            ? "bg-neutral-800 text-neutral-100"
-                            : "text-neutral-300 hover:bg-neutral-800/60"
+                            ? "text-white"
+                            : "text-neutral-400"
                         }`}
                       >
                         <span className="mt-0.5 shrink-0 rounded bg-neutral-800 px-1 py-0.5 text-[9px] uppercase tracking-wider text-neutral-400">

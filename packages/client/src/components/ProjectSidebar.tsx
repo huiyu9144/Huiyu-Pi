@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Plus, X, ChevronDown, ChevronRight, GripVertical } from "lucide-react";
+import { Folder, Plus, X } from "lucide-react";
 import { useProjectStore } from "../store/project-store";
 import { useSessionStore } from "../store/session-store";
+import { useUiStore } from "../store/ui-store";
 import { ProjectPicker } from "./ProjectPicker";
 import { SessionList } from "./SessionList";
 import { Modal } from "./Modal";
@@ -40,7 +41,8 @@ export function ProjectSidebar({ className = "" }: ProjectSidebarProps = {}) {
       // store.error surfaces — no UI noise here
     }
   };
-  const [showPicker, setShowPicker] = useState(false);
+  const showPicker = useUiStore((s) => s.projectPickerOpen);
+  const setShowPicker = useUiStore((s) => s.setProjectPickerOpen);
   const [renamingId, setRenamingId] = useState<string | undefined>();
   const [renameValue, setRenameValue] = useState("");
   const [draggingProjectId, setDraggingProjectId] = useState<string | undefined>();
@@ -138,7 +140,7 @@ export function ProjectSidebar({ className = "" }: ProjectSidebarProps = {}) {
 
   return (
     <aside
-      className={`flex h-full w-64 flex-col border-r border-neutral-800 bg-neutral-950 ${className}`}
+      className={`flex h-full w-64 flex-col border-r-[0.5px] border-neutral-800 bg-[#171717] ${className}`}
       // Safe-area-aware top + bottom padding so the drawer chrome
       // (header, sessions list) doesn't slide under iPhone notches /
       // Android cutouts when the drawer is fullscreen-tall on
@@ -149,21 +151,9 @@ export function ProjectSidebar({ className = "" }: ProjectSidebarProps = {}) {
         paddingBottom: "env(safe-area-inset-bottom)",
       }}
     >
-      <header className="flex items-center justify-between border-b border-neutral-800 px-3 py-2">
-        <span className="text-xs font-semibold uppercase tracking-wider text-neutral-400">
-          Projects
-        </span>
-        <button
-          onClick={() => setShowPicker(true)}
-          className="rounded-md border border-neutral-700 px-2 py-0.5 text-xs text-neutral-200 hover:bg-neutral-800"
-        >
-          + New
-        </button>
-      </header>
-
       <div className="flex-1 overflow-y-auto py-1">
         {projects.length === 0 && (
-          <p className="px-3 py-4 text-sm text-neutral-500">No projects yet.</p>
+          <p className="px-3 py-4 text-sm font-semibold text-[#545454]">No projects yet.</p>
         )}
         {projects.map((p) => {
           const isActive = p.id === activeProjectId;
@@ -171,7 +161,7 @@ export function ProjectSidebar({ className = "" }: ProjectSidebarProps = {}) {
           return (
             <div
               key={p.id}
-              className={`mt-1 px-1 ${draggingProjectId === p.id ? "opacity-60" : ""}`}
+              className={`mt-1 px-2 ${draggingProjectId === p.id ? "opacity-60" : ""}`}
               draggable={renamingId !== p.id}
               onDragStart={(e) => {
                 if (renamingId === p.id) {
@@ -199,28 +189,14 @@ export function ProjectSidebar({ className = "" }: ProjectSidebarProps = {}) {
               }}
             >
               <div
-                className={`group flex items-center gap-1 rounded-md px-2 py-1 text-sm ring-inset transition-colors ${
+                className={`group flex items-center gap-1 rounded-md px-2 py-1 ring-inset transition-colors ${
                   dragOverProjectId === p.id
                     ? "ring-1 ring-cyan-500/70"
                     : isActive
-                      ? "bg-neutral-800 text-neutral-100"
-                      : "text-neutral-300 hover:bg-neutral-900"
+                      ? "text-white"
+                      : "text-[#545454]"
                 }`}
               >
-                <span
-                  className="flex cursor-grab items-center text-neutral-600 group-hover:text-neutral-400"
-                  title="Drag to reorder projects"
-                  aria-hidden="true"
-                >
-                  <GripVertical size={14} />
-                </span>
-                <button
-                  onClick={() => toggleCollapsed(p.id)}
-                  className="flex items-center text-neutral-500 hover:text-neutral-300"
-                  title={isCollapsed ? "Expand" : "Collapse"}
-                >
-                  {isCollapsed ? <ChevronRight size={16} /> : <ChevronDown size={16} />}
-                </button>
                 {renamingId === p.id ? (
                   <input
                     value={renameValue}
@@ -231,45 +207,38 @@ export function ProjectSidebar({ className = "" }: ProjectSidebarProps = {}) {
                       if (e.key === "Escape") setRenamingId(undefined);
                     }}
                     autoFocus
-                    className="flex-1 rounded border border-neutral-700 bg-neutral-950 px-1 py-0.5 text-sm"
+                    className="flex-1 rounded border border-neutral-700 bg-neutral-950 px-1 py-0.5 text-xs"
                   />
                 ) : (
                   <button
-                    onClick={() => setActive(p.id)}
+                    onClick={() => {
+                      if (activeProjectId !== p.id) setActive(p.id);
+                      toggleCollapsed(p.id);
+                    }}
                     onDoubleClick={() => {
                       setRenamingId(p.id);
                       setRenameValue(p.name);
                     }}
-                    className="flex min-w-0 flex-1 flex-col items-start text-left leading-tight"
-                    title={p.path}
+                    className="flex min-w-0 flex-1 items-center gap-1.5 text-left text-xs font-semibold text-[#545454] transition-colors hover:text-neutral-100"
+                    title={`${p.name} — ${p.path}`}
                   >
+                    <Folder size={12} className="shrink-0" />
                     <span className="w-full truncate">{p.name}</span>
-                    {/* Folder basename below the display name. Distinct
-                        font (mono) and tone (neutral-500) so it reads as
-                        metadata, not part of the name. Useful when the
-                        display name doesn't match the on-disk folder
-                        (e.g. user renamed the project to something
-                        memorable but is debugging which checkout it
-                        points at). Hover the row to see the full path
-                        — that's still in the title attribute above. */}
-                    <span className="w-full truncate font-mono text-[10px] text-neutral-500">
-                      {folderName(p.path)}
-                    </span>
                   </button>
                 )}
                 <button
                   onClick={() => void handleNewSession(p.id)}
-                  className="inline-flex p-1 text-neutral-500 hover:text-neutral-200"
+                  className="inline-flex p-1 text-neutral-400 opacity-0 group-hover:opacity-100 hover:text-white transition-opacity"
                   title="New session in this project"
                 >
-                  <Plus size={16} />
+                  <Plus size={14} />
                 </button>
                 <button
                   onClick={() => handleDelete(p.id, p.name)}
-                  className="inline-flex items-center p-1 text-neutral-500 hover:text-red-400"
+                  className="inline-flex items-center p-1 text-neutral-400 opacity-0 group-hover:opacity-100 hover:text-white transition-opacity"
                   title="Delete project (blocked while live sessions exist)"
                 >
-                  <X size={16} />
+                  <X size={14} />
                 </button>
               </div>
               {!isCollapsed && <SessionList projectId={p.id} />}
@@ -344,7 +313,7 @@ export function ProjectSidebar({ className = "" }: ProjectSidebarProps = {}) {
                     type="button"
                     onClick={() => setDeleteDialog(undefined)}
                     disabled={deleteDialog.submitting}
-                    className="rounded-md border border-neutral-700 px-3 py-1 text-xs text-neutral-200 hover:bg-neutral-800 disabled:opacity-50"
+                    className="rounded-md px-3 py-1 text-xs text-neutral-400 disabled:opacity-50"
                   >
                     Cancel
                   </button>

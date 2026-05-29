@@ -571,7 +571,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   closeStream: (sessionId) => {
     const ctrl = controllers.get(sessionId);
     if (ctrl !== undefined) {
-      ctrl.abort();
+      ctrl.abort("stream closed");
       // Identity-check: only delete if no later openStream replaced
       // the entry between abort() and now (event-loop ordering means
       // this is essentially impossible synchronously, but the guard

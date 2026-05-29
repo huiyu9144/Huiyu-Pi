@@ -12,6 +12,7 @@ import {
   ChevronRight,
   Download,
   FilePlus2,
+  Folder,
   FolderPlus,
   Loader2,
   Pencil,
@@ -400,7 +401,8 @@ export function FileBrowserPanel() {
   return (
     <div className="flex h-full flex-col text-xs text-neutral-300">
       <div className="flex items-center justify-between border-b border-neutral-800 px-3 py-2">
-        <span className="truncate font-medium text-neutral-200" title={project.path}>
+        <span className="flex items-center gap-1.5 truncate font-medium text-neutral-200" title={project.path}>
+          <Folder size={12} className="shrink-0" />
           {project.name}
         </span>
         <div className="flex gap-1">
@@ -408,7 +410,7 @@ export function FileBrowserPanel() {
             onClick={() =>
               setDialog({ kind: "create", entryKind: "file", parentAbsPath: project.path })
             }
-            className="rounded p-1 text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200"
+            className="rounded p-1 text-neutral-400"
             title="New file"
           >
             <FilePlus2 size={14} />
@@ -417,28 +419,28 @@ export function FileBrowserPanel() {
             onClick={() =>
               setDialog({ kind: "create", entryKind: "folder", parentAbsPath: project.path })
             }
-            className="rounded p-1 text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200"
+            className="rounded p-1 text-neutral-400"
             title="New folder"
           >
             <FolderPlus size={14} />
           </button>
           <button
             onClick={() => onPickUpload(project.path)}
-            className="rounded p-1 text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200"
+            className="rounded p-1 text-neutral-400"
             title="Upload files into project root (drag-and-drop also works on any folder)"
           >
             <Upload size={14} />
           </button>
           <button
             onClick={() => void downloadEntry(undefined)}
-            className="rounded p-1 text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200"
+            className="rounded p-1 text-neutral-400"
             title="Download project as .tar.gz (skips node_modules, .git, dist, etc.)"
           >
             <Download size={14} />
           </button>
           <button
             onClick={() => void loadTree(project.id)}
-            className="rounded p-1 text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200"
+            className="rounded p-1 text-neutral-400"
             title="Refresh"
           >
             <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
@@ -773,7 +775,7 @@ function ContextMenuItem(props: {
       className={`flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs ${
         danger
           ? "text-red-300 hover:bg-red-900/30 hover:text-red-100 light:text-red-700 light:hover:bg-red-100 light:hover:text-red-900"
-          : "text-neutral-200 hover:bg-neutral-800"
+          : "text-neutral-400"
       }`}
     >
       {props.icon}
@@ -975,7 +977,7 @@ function Tree(props: TreeProps) {
                     e.stopPropagation();
                     props.onCreate(absPath, node.path, "file");
                   }}
-                  className="rounded p-0.5 text-neutral-500 hover:bg-neutral-800 hover:text-neutral-200"
+                  className="rounded p-0.5 text-neutral-400"
                   title="New file in this folder"
                 >
                   <FilePlus2 size={11} />
@@ -985,7 +987,7 @@ function Tree(props: TreeProps) {
                     e.stopPropagation();
                     props.onCreate(absPath, node.path, "folder");
                   }}
-                  className="rounded p-0.5 text-neutral-500 hover:bg-neutral-800 hover:text-neutral-200"
+                  className="rounded p-0.5 text-neutral-400"
                   title="New subfolder in this folder"
                 >
                   <FolderPlus size={11} />
@@ -995,7 +997,7 @@ function Tree(props: TreeProps) {
                     e.stopPropagation();
                     props.onUpload(absPath);
                   }}
-                  className="rounded p-0.5 text-neutral-500 hover:bg-neutral-800 hover:text-neutral-200"
+                  className="rounded p-0.5 text-neutral-400"
                   title="Upload into this folder"
                 >
                   <Upload size={11} />
@@ -1007,7 +1009,7 @@ function Tree(props: TreeProps) {
                 e.stopPropagation();
                 props.onDownload(absPath);
               }}
-              className="rounded p-0.5 text-neutral-500 hover:bg-neutral-800 hover:text-neutral-200"
+              className="rounded p-0.5 text-neutral-400"
               title={isDir ? "Download folder as .tar.gz" : "Download file"}
             >
               <Download size={11} />
@@ -1017,7 +1019,7 @@ function Tree(props: TreeProps) {
                 e.stopPropagation();
                 props.onRenameStart(absPath, node.name);
               }}
-              className="rounded p-0.5 text-neutral-500 hover:bg-neutral-800 hover:text-neutral-200"
+              className="rounded p-0.5 text-neutral-400"
               title="Rename"
             >
               <Pencil size={11} />

@@ -27,26 +27,7 @@ if not exist "node_modules\" (
 
 echo.
 echo [2/3] Checking desktop shortcut...
-set "SHORTCUT_NAME=pi-forge"
-set "SHORTCUT_PATH=%USERPROFILE%\Desktop\%SHORTCUT_NAME%.lnk"
-if not exist "%SHORTCUT_PATH%" (
-    echo Creating desktop shortcut...
-    powershell -NoProfile -Command ^
-      "$ws = New-Object -ComObject WScript.Shell; ^
-       $sc = $ws.CreateShortcut('%SHORTCUT_PATH%'); ^
-       $sc.TargetPath = '%~dp0start-dev.bat'; ^
-       $sc.WorkingDirectory = '%~dp0'; ^
-       $sc.Description = 'pi-forge Dev Server'; ^
-       $sc.IconLocation = '%~dp0docs\images\icon.png,0'; ^
-       $sc.Save()"
-    if exist "%SHORTCUT_PATH%" (
-        echo [2/3] Desktop shortcut created.
-    ) else (
-        echo [2/3] Failed to create shortcut, skip.
-    )
-) else (
-    echo [2/3] Desktop shortcut already exists, skip.
-)
+call :create_shortcut
 
 echo.
 echo [3/3] Starting servers...
@@ -85,3 +66,20 @@ echo.
 
 start "" http://localhost:9145
 call npm run dev -w packages/client
+exit /b 0
+
+:create_shortcut
+set "SC_NAME=pi-forge"
+set "SC_PATH=%USERPROFILE%\Desktop\%SC_NAME%.lnk"
+if exist "%SC_PATH%" (
+    echo [2/3] Desktop shortcut already exists, skip.
+    exit /b 0
+)
+echo Creating desktop shortcut...
+powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $sc = $ws.CreateShortcut('%SC_PATH%'); $sc.TargetPath = '%~dp0start-dev.bat'; $sc.WorkingDirectory = '%~dp0'; $sc.Description = 'pi-forge Dev Server'; $sc.IconLocation = '%~dp0packages\client\public\icons\icon-192.png,0'; $sc.Save()"
+if exist "%SC_PATH%" (
+    echo [2/3] Desktop shortcut created.
+) else (
+    echo [2/3] Failed to create shortcut, skip.
+)
+exit /b 0
