@@ -759,19 +759,16 @@ export function App() {
                 ) : active ? (
                   <div className="flex flex-1 items-center justify-center px-6 text-center">
                     <div className="space-y-3 text-sm text-neutral-400">
-                      <h2 className="text-xl font-semibold text-neutral-100">{active.name}</h2>
-                      <p className="font-mono text-xs">{active.path}</p>
+                      <div className="flex items-center justify-center gap-2">
+                        <img src="/icons/logo-rounded.png" alt="" className="h-10 w-10 rounded-xl" />
+                        <span className="text-xl font-semibold text-neutral-100">Huiyu Pi</span>
+                      </div>
                       <p>Pick a session from the sidebar — or start a new one here.</p>
                       <button
                         onClick={() => {
-                          // Fire-and-forget; createSession sets the
-                          // active session id on success which routes
-                          // this branch into the ChatView render
-                          // above. Failures surface via the session
-                          // store's `error` field.
                           void useSessionStore.getState().createSession(active.id);
                         }}
-                        className="rounded-md bg-neutral-100 px-3 py-1.5 text-sm font-medium text-neutral-900 hover:bg-white"
+                        className="rounded-md bg-neutral-100 px-3 py-1.5 text-sm font-medium text-neutral-900 hover:bg-neutral-200"
                       >
                         + New session
                       </button>
