@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/huiyu9144/Huiyu-PiwebUI-Forge/main/packages/client/public/icons/logo.jpg" alt="Huiyu PiwebUI Forge" width="120" style="border-radius: 24px;">
+  <img src="packages/client/public/icons/logo.jpg" alt="Huiyu PiwebUI Forge" width="120">
 </p>
 
 <h1 align="center">Huiyu PiwebUI Forge</h1>
