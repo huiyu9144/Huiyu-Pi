@@ -14,7 +14,6 @@ import { ProjectSidebar } from "./components/ProjectSidebar";
 import { ProjectPicker } from "./components/ProjectPicker";
 import { ChatView } from "./components/ChatView";
 import { ChatInput } from "./components/ChatInput";
-import { ChangedFilesBadge } from "./components/ChangedFilesBadge";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { AskUserQuestionPanel } from "./components/AskUserQuestionPanel";
 import { FilesPanelLayer } from "./components/FilesPanelLayer";
@@ -737,16 +736,6 @@ export function App() {
                 ) : activeSessionId !== undefined ? (
                   <>
                     <ChatView sessionId={activeSessionId} />
-                    {!minimal && (
-                      <ChangedFilesBadge
-                        sessionId={activeSessionId}
-                        alreadyOnChangesTab={useUiStore.getState().filesOpen && useUiStore.getState().rightTab === "changes"}
-                        onOpen={() => {
-                          if (!useUiStore.getState().filesOpen) useUiStore.getState().setFilesOpen(true);
-                          useUiStore.getState().setRightTab("changes");
-                        }}
-                      />
-                    )}
                     {/* Inline panel for `ask_user_question` tool
                         calls. Renders directly above the composer
                         when the agent has asked something; null

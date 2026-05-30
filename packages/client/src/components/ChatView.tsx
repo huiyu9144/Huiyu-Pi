@@ -8,6 +8,7 @@ import {
   Copy,
   ExternalLink,
   FileCode,
+  FileDiff,
   Rows2,
   Users,
   X,
@@ -31,6 +32,7 @@ import { QuickActionRunCard } from "./QuickActionRunCard";
 import { useQuickActionRunsStore } from "../store/quick-actions-store";
 import { parseSubagentDetails, type SubagentResult } from "../lib/subagent-parser";
 import { useUiStore } from "../store/ui-store";
+import { api } from "../lib/api-client";
 
 /**
  * Per-ChatView diff view-type preference. Each diff-rendering surface
@@ -925,6 +927,48 @@ function Message({
   );
 }
 
+function TurnDiffFooter({ sessionId }: { sessionId: string }) {
+  const agentEndCount = useSessionStore((s) => s.agentEndCountBySession[sessionId] ?? 0);
+  const isStreaming = useSessionStore((s) => s.streamingBySession[sessionId] ?? false);
+  const [entries, setEntries] = useState<{ file: string; additions: number; deletions: number }[]>([]);
+
+  useEffect(() => {
+    if (isStreaming) return;
+    let cancelled = false;
+    api
+      .getTurnDiff(sessionId)
+      .then((r) => {
+        if (!cancelled) setEntries(r.entries);
+      })
+      .catch(() => {
+        if (!cancelled) setEntries([]);
+      });
+    return () => { cancelled = true; };
+  }, [sessionId, agentEndCount, isStreaming]);
+
+  if (entries.length === 0) return null;
+
+  const totalAdd = entries.reduce((s, e) => s + e.additions, 0);
+  const totalDel = entries.reduce((s, e) => s + e.deletions, 0);
+
+  return (
+    <button
+      onClick={() => {
+        useUiStore.getState().setFilesOpen(true);
+        useUiStore.getState().setRightTab("changes");
+      }}
+      className="mt-2 flex items-center gap-1.5 rounded-md border border-neutral-800 bg-neutral-950 px-2.5 py-1 text-[11px] text-neutral-400 hover:border-neutral-600 hover:text-neutral-200"
+      title="Open changes tab to review"
+    >
+      <FileDiff size={11} />
+      <span>{entries.length === 1 ? "1 file edited" : `${entries.length} files edited`}</span>
+      <span className="text-neutral-600">·</span>
+      <span className="text-emerald-500">+{totalAdd}</span>
+      <span className="text-red-500">-{totalDel}</span>
+    </button>
+  );
+}
+
 function AssistantMessageBubble({
   message,
   content,
@@ -1006,6 +1050,9 @@ function AssistantMessageBubble({
               <span className="font-medium">Provider error: </span>
               {inlineError}
             </div>
+          )}
+          {isDone && sessionId !== undefined && (
+            <TurnDiffFooter sessionId={sessionId} />
           )}
         </>
       )}
