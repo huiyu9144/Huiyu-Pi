@@ -602,9 +602,9 @@ export function ChatInput({ sessionId }: Props) {
         run: () => {
           setAttachmentError(
             minimalUi
-              ? "/<cmd> runs a pi-forge command (compact, abort, settings, …). " +
+              ? "/<cmd> runs a Huiyu PiwebUI Forge command (compact, abort, settings, …). " +
                   "@<path> references a project file (autocomplete from the popover)."
-              : "/<cmd> runs a pi-forge command (compact, abort, settings, …). " +
+              : "/<cmd> runs a Huiyu PiwebUI Forge command (compact, abort, settings, …). " +
                   "!cmd runs bash (output → next LLM context); !!cmd runs bash local-only. " +
                   "@<path> references a project file (autocomplete from the popover).",
           );
@@ -1674,7 +1674,7 @@ export function ChatInput({ sessionId }: Props) {
                     disabled={!cmd.available}
                     className={`block w-full px-3 py-2.5 text-left text-[14px] md:py-1 md:text-[12px] ${
                       i === slashSelectedIdx && cmd.available
-                        ? "text-white"
+                        ? "text-neutral-100"
                         : "text-neutral-400"
                     } ${cmd.available ? "" : "opacity-40"}`}
                     title={
@@ -1710,7 +1710,7 @@ export function ChatInput({ sessionId }: Props) {
                     onMouseEnter={() => setAcSelectedIdx(i)}
                     className={`block w-full truncate px-3 py-2.5 text-left font-mono text-[14px] md:py-1 md:text-[12px] ${
                       i === acSelectedIdx
-                        ? "text-white"
+                        ? "text-neutral-100"
                         : "text-neutral-400"
                     }`}
                     title={path}
@@ -1748,14 +1748,14 @@ export function ChatInput({ sessionId }: Props) {
                   ? { height: `${textareaHeight}px` }
                   : undefined
             }
-            className={`block w-full resize-none rounded-md border-[0.5px] border-[#1f1f1f] bg-neutral-900 px-3 py-2 pr-12 pb-10 text-sm text-neutral-100 outline-none ${
+            className={`block w-full resize-none rounded-md border-[0.5px] border-neutral-800 bg-neutral-900 px-3 py-2 pr-12 pb-10 text-sm text-neutral-100 outline-none ${
               "min-h-11 md:min-h-0 "
             }${
               bangMode === "local"
                 ? "border-amber-500 focus:border-amber-400"
                 : bangMode === "context"
                   ? "border-emerald-500 focus:border-emerald-400"
-                  : "border-[#212121] focus:border-neutral-500"
+                  : "border-neutral-800 focus:border-neutral-500"
             }`}
           />
           {bangMode !== undefined && (
@@ -1957,7 +1957,7 @@ export function ChatInput({ sessionId }: Props) {
                     }}
                     className={`flex items-center gap-1 rounded px-1.5 py-1 text-[11px] ${
                       isMobile && processesPopoverOpen
-                        ? "text-white"
+                        ? "text-neutral-100"
                         : "text-neutral-400"
                     }`}
                     title={
@@ -2298,7 +2298,7 @@ function ModelPicker({
               onMouseEnter={() => setActiveIdx(-1)}
               onClick={() => commit(-1)}
               className={`flex w-full items-center justify-between px-3 py-1.5 text-left text-xs ${
-                activeIdx === -1 ? "text-white" : "text-neutral-400"
+                activeIdx === -1 ? "text-neutral-100" : "text-neutral-400"
               }`}
             >
               <span className="flex min-w-0 items-baseline gap-2">
@@ -2323,7 +2323,7 @@ function ModelPicker({
                   onMouseEnter={() => setActiveIdx(i)}
                   onClick={() => commit(i)}
                   className={`flex w-full items-center justify-between px-3 py-1.5 text-left text-xs ${
-                    i === activeIdx ? "text-white" : "text-neutral-400"
+                    i === activeIdx ? "text-neutral-100" : "text-neutral-400"
                   }`}
                 >
                   <span className="flex min-w-0 items-baseline gap-2">
@@ -2399,7 +2399,7 @@ function ThinkingLevelPicker({
                 setOpen(false);
               }}
               className={`flex w-full items-center justify-between px-3 py-1.5 text-left text-xs ${
-                level === value ? "text-white" : "text-neutral-400"
+                level === value ? "text-neutral-100" : "text-neutral-400"
               }`}
             >
               <span>{level}</span>

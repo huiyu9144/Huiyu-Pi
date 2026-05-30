@@ -1,10 +1,58 @@
-# Huiyu PiwebUI Forge
+<p align="center">
+  <img src="https://raw.githubusercontent.com/huiyu9144/Huiyu-PiwebUI-Forge/main/packages/client/public/icons/logo.jpg" alt="Huiyu PiwebUI Forge" width="120">
+</p>
 
-A self-hosted browser UI for the Pi coding agent, with a custom theme and visual design.
+<h1 align="center">Huiyu PiwebUI Forge</h1>
 
-Built on top of [pi-forge](https://github.com/Devin-Marks/pi-forge) and [pi](https://github.com/earendil-works/pi).
+<p align="center">
+  Self-hosted browser UI for AI coding agents — your data never leaves your machine.
+</p>
 
-## Quick Start
+<p align="center">
+  <a href="https://discord.gg/BdJDs4AKbS"><img src="https://img.shields.io/discord/1334932402172137576?style=flat-square&logo=discord&logoColor=white&label=Discord&color=5865F2" alt="Discord"></a>
+  <a href="https://github.com/huiyu9144/Huiyu-PiwebUI-Forge/stargazers"><img src="https://img.shields.io/github/stars/huiyu9144/Huiyu-PiwebUI-Forge?style=flat-square&logo=github&color=f1c40f&labelColor=555555" alt="GitHub Stars"></a>
+  <a href="https://github.com/huiyu9144/Huiyu-PiwebUI-Forge/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-20B2AA?style=flat-square" alt="MIT License"></a>
+  <a href="https://github.com/huiyu9144/Huiyu-PiwebUI-Forge/releases"><img src="https://img.shields.io/github/v/release/huiyu9144/Huiyu-PiwebUI-Forge?style=flat-square&color=blue" alt="Release"></a>
+</p>
+
+<p align="center">
+  <i>Built on top of <a href="https://github.com/Devin-Marks/pi-forge">pi-forge</a> and <a href="https://github.com/earendil-works/pi">pi</a>.</i>
+</p>
+
+---
+
+## Features
+
+### 🔐 Self-hosted & private
+Your code, API keys, and conversation history stay on your own machine. No cloud, no third party, no data leakage.
+
+### 🧠 Multi-LLM support
+Works with Anthropic Claude, OpenAI GPT/o1/o3, DeepSeek, Google Gemini, Mistral, Groq, xAI, OpenRouter, and more — including local models.
+
+### 📁 Full file management
+Built-in file browser with CodeMirror editor supporting 10+ languages. Create, edit, search files right in the browser.
+
+### 🖥️ Integrated terminal
+Full terminal emulator via xterm.js + WebSocket. Multiple tabs, reconnect support, resizable layout.
+
+### 🔀 Git integration
+View diffs, stage changes at hunk level, explore commit history with git-graph — all from the browser.
+
+### 🔌 MCP protocol support
+Connect external MCP servers and expose their tools to your coding agent. Supports both global and project-level configurations.
+
+### 📱 Mobile-friendly + PWA
+Responsive design works on iOS/Android. Install as a PWA for a native-like experience.
+
+### 🎨 Fully customizable theme
+Dark and light themes controlled by CSS variables. Create your own skin without rebuilding.
+
+### 📦 Docker & K8s ready
+Dockerfile, docker-compose, Kubernetes and OpenShift deployment manifests included.
+
+---
+
+## Getting Started
 
 ### Prerequisites
 
@@ -13,17 +61,14 @@ Built on top of [pi-forge](https://github.com/Devin-Marks/pi-forge) and [pi](htt
 
 ### One-click Start (Windows)
 
-1. Clone the repo and double-click `start.bat`
-2. The script will install all dependencies (including Pi SDK) and start both services
-3. Browser opens automatically at http://localhost:9144
+Clone the repo, double-click `start.bat` — the script installs everything and opens your browser at `http://localhost:9144`.
 
 ### Manual Start
 
 ```bash
 git clone https://github.com/huiyu9144/Huiyu-PiwebUI-Forge.git
 cd Huiyu-PiwebUI-Forge
-npm install
-cd server && npm install && cd ..
+npm install && cd server && npm install && cd ..
 npm run dev:all
 ```
 
@@ -32,7 +77,7 @@ npm run dev:all
 
 ### API Key Setup
 
-Before using, you need to configure an API key. Create the file `~/.pi/agent/auth.json`:
+Create `~/.pi/agent/auth.json`:
 
 ```json
 {
@@ -53,7 +98,9 @@ set DEEPSEEK_API_KEY=sk-your-api-key
 export DEEPSEEK_API_KEY=sk-your-api-key
 ```
 
-Supported providers: Anthropic, OpenAI, DeepSeek, Google, Mistral, Groq, xAI, OpenRouter, and more.
+**Supported providers:** Anthropic, OpenAI, DeepSeek, Google, Mistral, Groq, xAI, OpenRouter, and more.
+
+---
 
 ## Customization
 
@@ -73,11 +120,25 @@ html[data-theme="light"] {
 }
 ```
 
+---
+
 ## Tech Stack
 
-- React 19 + TypeScript
-- Vite 6
-- Tailwind CSS v4
+| Layer | Technologies |
+|-------|-------------|
+| **Frontend** | React 19, TypeScript, Vite 6, Tailwind CSS v4, Zustand, CodeMirror 6 |
+| **Backend** | Fastify 5, WebSocket, SSE, JWT |
+| **Terminal** | xterm.js + node-pty |
+| **Infrastructure** | Docker, docker-compose, Kubernetes, GitHub Actions |
+
+---
+
+## Community
+
+- 💬 [Join our Discord](https://discord.gg/BdJDs4AKbS) — ask questions, share tips, connect with users and contributors.
+- ⭐ [Star us on GitHub](https://github.com/huiyu9144/Huiyu-PiwebUI-Forge) — it helps others discover the project.
+
+---
 
 ## Acknowledgments
 
@@ -85,8 +146,6 @@ This project is built on top of two open-source projects:
 
 - [**pi-forge**](https://github.com/Devin-Marks/pi-forge) by [Devin Marks](https://github.com/Devin-Marks) and contributors — the self-hosted browser UI for the Pi coding agent.
 - [**pi**](https://github.com/earendil-works/pi) by [earendil-works](https://github.com/earendil-works) and contributors — the core Pi coding agent SDK and CLI.
-
-Licensed under the [MIT License](LICENSE).
 
 ## License
 

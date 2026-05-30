@@ -225,7 +225,7 @@ function Tabs({
           // collision shows up is the banner inside the active tab.
           const extChanged = externallyChanged[f.path] === true;
           const baseClass = active
-            ? "bg-neutral-950 text-white"
+            ? "bg-neutral-950 text-neutral-100"
             : "text-neutral-400";
           const conflictClass = extChanged
             ? "bg-amber-900/30 text-amber-200 light:bg-amber-100 light:text-amber-800"
@@ -354,7 +354,7 @@ function StatusBar({
         <button
           onClick={onToggleWrap}
           className={`flex items-center gap-1 rounded px-1 py-0.5 text-[10px] ${
-            wrap ? "text-white" : "text-neutral-400"
+            wrap ? "text-neutral-100" : "text-neutral-400"
           }`}
           title={
             wrap

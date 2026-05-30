@@ -238,7 +238,7 @@ function FilePreviewLink({
     <button
       type="button"
       onClick={() => openPreviewFile(filePath)}
-      className="inline-flex items-center gap-1 rounded bg-neutral-800/60 px-1.5 py-0.5 text-[#7BB8FF] transition-colors hover:bg-neutral-700/60 hover:text-[#7BB8FF]"
+      className="inline-flex items-center gap-1 rounded bg-neutral-800/60 px-1.5 py-0.5 text-[#7BB8FF] light:text-blue-600 transition-colors hover:bg-neutral-700/60 hover:text-[#7BB8FF]"
       title={`Preview ${filePath}`}
     >
       <FileText size={12} />
@@ -297,7 +297,7 @@ const components: Components = {
         href={href}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-[#7BB8FF] underline hover:text-[#7BB8FF] light:text-[#7BB8FF] light:hover:text-[#7BB8FF]"
+        className="text-[#7BB8FF] light:text-blue-600 underline hover:text-[#7BB8FF] light:text-[#7BB8FF] light:hover:text-[#7BB8FF]"
       >
         {children}
       </a>

@@ -86,7 +86,7 @@ function isObject(v: unknown): v is Record<string, unknown> {
 }
 
 const vVoid: Validator<undefined> = (value, status) => {
-  if (value !== undefined) fail(status, "expected empty body");
+  if (value !== undefined && value !== null) fail(status, "expected empty body");
   return undefined;
 };
 

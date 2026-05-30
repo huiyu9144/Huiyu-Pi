@@ -45,7 +45,7 @@ export function InstallPrompt(): React.JSX.Element | null {
       <div className="mx-auto flex max-w-3xl items-center gap-2">
         <div className="min-w-0 flex-1">
           {canInstall ? (
-            <span>Install pi-forge as an app for a fullscreen experience.</span>
+            <span>Install Huiyu PiwebUI Forge as an app for a fullscreen experience.</span>
           ) : (
             <span className="inline-flex flex-wrap items-center gap-1">
               Install: tap <Share size={14} className="inline shrink-0 text-neutral-400" /> Share,

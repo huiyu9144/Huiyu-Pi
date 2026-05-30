@@ -94,16 +94,16 @@ async function main() {
     name: "pi-forge",
     version: rootPkg.version,
     description:
-      "Browser UI for the pi coding agent — embedded HTTP server with a React workbench (chat, file browser, terminal, git, MCP).",
-    keywords: ["pi", "coding-agent", "ai", "llm", "agent", "workbench", "fastify"],
-    homepage: "https://github.com/Devin-Marks/pi-forge#readme",
-    bugs: { url: "https://github.com/Devin-Marks/pi-forge/issues" },
+      "Frontend UI optimized by Huiyu, based on pi-forge — browser UI for the pi coding agent with chat, file browser, terminal, git, MCP.",
+    keywords: ["pi", "coding-agent", "ai", "llm", "agent", "workbench", "fastify", "huiyu", "piwebui"],
+    homepage: "https://github.com/huiyu9144/Huiyu-PiwebUI-Forge#readme",
+    bugs: { url: "https://github.com/huiyu9144/Huiyu-PiwebUI-Forge/issues" },
     repository: {
       type: "git",
-      url: "git+https://github.com/Devin-Marks/pi-forge.git",
+      url: "git+https://github.com/huiyu9144/Huiyu-PiwebUI-Forge.git",
     },
     license: "MIT",
-    author: "Devin Marks",
+    author: "Huiyu (based on pi-forge by Devin Marks)",
     type: "module",
     bin: { "pi-forge": "bin/pi-forge.mjs" },
     files: ["bin/", "dist/", "README.md", "LICENSE"],
@@ -196,12 +196,12 @@ production, set at minimum \`--api-key\`.
 ## Programmatic API
 
 REST + Server-Sent Events under \`/api/v1/\`. Interactive docs at
-\`/api/docs\`. See the [project README](https://github.com/Devin-Marks/pi-forge#readme)
+\`/api/docs\`. See the [project README](https://github.com/huiyu9144/Huiyu-PiwebUI-Forge#readme)
 for the full surface and example curl flows.
 
 ## Versioning
 
-This package version (\`${version}\`) tracks the [GitHub release](https://github.com/Devin-Marks/pi-forge/releases)
+This package version (\`${version}\`) tracks the [GitHub release](https://github.com/huiyu9144/Huiyu-PiwebUI-Forge/releases)
 of the same name. Docker images and the npm package are published in
 lockstep on each \`v*\` tag.
 

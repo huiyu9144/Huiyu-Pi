@@ -249,7 +249,7 @@ export function ProjectPicker({ onClose, required = false }: Props) {
                   >
                     <button
                       onClick={() => setPath(e.path)}
-                      className="flex flex-1 items-center gap-2 text-left text-neutral-200 hover:text-white"
+                      className="flex flex-1 items-center gap-2 text-left text-neutral-200 hover:text-white light:hover:text-neutral-950"
                     >
                       <span>📁</span>
                       <span className="truncate">{e.name}</span>

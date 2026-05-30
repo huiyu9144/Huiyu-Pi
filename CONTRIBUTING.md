@@ -128,6 +128,10 @@ behind the layout — request lifecycles, persistence model, threading.
 - **Feature requests:** GitHub Issues with the feature-request template.
   Linking to a real use-case helps prioritise.
 
+## Community
+
+Join our [Discord server](https://discord.gg/BdJDs4AKbS) to chat with other contributors and users.
+
 ## Code of conduct
 
 By participating you agree to abide by the

@@ -5,7 +5,7 @@ import type { WebSocket } from "ws";
 import { extractBearer, verifyApiKey, verifyToken } from "../auth.js";
 import { authEnabled } from "../config.js";
 import { getProject } from "../project-manager.js";
-import { attachSink, findPtyByTabId, spawnPty } from "../pty-manager.js";
+import { attachSink, findPtyByTabId, killPty, spawnPty } from "../pty-manager.js";
 
 /**
  * WebSocket close codes used here. Per RFC 6455 §7.4, codes in
@@ -345,15 +345,20 @@ export const terminalRoutes: FastifyPluginAsync = async (fastify) => {
       });
 
       let disposed = false;
-      const cleanup = (reason: string): void => {
+      const cleanup = (reason: string, killOnClose = false): void => {
         if (disposed) return;
         disposed = true;
         clearInterval(keepAliveTimer);
         detach();
         exitDisposable.dispose();
-        // NB: no killPty here. The PTY is intentionally kept alive
-        // so a page-refresh / network blip can reattach. The idle
-        // reaper inside attachSink will GC it after IDLE_REAP_MS
+        if (killOnClose) {
+          killPty(managed.ptyId);
+          log.info({ ptyId: managed.ptyId, tabId: managed.tabId, reason }, "terminal closed");
+          return;
+        }
+        // NB: no killPty on ordinary WS close — the PTY is intentionally
+        // kept alive so a page-refresh / network blip can reattach. The
+        // idle reaper inside attachSink will GC it after IDLE_REAP_MS
         // if no reconnect arrives.
         log.info({ ptyId: managed.ptyId, tabId: managed.tabId, reason }, "terminal detached");
       };
@@ -389,7 +394,10 @@ export const terminalRoutes: FastifyPluginAsync = async (fastify) => {
         }
       });
 
-      socket.on("close", () => cleanup("ws_close"));
+      socket.on("close", (code, reason) => {
+        const reasonStr = typeof reason === "string" ? reason : reason?.toString() ?? "";
+        cleanup("ws_close", reasonStr === "tab_closed");
+      });
       socket.on("error", (err) => {
         log.warn({ err, ptyId: managed.ptyId }, "terminal websocket error");
         cleanup("ws_error");

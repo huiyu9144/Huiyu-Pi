@@ -217,7 +217,7 @@ export function GlobalSearchBar() {
           onKeyDown={onKeyDown}
           placeholder=""
           aria-label="Search across all sessions"
-          className="w-40 rounded-md bg-[#171717] py-1 pl-7 pr-7 text-xs text-neutral-200 placeholder-neutral-500 outline-none"
+          className="w-40 rounded-md bg-neutral-900 py-1 pl-7 pr-7 text-xs text-neutral-200 placeholder-neutral-500 outline-none"
         />
         {query.length > 0 && (
           <button
@@ -278,7 +278,7 @@ export function GlobalSearchBar() {
                         onClick={() => dispatchResult(group, match)}
                         className={`flex w-full items-start gap-2 px-3 py-1.5 text-left text-xs ${
                           isActive
-                            ? "text-white"
+                            ? "text-neutral-100"
                             : "text-neutral-400"
                         }`}
                       >

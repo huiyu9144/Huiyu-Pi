@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, CircleCheck, Code, Download, FileDown, Globe, Menu, MessageCircle, Monitor, MousePointerClick, Share2, SquareTerminal, Plus, Settings, Coffee, Sparkles } from "lucide-react";
+import { ChevronLeft, CircleCheck, Code, Download, FileDown, Globe, Menu, MessageCircle, Monitor, MousePointerClick, SquareTerminal, Plus, Settings, Coffee, Sparkles } from "lucide-react";
 import { useIsMobile } from "./lib/use-is-mobile";
 import { useAuthStore } from "./store/auth-store";
 import { useActiveProject, useProjectStore } from "./store/project-store";
@@ -67,7 +67,6 @@ export function App() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const mustChangePassword = useAuthStore((s) => s.mustChangePassword);
   const bootstrap = useAuthStore((s) => s.bootstrap);
-  const logout = useAuthStore((s) => s.logout);
 
   const projects = useProjectStore((s) => s.projects);
   const projectsLoaded = useProjectStore((s) => !s.loading);
@@ -227,7 +226,6 @@ export function App() {
   useEffect(() => {
     if (openEditorPaneSeq === 0) return;
     setEditorOpenPersisted(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [openEditorPaneSeq]);
 
   const previewFilePath = useUiStore((s) => s.previewFilePath);
@@ -464,7 +462,7 @@ export function App() {
           with `py-2` so we have at least the original 8 px even on
           devices with no inset. */}
       <header
-        className="absolute inset-x-0 top-0 z-50 flex items-center justify-between border-b-[0.5px] border-neutral-800 bg-[#0A0A0A] px-4 py-2"
+        className="absolute inset-x-0 top-0 z-50 flex items-center justify-between border-b-[0.5px] border-neutral-800 bg-neutral-950 px-4 py-2"
         style={{ paddingTop: "max(0.5rem, env(safe-area-inset-top))" }}
       >
         <div className="flex items-center gap-3">
@@ -491,7 +489,7 @@ export function App() {
             <span className="text-sm font-semibold tracking-tight">Huiyu PiwebUI Forge</span>
             <button
               onClick={() => useUiStore.getState().setProjectPickerOpen(true)}
-              className="ml-1 rounded-md p-0.5 text-neutral-400 hover:text-white transition-colors"
+              className="ml-1 rounded-md p-0.5 text-neutral-400 hover:text-neutral-100 transition-colors"
               title="New project"
             >
               <Plus size={14} />
@@ -509,7 +507,7 @@ export function App() {
             <button
               onClick={() => setChatOpenPersisted(!chatOpen)}
               className={`flex items-center justify-center rounded-md p-1.5 ${
-                chatOpen ? "text-white" : "text-neutral-400"
+                chatOpen ? "text-neutral-100" : "text-neutral-400"
               }`}
               title="Toggle the chat pane"
             >
@@ -518,7 +516,7 @@ export function App() {
             <button
               onClick={() => setEditorOpenPersisted(!editorOpen)}
               className={`flex items-center justify-center rounded-md p-1.5 ${
-                editorOpen ? "text-white" : "text-neutral-400"
+                editorOpen ? "text-neutral-100" : "text-neutral-400"
               }`}
               title="Toggle the editor pane (open tabs persist across reloads)"
             >
@@ -528,7 +526,7 @@ export function App() {
               <button
                 onClick={() => setTerminalOpenPersisted(!terminalOpen)}
                 className={`flex items-center justify-center rounded-md p-1.5 ${
-                  terminalOpen ? "text-white" : "text-neutral-400"
+                  terminalOpen ? "text-neutral-100" : "text-neutral-400"
                 }`}
                 title="Toggle the integrated terminal"
               >
@@ -559,7 +557,7 @@ export function App() {
                     setInstallTooltip((v) => !v);
                   }
                 }}
-                className="flex items-center justify-center rounded-md p-1.5 text-neutral-400 hover:text-white"
+                className="flex items-center justify-center rounded-md p-1.5 text-neutral-400 hover:text-neutral-100"
                 title="Install app (PWA)"
               >
                 <Download size={16} />
@@ -920,7 +918,7 @@ export function App() {
                         </>
                       )}
                     </div>
-                    <div className="flex border-t border-neutral-800 bg-[#171717] opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                    <div className="flex border-t border-neutral-800 bg-neutral-900 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
                       {(minimal
                         ? (["files", "search", "processes", "context"] as const)
                         : (["files", "search", "changes", "git", "processes", "context", "preview"] as const)
@@ -929,7 +927,7 @@ export function App() {
                           key={t}
                           onClick={() => setRightTabPersisted(t)}
                           className={`flex items-center gap-1 px-3 py-1.5 text-[11px] uppercase tracking-wider ${
-                            rightTab === t ? "text-white" : "text-neutral-400"
+                            rightTab === t ? "text-neutral-100" : "text-neutral-400"
                           }`}
                         >
                           {t === "files"
@@ -961,7 +959,7 @@ export function App() {
                   </>
                 );
                 if (filesIsLeftmost) {
-                  return <div className="flex flex-1 flex-col overflow-hidden bg-[#171717] group">{filesContent}</div>;
+                  return <div className="flex flex-1 flex-col overflow-hidden bg-neutral-900 group">{filesContent}</div>;
                 }
                 return (
                   <>
@@ -987,7 +985,7 @@ export function App() {
                     />
                     <div
                       ref={filesPanelRef}
-                      className="group flex shrink-0 flex-col border-l-[0.5px] border-neutral-800 bg-[#171717]"
+                      className="group flex shrink-0 flex-col border-l-[0.5px] border-neutral-800 bg-neutral-900"
                       style={{ width: `${filesWidth}px` }}
                     >
                       {filesContent}
@@ -1035,7 +1033,7 @@ export function App() {
                   <span
                     className={`cursor-pointer text-xs transition-colors ${
                       activeQR === "wechat"
-                        ? "font-medium text-[#75B3CB]"
+                        ? "font-medium text-[#75B3CB] light:text-cyan-600"
                         : "text-neutral-500 hover:text-neutral-300"
                     }`}
                     onMouseEnter={() => setActiveQR("wechat")}
@@ -1046,7 +1044,7 @@ export function App() {
                   <span
                     className={`cursor-pointer text-xs transition-colors ${
                       activeQR === "alipay"
-                        ? "font-medium text-[#75B3CB]"
+                        ? "font-medium text-[#75B3CB] light:text-cyan-600"
                         : "text-neutral-500 hover:text-neutral-300"
                     }`}
                     onMouseEnter={() => setActiveQR("alipay")}
@@ -1057,7 +1055,7 @@ export function App() {
                   <span
                     className={`cursor-pointer text-xs transition-colors ${
                       activeQR === "paypal"
-                        ? "font-medium text-[#75B3CB]"
+                        ? "font-medium text-[#75B3CB] light:text-cyan-600"
                         : "text-neutral-500 hover:text-neutral-300"
                     }`}
                     onMouseEnter={() => setActiveQR("paypal")}

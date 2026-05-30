@@ -2,10 +2,10 @@
 chcp 65001 >nul
 cd /d "%~dp0"
 
-title pi-forge - Dev Server
+title Huiyu PiwebUI Forge - Dev Server
 
 echo ========================================
-echo   pi-forge
+echo   Huiyu PiwebUI Forge
 echo   API    - http://localhost:9144
 echo   Client - http://localhost:9145
 echo ========================================
@@ -69,14 +69,14 @@ call npm run dev -w packages/client
 exit /b 0
 
 :create_shortcut
-set "SC_NAME=pi-forge"
+set "SC_NAME=Huiyu PiwebUI Forge"
 set "SC_PATH=%USERPROFILE%\Desktop\%SC_NAME%.lnk"
 if exist "%SC_PATH%" (
     echo [2/3] Desktop shortcut already exists, skip.
     exit /b 0
 )
 echo Creating desktop shortcut...
-powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $sc = $ws.CreateShortcut('%SC_PATH%'); $sc.TargetPath = '%~dp0start-dev.bat'; $sc.WorkingDirectory = '%~dp0'; $sc.Description = 'pi-forge Dev Server'; $sc.IconLocation = '%~dp0packages\client\public\icons\icon-192.png,0'; $sc.Save()"
+powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $sc = $ws.CreateShortcut('%SC_PATH%'); $sc.TargetPath = '%~dp0start.bat'; $sc.WorkingDirectory = '%~dp0'; $sc.Description = 'Huiyu PiwebUI Forge Dev Server'; $sc.IconLocation = '%~dp0packages\client\public\icons\logo.jpg,0'; $sc.Save()"
 if exist "%SC_PATH%" (
     echo [2/3] Desktop shortcut created.
 ) else (

@@ -140,7 +140,7 @@ export function ProjectSidebar({ className = "" }: ProjectSidebarProps = {}) {
 
   return (
     <aside
-      className={`flex h-full w-64 flex-col border-r-[0.5px] border-neutral-800 bg-[#171717] ${className}`}
+      className={`flex h-full w-64 flex-col border-r-[0.5px] border-neutral-800 bg-neutral-900 ${className}`}
       // Safe-area-aware top + bottom padding so the drawer chrome
       // (header, sessions list) doesn't slide under iPhone notches /
       // Android cutouts when the drawer is fullscreen-tall on
@@ -153,7 +153,7 @@ export function ProjectSidebar({ className = "" }: ProjectSidebarProps = {}) {
     >
       <div className="flex-1 overflow-y-auto py-1">
         {projects.length === 0 && (
-          <p className="px-3 py-4 text-sm font-semibold text-[#545454]">No projects yet.</p>
+          <p className="px-3 py-4 text-sm font-semibold text-[#545454] light:text-neutral-500">No projects yet.</p>
         )}
         {projects.map((p) => {
           const isActive = p.id === activeProjectId;
@@ -193,8 +193,8 @@ export function ProjectSidebar({ className = "" }: ProjectSidebarProps = {}) {
                   dragOverProjectId === p.id
                     ? "ring-1 ring-cyan-500/70"
                     : isActive
-                      ? "text-white"
-                      : "text-[#545454]"
+                      ? "text-neutral-100"
+                      : "text-[#545454] light:text-neutral-500"
                 }`}
               >
                 {renamingId === p.id ? (
@@ -219,7 +219,7 @@ export function ProjectSidebar({ className = "" }: ProjectSidebarProps = {}) {
                       setRenamingId(p.id);
                       setRenameValue(p.name);
                     }}
-                    className="flex min-w-0 flex-1 items-center gap-1.5 text-left text-xs font-semibold text-[#545454] transition-colors hover:text-neutral-100"
+                    className="flex min-w-0 flex-1 items-center gap-1.5 text-left text-xs font-semibold text-[#545454] light:text-neutral-500 transition-colors hover:text-neutral-100"
                     title={`${p.name} — ${p.path}`}
                   >
                     <Folder size={12} className="shrink-0" />
@@ -228,14 +228,14 @@ export function ProjectSidebar({ className = "" }: ProjectSidebarProps = {}) {
                 )}
                 <button
                   onClick={() => void handleNewSession(p.id)}
-                  className="inline-flex p-1 text-neutral-400 opacity-0 group-hover:opacity-100 hover:text-white transition-opacity"
+                  className="inline-flex p-1 text-neutral-400 opacity-0 group-hover:opacity-100 hover:text-white light:hover:text-neutral-950 transition-opacity"
                   title="New session in this project"
                 >
                   <Plus size={14} />
                 </button>
                 <button
                   onClick={() => handleDelete(p.id, p.name)}
-                  className="inline-flex items-center p-1 text-neutral-400 opacity-0 group-hover:opacity-100 hover:text-white transition-opacity"
+                  className="inline-flex items-center p-1 text-neutral-400 opacity-0 group-hover:opacity-100 hover:text-white light:hover:text-neutral-950 transition-opacity"
                   title="Delete project (blocked while live sessions exist)"
                 >
                   <X size={14} />
@@ -264,7 +264,7 @@ export function ProjectSidebar({ className = "" }: ProjectSidebarProps = {}) {
             return (
               <div className="flex flex-col gap-3 px-4 py-3">
                 <p className="text-xs text-neutral-300">
-                  Remove "{deleteDialog.name}" from pi-forge.
+                  Remove "{deleteDialog.name}" from Huiyu PiwebUI Forge.
                 </p>
                 <ul className="ml-4 list-disc space-y-0.5 text-[11px] text-neutral-400">
                   <li>
@@ -334,17 +334,3 @@ export function ProjectSidebar({ className = "" }: ProjectSidebarProps = {}) {
   );
 }
 
-/**
- * Strip everything but the last path segment so the project row can
- * show "the folder name" as a sub-label under the display name. Both
- * `/` and `\` are accepted so Windows-form paths (which the project
- * store could in principle produce) don't fall through to showing the
- * whole absolute path. Trailing-separator and empty-string defenses
- * are belt-and-suspenders — `project-manager` realpaths every project
- * path before storage, so the result should always have at least one
- * segment.
- */
-function folderName(absPath: string): string {
-  const parts = absPath.split(/[/\\]/).filter((s) => s.length > 0);
-  return parts[parts.length - 1] ?? absPath;
-}

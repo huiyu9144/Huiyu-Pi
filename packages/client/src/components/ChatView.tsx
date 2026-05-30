@@ -6,10 +6,8 @@ import {
   ChevronRight,
   Columns2,
   Copy,
-  Download,
   ExternalLink,
   FileCode,
-  GitBranch,
   Rows2,
   Users,
   X,
@@ -24,8 +22,6 @@ import {
   type CompactionEvent,
 } from "../store/session-store";
 import { useActiveProject, useProjectStore } from "../store/project-store";
-import { api, ApiError } from "../lib/api-client";
-import { useIsMobile } from "../lib/use-is-mobile";
 import { ChatMarkdown } from "./ChatMarkdown";
 import { CompactionCard } from "./CompactionCard";
 import { DiffBlock } from "./DiffBlock";
@@ -130,53 +126,6 @@ export function ChatView({ sessionId }: Props) {
   const project = useActiveProject();
   const treeOpen = useUiStore((s) => s.treeModalOpen);
   const setTreeOpen = useUiStore((s) => s.setTreeModalOpen);
-
-  // Conversation export menu (Markdown / Raw JSONL). Hidden on mobile —
-  // the file-download flow is desktop-shaped (browser save dialog,
-  // open-in-editor follow-ups) and a phone user typically doesn't
-  // want a .md / .jsonl landing in their Downloads folder anyway.
-  const isMobile = useIsMobile();
-  const [exportMenuOpen, setExportMenuOpen] = useState(false);
-  const [exportError, setExportError] = useState<string | undefined>(undefined);
-  const exportMenuRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!exportMenuOpen) return;
-    const onDoc = (e: MouseEvent): void => {
-      if (exportMenuRef.current === null) return;
-      if (!exportMenuRef.current.contains(e.target as Node)) setExportMenuOpen(false);
-    };
-    document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
-  }, [exportMenuOpen]);
-  const doExport = async (format: "markdown" | "jsonl"): Promise<void> => {
-    setExportMenuOpen(false);
-    setExportError(undefined);
-    try {
-      const { blob, filename } = await api.exportSession(sessionId, format);
-      // Same trigger pattern FileBrowserPanel / SettingsPanel use:
-      // synthesize an `<a download>`, click, then revoke the blob URL
-      // on the next tick so Safari has time to grab it.
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-    } catch (err) {
-      const message =
-        err instanceof ApiError
-          ? `${err.code} (${err.status})`
-          : err instanceof Error
-            ? err.message
-            : "export_failed";
-      setExportError(message);
-      // Auto-clear after a few seconds so a transient error doesn't
-      // sit forever.
-      window.setTimeout(() => setExportError(undefined), 4_000);
-    }
-  };
 
   // Open SSE on mount, close on unmount/session change. The store ensures
   // openStream is idempotent for the same id.
@@ -485,7 +434,7 @@ export function ChatView({ sessionId }: Props) {
               return out;
             })()}
             {streamingText.length > 0 && (
-              <div className="message-bubble rounded-lg border-[0.5px] border-[#1f1f1f] bg-neutral-900 px-4 py-3">
+              <div className="message-bubble rounded-lg border-[0.5px] border-neutral-800 bg-neutral-900 px-4 py-3">
                 <div className="mb-1 text-[10px] uppercase tracking-wider text-neutral-500">
                   assistant (streaming)
                 </div>
@@ -830,7 +779,7 @@ function Message({
     }
     return (
       <div
-        className="message-bubble group rounded-lg border-[0.5px] border-[#1f1f1f] bg-[#14171f] px-4 py-3"
+        className="message-bubble group rounded-lg border-[0.5px] border-neutral-800 bg-[#14171f] light:bg-neutral-100 px-4 py-3"
         data-message-role="user"
       >
         <div className="mb-1 flex items-center justify-between">
@@ -1007,7 +956,7 @@ function AssistantMessageBubble({
       : undefined;
   return (
     <div
-      className="message-bubble group rounded-lg border-[0.5px] border-[#1f1f1f] bg-neutral-900 px-4 py-3"
+      className="message-bubble group rounded-lg border-[0.5px] border-neutral-800 bg-neutral-900 px-4 py-3"
       data-message-role="assistant"
     >
       <div className="mb-1 flex items-center justify-between">

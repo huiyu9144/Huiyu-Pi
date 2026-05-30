@@ -24,7 +24,7 @@ function isDismissed(): boolean {
 function isChromiumDesktop(): boolean {
   if (typeof navigator === "undefined") return false;
   const ua = navigator.userAgent;
-  const isChromium = /Chrome\/\d+/.test(ua) && !/Edg\//.test(ua) || /Edg\/\d+/.test(ua);
+  const isChromium = (/Chrome\/\d+/.test(ua) && !ua.includes("Edg/")) || ua.includes("Edg/");
   const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(ua);
   return isChromium && !isMobile;
 }
@@ -51,7 +51,7 @@ export function useInstallPrompt() {
     setDismissed(true);
     try {
       localStorage.setItem(DISMISS_KEY, "true");
-    } catch {}
+    } catch { /* storage unavailable */ }
   }, []);
 
   const install = useCallback(async (): Promise<void> => {
@@ -63,7 +63,7 @@ export function useInstallPrompt() {
       setDismissed(true);
       try {
         localStorage.setItem(DISMISS_KEY, "true");
-      } catch {}
+      } catch { /* storage unavailable */ }
     }
   }, [deferred]);
 

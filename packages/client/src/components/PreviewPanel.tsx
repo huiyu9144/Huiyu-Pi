@@ -19,7 +19,6 @@ function isMarkdown(path: string): boolean {
 export function PreviewPanel() {
   const filePath = useUiStore((s) => s.previewFilePath);
   const closePreviewFile = useUiStore((s) => s.closePreviewFile);
-  const openPreviewFile = useUiStore((s) => s.openPreviewFile);
   const active = useActiveProject();
 
   const [content, setContent] = useState<string>("");
@@ -55,7 +54,7 @@ export function PreviewPanel() {
     return () => {
       cancelled = true;
     };
-  }, [filePath, active?.id]);
+  }, [filePath, active]);
 
   if (filePath === undefined) {
     return (
