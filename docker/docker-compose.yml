@@ -14,8 +14,8 @@ services:
         # Override in .env to match `id -u` / `id -g` for writable bind mounts.
         PUID: ${PUID:-1000}
         PGID: ${PGID:-1000}
-    image: huiyu-piwebui-forge:latest
-    container_name: ${CONTAINER_NAME:-huiyu-piwebui-forge}
+    image: huiyu-pi:latest
+    container_name: ${CONTAINER_NAME:-huiyu-pi}
     restart: unless-stopped
     ports:
       # Loopback only by default — drop the `127.0.0.1:` prefix to expose

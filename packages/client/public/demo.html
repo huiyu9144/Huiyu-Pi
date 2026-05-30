@@ -134,7 +134,7 @@ body{background:var(--bg);color:var(--text);font-family:ui-sans-serif,system-ui,
 <div class="header">
   <div class="header-left">
     <img src="/icons/logo-rounded.png" class="header-logo" alt="logo">
-    <span class="header-title">Huiyu PiwebUI Forge</span>
+    <span class="header-title">Huiyu Pi</span>
   </div>
   <div class="header-actions">
     <button class="header-btn" title="New">+</button>
@@ -218,14 +218,14 @@ body{background:var(--bg);color:var(--text);font-family:ui-sans-serif,system-ui,
       <div class="chat-messages" id="chatMessages">
         <div class="empty-state" id="emptyState">
           <img src="/icons/logo-rounded.png" alt="logo">
-          <div class="es-title">Huiyu PiwebUI Forge</div>
+          <div class="es-title">Huiyu Pi</div>
           <div class="es-sub">Start a conversation to build something great</div>
         </div>
       </div>
     </div>
     <div class="input-area">
       <div class="input-wrapper">
-        <textarea class="input-box" id="chatInput" placeholder="Ask Huiyu PiwebUI Forge ..." rows="2" readonly></textarea>
+        <textarea class="input-box" id="chatInput" placeholder="Ask Huiyu Pi ..." rows="2" readonly></textarea>
         <button class="send-btn" id="sendBtn">
           <svg class="send-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
         </button>
@@ -254,7 +254,7 @@ body{background:var(--bg);color:var(--text);font-family:ui-sans-serif,system-ui,
   var AI_RESPONSE='<h3>Authentication Setup</h3><p>I\'ll set up JWT-based authentication for your project. Here\'s the implementation:</p><h3>1. Install Dependencies</h3><pre><code>npm install jsonwebtoken bcryptjs express-validator</code></pre><h3>2. Auth Middleware</h3><pre><code>import jwt from \'jsonwebtoken\';\n\nexport const authMiddleware = (req, res, next) => {\n  const token = req.headers.authorization?.split(\' \')[1];\n  if (!token) return res.status(401).json({ error: \'No token\' });\n  \n  try {\n    const decoded = jwt.verify(token, process.env.JWT_SECRET);\n    req.userId = decoded.id;\n    next();\n  } catch (err) {\n    res.status(401).json({ error: \'Invalid token\' });\n  }\n};</code></pre><h3>3. Login Endpoint</h3><pre><code>app.post(\'/api/auth/login\', async (req, res) => {\n  const { email, password } = req.body;\n  const user = await User.findOne({ email });\n  \n  if (!user || !await bcrypt.compare(password, user.hash)) {\n    return res.status(401).json({ error: \'Invalid credentials\' });\n  }\n  \n  const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {\n    expiresIn: \'7d\'\n  });\n  \n  res.json({ token, user: { id: user.id, email } });\n});</code></pre><p>Files created: <code>src/middleware/auth.ts</code>, <code>src/routes/auth.ts</code></p><p>The auth system is now ready. Protected routes can use the <code>authMiddleware</code> guard.</p>';
 
   var FILE_CONTENTS={
-    readme:'<h1>My Webapp</h1><p>A modern web application built with TypeScript and React.</p><h2>Features</h2><ul><li>JWT-based authentication</li><li>Real-time updates via WebSocket</li><li>Responsive design with Tailwind CSS</li><li>Full test coverage</li></ul><h2>Quick Start</h2><pre><code>npm install\nnpm run dev</code></pre><p>Open <a href="#">http://localhost:3000</a> to view the app.</p><h2>Project Structure</h2><table><tr><th>Directory</th><th>Description</th></tr><tr><td><code>src/</code></td><td>Application source code</td></tr><tr><td><code>src/middleware/</code></td><td>Express middleware (auth, etc.)</td></tr><tr><td><code>src/routes/</code></td><td>API route handlers</td></tr><tr><td><code>tests/</code></td><td>Test files</td></tr></table><h2>Environment Variables</h2><pre><code>JWT_SECRET=your-secret-key\nDB_URL=mongodb://localhost:27017/myapp\nPORT=3000</code></pre><blockquote><p>Built with Huiyu PiwebUI Forge — zero context, lightning fast AI.</p></blockquote>',
+    readme:'<h1>My Webapp</h1><p>A modern web application built with TypeScript and React.</p><h2>Features</h2><ul><li>JWT-based authentication</li><li>Real-time updates via WebSocket</li><li>Responsive design with Tailwind CSS</li><li>Full test coverage</li></ul><h2>Quick Start</h2><pre><code>npm install\nnpm run dev</code></pre><p>Open <a href="#">http://localhost:3000</a> to view the app.</p><h2>Project Structure</h2><table><tr><th>Directory</th><th>Description</th></tr><tr><td><code>src/</code></td><td>Application source code</td></tr><tr><td><code>src/middleware/</code></td><td>Express middleware (auth, etc.)</td></tr><tr><td><code>src/routes/</code></td><td>API route handlers</td></tr><tr><td><code>tests/</code></td><td>Test files</td></tr></table><h2>Environment Variables</h2><pre><code>JWT_SECRET=your-secret-key\nDB_URL=mongodb://localhost:27017/myapp\nPORT=3000</code></pre><blockquote><p>Built with Huiyu Pi — zero context, lightning fast AI.</p></blockquote>',
     package:'<h2>package.json</h2><pre><code>{\n  "name": "my-webapp",\n  "version": "1.0.0",\n  "scripts": {\n    "dev": "vite",\n    "build": "tsc && vite build",\n    "test": "vitest",\n    "lint": "eslint src/"\n  },\n  "dependencies": {\n    "react": "^18.2.0",\n    "jsonwebtoken": "^9.0.0",\n    "bcryptjs": "^2.4.3"\n  }\n}</code></pre>',
     app:'<h2>App.tsx</h2><pre><code>import { BrowserRouter, Routes, Route } from \'react-router-dom\';\nimport { AuthProvider } from \'./context/auth\';\nimport { Dashboard } from \'./pages/Dashboard\';\nimport { Login } from \'./pages/Login\';\n\nexport default function App() {\n  return (\n    <AuthProvider>\n      <BrowserRouter>\n        <Routes>\n          <Route path="/login" element={<Login />} />\n          <Route path="/" element={<Dashboard />} />\n        </Routes>\n      </BrowserRouter>\n    </AuthProvider>\n  );\n}</code></pre>',
     auth:'<h2>auth.ts</h2><pre><code>import jwt from \'jsonwebtoken\';\nimport bcrypt from \'bcryptjs\';\n\nexport class AuthService {\n  async login(email: string, password: string) {\n    const user = await this.findUser(email);\n    if (!user) throw new Error(\'User not found\');\n    \n    const valid = await bcrypt.compare(password, user.hash);\n    if (!valid) throw new Error(\'Invalid password\');\n    \n    return jwt.sign(\n      { id: user.id, role: user.role },\n      process.env.JWT_SECRET!,\n      { expiresIn: \'7d\' }\n    );\n  }\n}</code></pre>',

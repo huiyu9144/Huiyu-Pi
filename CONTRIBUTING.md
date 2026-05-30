@@ -1,4 +1,4 @@
-# Contributing to Huiyu PiwebUI Forge
+# Contributing to Huiyu Pi
 
 Thank you for your interest in contributing! This document provides guidelines and information for contributors.
 
@@ -13,8 +13,8 @@ Thank you for your interest in contributing! This document provides guidelines a
 ### Development Setup
 
 ```bash
-git clone https://github.com/huiyu9144/Huiyu-PiwebUI-Forge.git
-cd Huiyu-PiwebUI-Forge
+git clone https://github.com/huiyu9144/Huiyu-Pi.git
+cd Huiyu-Pi
 npm install
 cd server && npm install && cd ..
 npm run dev:all
@@ -27,7 +27,7 @@ npm run dev:all
 
 ### Reporting Bugs
 
-1. Check [existing issues](https://github.com/huiyu9144/Huiyu-PiwebUI-Forge/issues) to avoid duplicates
+1. Check [existing issues](https://github.com/huiyu9144/Huiyu-Pi/issues) to avoid duplicates
 2. Open a new issue using the **Bug Report** template
 3. Include:
    - Steps to reproduce
@@ -38,7 +38,7 @@ npm run dev:all
 
 ### Suggesting Features
 
-1. Check [existing issues](https://github.com/huiyu9144/Huiyu-PiwebUI-Forge/issues) for similar requests
+1. Check [existing issues](https://github.com/huiyu9144/Huiyu-Pi/issues) for similar requests
 2. Open a new issue using the **Feature Request** template
 3. Describe the problem you're solving and your proposed solution
 

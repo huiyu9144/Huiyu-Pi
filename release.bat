@@ -15,7 +15,7 @@ set VERSION=%1
 set ALLOW_EMPTY=%2
 
 echo ========================================
-echo  Huiyu PiwebUI Forge Release v%VERSION%
+echo  Huiyu Pi Release v%VERSION%
 echo ========================================
 echo.
 
@@ -61,5 +61,5 @@ echo    - Docker images ^(ghcr.io^)
 echo    - GitHub Release
 echo.
 echo  Check progress at:
-echo    https://github.com/huiyu9144/Huiyu-PiwebUI-Forge/actions
+echo    https://github.com/huiyu9144/Huiyu-Pi/actions
 echo ========================================

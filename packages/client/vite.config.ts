@@ -40,8 +40,8 @@ export default defineConfig({
         "offline.html",
       ],
       manifest: {
-        name: "Huiyu PiwebUI Forge",
-        short_name: "PiwebUI Forge",
+        name: "Huiyu Pi",
+        short_name: "Huiyu Pi",
         description:
           "Self-hosted browser workbench for the pi coding agent — chat with the agent against your code, browse files, run a terminal, review diffs, all from one tab.",
         // theme_color is the static fallback used during PWA install

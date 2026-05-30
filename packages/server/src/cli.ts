@@ -160,11 +160,11 @@ export function applyCliEnv(parsed: ParsedCli): void {
 
 export function buildHelpText(): string {
   const lines: string[] = [
-    "huiyu-piwebui-forge — Self-hosted browser workbench for the pi coding agent",
+    "huiyu-pi — Self-hosted browser workbench for the pi coding agent",
     "",
     "Usage:",
-    "  huiyu-piwebui-forge [options]",
-    "  npx huiyu-piwebui-forge [options]",
+    "  huiyu-pi [options]",
+    "  npx huiyu-pi [options]",
     "",
     "Options:",
   ];
@@ -186,9 +186,9 @@ export function buildHelpText(): string {
   lines.push("  by prefixing the value with @. Example: --api-key @/run/secrets/api-key");
   lines.push("");
   lines.push("Examples:");
-  lines.push("  huiyu-piwebui-forge");
-  lines.push("  huiyu-piwebui-forge --port 4000 --workspace-path ~/Code");
-  lines.push("  huiyu-piwebui-forge --api-key @/run/secrets/api-key --no-expose-docs");
+  lines.push("  huiyu-pi");
+  lines.push("  huiyu-pi --port 4000 --workspace-path ~/Code");
+  lines.push("  huiyu-pi --api-key @/run/secrets/api-key --no-expose-docs");
 
   return lines.join("\n");
 }

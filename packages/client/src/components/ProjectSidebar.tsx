@@ -264,7 +264,7 @@ export function ProjectSidebar({ className = "" }: ProjectSidebarProps = {}) {
             return (
               <div className="flex flex-col gap-3 px-4 py-3">
                 <p className="text-xs text-neutral-300">
-                  Remove "{deleteDialog.name}" from Huiyu PiwebUI Forge.
+                  Remove "{deleteDialog.name}" from Huiyu Pi.
                 </p>
                 <ul className="ml-4 list-disc space-y-0.5 text-[11px] text-neutral-400">
                   <li>

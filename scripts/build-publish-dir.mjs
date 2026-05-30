@@ -54,7 +54,7 @@ mkdirSync(join(publishDir, "dist", "client"), { recursive: true });
 // ── Copy assets ─────────────────────────────────────────────────────
 cpSync(serverDist, join(publishDir, "dist", "server"), { recursive: true, force: true });
 cpSync(clientDist, join(publishDir, "dist", "client"), { recursive: true, force: true });
-copyFileSync(join(root, "bin", "huiyu-piwebui-forge.mjs"), join(publishDir, "bin", "huiyu-piwebui-forge.mjs"));
+copyFileSync(join(root, "bin", "huiyu-pi.mjs"), join(publishDir, "bin", "huiyu-pi.mjs"));
 copyFileSync(join(root, "bin", "fix-pty-perms.mjs"), join(publishDir, "bin", "fix-pty-perms.mjs"));
 
 for (const file of ["README.md", "LICENSE"]) {
@@ -68,12 +68,12 @@ const serverPkg = JSON.parse(readFileSync(join(root, "packages", "server", "pack
 
 // ── Write synthetic package.json ────────────────────────────────────
 const publishPkg = {
-  name: "huiyu-piwebui-forge",
+  name: "huiyu-pi",
   version: rootPkg.version,
   description: rootPkg.description ?? "Self-hosted browser workbench for the pi coding agent",
   type: "module",
   bin: {
-    "huiyu-piwebui-forge": "bin/huiyu-piwebui-forge.mjs",
+    "huiyu-pi": "bin/huiyu-pi.mjs",
   },
   files: ["bin/", "dist/", "README.md", "LICENSE"],
   engines: {
@@ -93,5 +93,5 @@ const publishPkg = {
 writeFileSync(join(publishDir, "package.json"), JSON.stringify(publishPkg, null, 2) + "\n");
 
 console.log(`[publish] Assembled in ${publishDir}`);
-console.log(`[publish] Package: huiyu-piwebui-forge@${rootPkg.version}`);
+console.log(`[publish] Package: huiyu-pi@${rootPkg.version}`);
 console.log(`[publish] Run:  cd publish && npm publish`);

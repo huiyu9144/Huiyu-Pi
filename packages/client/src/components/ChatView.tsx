@@ -228,7 +228,7 @@ export function ChatView({ sessionId }: Props) {
           {messages.length === 0 && streamingText.length === 0 && !isStreaming && (
             <div className="mt-64 flex flex-col items-center gap-3">
               <img src="/icons/logo-rounded.png" alt="" className="h-16 w-16 rounded-xl" />
-              <span className="text-lg font-semibold tracking-tight">Huiyu PiwebUI Forge</span>
+              <span className="text-lg font-semibold tracking-tight">Huiyu Pi</span>
             </div>
           )}
           <div className="chat-message-list mx-auto max-w-3xl space-y-4">

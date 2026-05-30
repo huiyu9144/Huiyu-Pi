@@ -17,19 +17,15 @@
 
 <p align="center">
   <a href="https://discord.gg/BdJDs4AKbS"><img src="https://img.shields.io/discord/1334932402172137576?style=flat-square&logo=discord&logoColor=white&label=Discord&color=5865F2" alt="Discord"></a>
-  <a href="https://github.com/huiyu9144/Huiyu-PiwebUI-Forge/stargazers"><img src="https://img.shields.io/github/stars/huiyu9144/Huiyu-PiwebUI-Forge?style=flat-square&logo=github&color=f1c40f&labelColor=555555" alt="GitHub Stars"></a>
-  <a href="https://github.com/huiyu9144/Huiyu-PiwebUI-Forge/network/members"><img src="https://img.shields.io/github/forks/huiyu9144/Huiyu-PiwebUI-Forge?style=flat-square&logo=github&color=20B2AA&label=Forks" alt="GitHub Forks"></a>
-  <a href="https://github.com/huiyu9144/Huiyu-PiwebUI-Forge/blob/main/LICENSE"><img src="https://img.shields.io/github/license/huiyu9144/Huiyu-PiwebUI-Forge?style=flat-square&color=20B2AA" alt="MIT License"></a>
-  <a href="https://github.com/huiyu9144/Huiyu-PiwebUI-Forge/releases"><img src="https://img.shields.io/github/v/release/huiyu9144/Huiyu-PiwebUI-Forge?style=flat-square&color=20B2AA" alt="Release"></a>
-  <a href="https://github.com/huiyu9144/Huiyu-PiwebUI-Forge/issues"><img src="https://img.shields.io/github/issues/huiyu9144/Huiyu-PiwebUI-Forge?style=flat-square&color=20B2AA" alt="Issues"></a>
+  <a href="https://github.com/huiyu9144/Huiyu-Pi/stargazers"><img src="https://img.shields.io/github/stars/huiyu9144/Huiyu-Pi?style=flat-square&logo=github&color=f1c40f&labelColor=555555" alt="GitHub Stars"></a>
+  <a href="https://github.com/huiyu9144/Huiyu-Pi/network/members"><img src="https://img.shields.io/github/forks/huiyu9144/Huiyu-Pi?style=flat-square&logo=github&color=20B2AA&label=Forks" alt="GitHub Forks"></a>
+  <a href="https://github.com/huiyu9144/Huiyu-Pi/blob/main/LICENSE"><img src="https://img.shields.io/github/license/huiyu9144/Huiyu-Pi?style=flat-square&color=20B2AA" alt="MIT License"></a>
+  <a href="https://github.com/huiyu9144/Huiyu-Pi/releases"><img src="https://img.shields.io/github/v/release/huiyu9144/Huiyu-Pi?style=flat-square&color=20B2AA" alt="Release"></a>
+  <a href="https://github.com/huiyu9144/Huiyu-Pi/issues"><img src="https://img.shields.io/github/issues/huiyu9144/Huiyu-Pi?style=flat-square&color=20B2AA" alt="Issues"></a>
 </p>
 
 <p align="center">
   <i>基于 <a href="https://github.com/Devin-Marks/pi-forge">pi-forge</a> 和 <a href="https://github.com/earendil-works/pi">pi</a> 构建。</i>
-</p>
-
-<p align="center">
-  <img src="docs/images/demo.gif" alt="Huiyu Pi 演示" width="100%">
 </p>
 
 ---
@@ -40,12 +36,12 @@
 
 | | 核心优势 | 详情 |
 |---|---|---|
-| **1** | **性能更快** | 默认上下文及 Prompt 从 ~20K 压缩到接近于 0，仅保留最基础的几个命令。AI 响应时长大幅缩短。 |
-| **2** | **Token 消耗更少** | 去除了绝大多数不常用的上下文，使得每次的 Token 消耗都大幅度降低。告别一句话就是一美金的时代。 |
-| **3** | **上下文越少，AI 越专注** | 上下文越多，AI 的注意力就会被稀释。极致精简上下文，让 AI 聚焦核心指令，执行更精准。 |
-| **4** | **本地部署安全** | 纯粹本地部署，任何信息都在本地。杜绝 API Key 等敏感信息与网络产生关系，数据零泄露风险。 |
-| **5** | **从 0 搭建你的 AI 帝国** | 从 0 搭建自己的 Harness 和 Agent，告别臃肿的不可修改的各类平台。完全自定义，完全掌控。 |
-| **6** | **弥补原版不足，体验更丝滑** | 弥补 pi 缺少前台 WebUI 以及 pi-forge 交互细节体验不方便等问题。用过都说爽。 |
+| ⚡ | **性能更快** | 默认上下文及 Prompt 从 ~20K 压缩到接近于 0，仅保留最基础的几个命令。AI 响应时长大幅缩短。 |
+| 💰 | **Token 消耗更少** | 去除了绝大多数不常用的上下文，使得每次的 Token 消耗都大幅度降低。告别一句话就是一美金的时代。 |
+| 🎯 | **上下文越少，AI 越专注** | 上下文越多，AI 的注意力就会被稀释。极致精简上下文，让 AI 聚焦核心指令，执行更精准。 |
+| 🔒 | **本地部署安全** | 纯粹本地部署，任何信息都在本地。杜绝 API Key 等敏感信息与网络产生关系，数据零泄露风险。 |
+| 🏗️ | **从 0 搭建你的 AI 帝国** | 从 0 搭建自己的 Harness 和 Agent，告别臃肿的不可修改的各类平台。完全自定义，完全掌控。 |
+| 🛠️ | **弥补原版不足，体验更丝滑** | 弥补 pi 缺少前台 WebUI 以及 pi-forge 交互细节体验不方便等问题。用过都说爽。 |
 
 ---
 
@@ -76,6 +72,10 @@
 通过 CSS 变量控制深色和浅色主题。无需重新构建即可创建自己的皮肤。
 
 ---
+
+<p align="center">
+  <img src="docs/images/demo.gif" alt="Huiyu Pi 演示" width="100%">
+</p>
 
 ## 界面展示
 
@@ -118,28 +118,34 @@ huiyu-pi
 
 # 通过参数覆盖默认配置：
 huiyu-pi --port 4000 --workspace-path ~/Code
+huiyu-pi --api-key @/run/secrets/api-key --no-expose-docs
 huiyu-pi --help       # 查看全部参数
 ```
+
+默认情况下 Huiyu Pi 监听 `http://localhost:9144`，从 `~/.pi/agent/` 读取提供商配置（如果安装了 pi CLI 则共享同一份配置），状态数据存储在 `~/.pi-forge/`。可通过参数或环境变量覆盖所有配置。
 
 ### 手动启动（开发模式）
 
 ```bash
-git clone https://github.com/huiyu9144/Huiyu-PiwebUI-Forge.git
-cd Huiyu-PiwebUI-Forge
-npm install && cd server && npm install && cd ..
-npm run dev:all
+git clone https://github.com/huiyu9144/Huiyu-Pi.git
+cd Huiyu-Pi
+npm install
+npm run dev
 ```
 
-- 前端: http://localhost:9144
-- 后端: http://localhost:9145
+### Windows / macOS / Linux 一键启动
 
-### Windows 一键启动
-
-克隆仓库，双击 `start.bat` — 自动安装依赖并打开浏览器。
+克隆仓库，运行 `start.bat`（Windows）或 `bash start.sh`（macOS/Linux）— 自动安装依赖并打开浏览器。
 
 ---
 
 ## API 密钥配置
+
+**方式 1：通过设置界面**（推荐）
+
+打开 `http://localhost:9144`，进入 **设置 → 提供商**，输入你的 API 密钥。
+
+**方式 2：配置文件**
 
 创建 `~/.pi/agent/auth.json`:
 
@@ -152,7 +158,7 @@ npm run dev:all
 }
 ```
 
-或设置环境变量:
+**方式 3：环境变量**
 
 ```bash
 # Windows
@@ -160,6 +166,12 @@ set DEEPSEEK_API_KEY=sk-your-api-key
 
 # macOS/Linux
 export DEEPSEEK_API_KEY=sk-your-api-key
+```
+
+**方式 4：CLI 参数**
+
+```bash
+huiyu-pi --api-key @/path/to/api-key.txt
 ```
 
 **支持的提供商:** Anthropic、OpenAI、DeepSeek、Google、Mistral、Groq、xAI、OpenRouter 等。

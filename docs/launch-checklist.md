@@ -1,4 +1,4 @@
-# Huiyu PiwebUI Forge — 产品发布推广清单
+# Huiyu Pi — 产品发布推广清单
 
 > 对标项目：pi-forge (1.2k⭐)、Cline (28k⭐)、Continue (20k⭐)、Cursor (社区热度)、Aider (25k⭐)
 
@@ -38,7 +38,7 @@
 
 | 渠道 | 标题模板 | 发布时间 | 备注 |
 |------|----------|----------|------|
-| **Hacker News** | "Show HN: Huiyu PiwebUI Forge – Zero-context local AI coding agent" | 美东时间 9-11 AM | 周二到周四效果最好 |
+| **Hacker News** | "Show HN: Huiyu Pi – Zero-context local AI coding agent" | 美东时间 9-11 AM | 周二到周四效果最好 |
 | **Reddit** r/selfhosted | "I built a self-hosted AI coding tool with near-zero context" | 美东时间 10 AM - 2 PM | 附 GIF + GitHub 链接 |
 | **Reddit** r/LocalLLaMA | "Local AI coding agent with WebUI, supports Claude/GPT/DeepSeek" | 同上 | 技术向标题 |
 | **Reddit** r/programming | "Show r/programming: Open-source alternative to Codex/Claude Code" | 同上 | 如果有足够技术深度 |
@@ -48,7 +48,7 @@
 
 | 渠道 | 标题模板 | 备注 |
 |------|----------|------|
-| **Product Hunt** | "Huiyu PiwebUI Forge – Self-hosted AI coding agent" | 提前预约，周二发布 |
+| **Product Hunt** | "Huiyu Pi – Self-hosted AI coding agent" | 提前预约，周二发布 |
 | **Dev.to** | 发布技术博客文章 | "How I built a zero-context AI coding agent" |
 | **Twitter/X** | Thread 形式，5-8 条推文 | 附 GIF + 关键特性 |
 | **Discord** 各 AI 开发社区 | 分享链接 | 不要硬广，自然分享 |
@@ -76,8 +76,8 @@
 
 ### Hacker News（最重要）
 ```
-标题：Show HN: Huiyu PiwebUI Forge – Local AI coding agent with near-zero context
-链接：https://github.com/huiyu9144/Huiyu-PiwebUI-Forge
+标题：Show HN: Huiyu Pi – Local AI coding agent with near-zero context
+链接：https://github.com/huiyu9144/Huiyu-Pi
 ```
 **技巧**：
 - 周二到周四发布，美东 9-11 AM
@@ -110,7 +110,7 @@ Local AI coding agent with WebUI – supports Claude, GPT, DeepSeek, Gemini
 ```
 🧵 1/6 I built an open-source alternative to Codex & Claude Code
 
-Huiyu PiwebUI Forge – a self-hosted AI coding agent with near-zero context
+Huiyu Pi – a self-hosted AI coding agent with near-zero context
 
 Here's what makes it different 👇
 
@@ -131,7 +131,7 @@ Unlike Codex/Claude Code that load entire codebases
 We keep context minimal = faster responses
 
 6/6 🔗 Try it now
-GitHub: github.com/huiyu9144/Huiyu-PiwebUI-Forge
+GitHub: github.com/huiyu9144/Huiyu-Pi
 Star ⭐ if you find it useful!
 ```
 

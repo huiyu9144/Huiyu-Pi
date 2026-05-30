@@ -932,7 +932,7 @@ function SkillsTab({ onError }: { onError: (msg: string | undefined) => void }) 
         Skills discovered in <code className="font-mono">~/.pi/agent/skills/</code> and{" "}
         <code className="font-mono">{project.path}/.pi/skills/</code>. The global toggle writes to
         pi&apos;s <code className="font-mono">settings.skills</code>; per-project overrides write to
-        the Huiyu PiwebUI Forge-private file at{" "}
+        the Huiyu Pi-private file at{" "}
         <code className="font-mono">{`\${FORGE_DATA_DIR}/skills-overrides.json`}</code>.
       </p>
       <div className="rounded border border-amber-700/40 bg-amber-900/10 px-3 py-2 text-[11px] text-amber-200 light:border-amber-300 light:bg-amber-50 light:text-amber-800">
@@ -2227,7 +2227,7 @@ function QuickActionsTab({ onError }: { onError: (msg: string | undefined) => vo
                 <p className="mt-1 text-[11px] text-neutral-500 light:text-neutral-600">
                   Runs in the active project&apos;s folder via <code>/bin/sh -c</code>. Multi-line
                   is fine (<code>&amp;&amp;</code>, <code>;</code>, etc.). Environment is scrubbed
-                  of Huiyu PiwebUI Forge and provider secrets (same as the integrated terminal).
+                  of Huiyu Pi and provider secrets (same as the integrated terminal).
                 </p>
               </div>
               <div>
@@ -2376,7 +2376,7 @@ function ThemeSwatch({ id }: { id: ThemeId }) {
 // ---------------- Backup tab ----------------
 
 /**
- * Export / import the Huiyu PiwebUI Forge's portable config as a `.tar.gz`.
+ * Export / import the Huiyu Pi's portable config as a `.tar.gz`.
  *
  * Export bundles `mcp.json` + `settings.json` + `models.json` +
  * `skills-overrides.json` + `tool-overrides.json`. Auth is
@@ -2736,7 +2736,7 @@ interface McpDraft {
    *  headers, so the form reuses the same row UI. */
   env: { key: string; value: string }[];
   /** Optional cwd; blank ↦ default (project path for project
-   *  servers, Huiyu PiwebUI Forge process cwd for global). */
+   *  servers, Huiyu Pi process cwd for global). */
   cwd: string;
 }
 
@@ -3440,7 +3440,7 @@ function StdioTrustBanner(props: {
       </div>
       <p className="text-[11px] leading-relaxed">
         <strong>{props.projectName}</strong>'s <code className="font-mono">.mcp.json</code> declares
-        MCP server{props.gatedCount === 1 ? "" : "s"} that Huiyu PiwebUI Forge would launch as local subprocess
+        MCP server{props.gatedCount === 1 ? "" : "s"} that Huiyu Pi would launch as local subprocess
         {props.gatedCount === 1 ? "" : "es"}. Stdio MCP runs arbitrary commands on this machine with
         whatever env you've passed through — only trust projects whose{" "}
         <code className="font-mono">.mcp.json</code> you've reviewed and approve of. Remote (URL)
@@ -3718,7 +3718,7 @@ function GeneralTab() {
   return (
     <div className="space-y-6 text-sm text-neutral-300">
       <header className="space-y-1">
-        <h2 className="text-base font-semibold text-neutral-100">Huiyu PiwebUI Forge</h2>
+        <h2 className="text-base font-semibold text-neutral-100">Huiyu Pi</h2>
         <p className="text-xs text-neutral-500">
           Frontend UI optimized by{" "}
           <span className="text-neutral-400">Huiyu</span>
