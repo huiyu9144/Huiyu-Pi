@@ -109,7 +109,7 @@ export function PreviewPanel() {
     return (
       <div className="flex h-full items-center justify-center p-4">
         <div className="flex flex-col items-center gap-3">
-          <img src="/icons/logo.jpg" alt="" className="h-16 w-16 rounded-xl" />
+          <img src="/icons/logo-rounded.png" alt="" className="h-16 w-16 rounded-xl" />
           <span className="text-lg font-semibold tracking-tight">Huiyu PiwebUI Forge</span>
           <p className="mt-2 text-center text-sm text-neutral-500">
             Click a file path in the chat to preview it here.

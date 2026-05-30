@@ -445,7 +445,7 @@ export function App() {
               rel="noopener noreferrer"
               className="flex items-center gap-1.5"
             >
-              <img src="/icons/logo.jpg" alt="" className="h-6 w-6 rounded-md" aria-hidden="true" />
+              <img src="/icons/logo-rounded.png" alt="" className="h-6 w-6 rounded-md" aria-hidden="true" />
               <span className="text-sm font-semibold tracking-tight">Huiyu PiwebUI Forge</span>
             </a>
             <button

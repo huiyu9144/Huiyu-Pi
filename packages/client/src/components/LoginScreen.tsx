@@ -21,7 +21,7 @@ export function LoginScreen() {
       >
         <header className="space-y-1">
           <div className="flex items-center gap-2">
-            <img src="/icons/logo.jpg" alt="" className="h-6 w-6 rounded-md" aria-hidden="true" />
+            <img src="/icons/logo-rounded.png" alt="" className="h-6 w-6 rounded-md" aria-hidden="true" />
             <h1 className="text-xl font-semibold tracking-tight">Huiyu PiwebUI Forge</h1>
           </div>
           <p className="text-sm text-neutral-400">Enter the Huiyu PiwebUI Forge password to continue.</p>
