@@ -11,7 +11,7 @@
 <p align="center">
   <b>100% Free · Open Source · Self-Hosted</b><br>
   A local open-source Agent tool that lets you build your own Harness system from scratch.<br>
-  Built on Pi and pi-forge — context reduced to near-zero, speed boosted dramatically.<br>
+  Built on Pi and pi-forge — <b>context reduced to near-zero, speed boosted dramatically</b>.<br>
   Build from scratch cleanly without platform restrictions.
 </p>
 
