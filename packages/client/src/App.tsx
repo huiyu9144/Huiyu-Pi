@@ -759,8 +759,8 @@ export function App() {
                 ) : active ? (
                   <div className="flex flex-1 items-center justify-center px-6 text-center">
                     <div className="space-y-3 text-sm text-neutral-400">
-                      <div className="flex items-center justify-center gap-2">
-                        <img src="/icons/logo-rounded.png" alt="" className="h-10 w-10 rounded-xl" />
+                      <div className="flex flex-col items-center gap-2">
+                        <img src="/icons/logo-rounded.png" alt="" className="h-16 w-16 rounded-2xl" />
                         <span className="text-xl font-semibold text-neutral-100">Huiyu Pi</span>
                       </div>
                       <p>Pick a session from the sidebar — or start a new one here.</p>
