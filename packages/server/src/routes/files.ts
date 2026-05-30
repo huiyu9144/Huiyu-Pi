@@ -439,7 +439,8 @@ export const fileRoutes: FastifyPluginAsync = async (fastify) => {
       if (project === undefined) return reply;
       try {
         const rawPath = req.query.path;
-        const fileAbsPath = isAbsolute(rawPath) ? rawPath : join(project.path, rawPath);
+        const normalizedPath = rawPath.replace(/^[/\\]+/, "");
+        const fileAbsPath = isAbsolute(normalizedPath) ? normalizedPath : join(project.path, normalizedPath);
         const result = await readFile(fileAbsPath, project.path);
         return result;
       } catch (err) {
