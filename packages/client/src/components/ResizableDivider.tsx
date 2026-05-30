@@ -51,7 +51,7 @@ export function ResizableDivider({
   orientation = "vertical",
   onDragEnd,
 }: Props) {
-  const dragRef = useRef<{ start: number; startSize: number } | null>(null);
+  const dragRef = useRef<{ start: number; startSize: number; raf: number | null } | null>(null);
   const horizontal = orientation === "horizontal";
   const cursor = horizontal ? "row-resize" : "col-resize";
 
@@ -64,6 +64,7 @@ export function ResizableDivider({
   useEffect(() => {
     const cancel = (): void => {
       if (dragRef.current === null) return;
+      if (dragRef.current.raf !== null) cancelAnimationFrame(dragRef.current.raf);
       dragRef.current = null;
       document.body.style.removeProperty("cursor");
       document.body.style.removeProperty("user-select");
@@ -86,6 +87,7 @@ export function ResizableDivider({
     dragRef.current = {
       start: horizontal ? e.clientY : e.clientX,
       startSize: getStartSize(),
+      raf: null,
     };
     document.body.style.cursor = cursor;
     document.body.style.userSelect = "none";
@@ -93,14 +95,20 @@ export function ResizableDivider({
 
   const onPointerMove = (e: PointerEvent<HTMLDivElement>): void => {
     if (dragRef.current === null) return;
-    const cur = horizontal ? e.clientY : e.clientX;
-    const delta = cur - dragRef.current.start;
-    const next = dragRef.current.startSize + delta * direction;
-    onResize(Math.min(Math.max(next, minSize), maxSize));
+    if (dragRef.current.raf !== null) return;
+    dragRef.current.raf = requestAnimationFrame(() => {
+      if (dragRef.current === null) return;
+      const cur = horizontal ? e.clientY : e.clientX;
+      const delta = cur - dragRef.current.start;
+      const next = dragRef.current.startSize + delta * direction;
+      onResize(Math.min(Math.max(next, minSize), maxSize));
+      if (dragRef.current) dragRef.current.raf = null;
+    });
   };
 
   const onPointerUp = (e: PointerEvent<HTMLDivElement>): void => {
     if (dragRef.current === null) return;
+    if (dragRef.current.raf !== null) cancelAnimationFrame(dragRef.current.raf);
     const cur = horizontal ? e.clientY : e.clientX;
     const delta = cur - dragRef.current.start;
     const finalSize = dragRef.current.startSize + delta * direction;
