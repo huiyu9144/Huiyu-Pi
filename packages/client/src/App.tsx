@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, CircleCheck, Code, Download, FileDown, Globe, Menu, MessageCircle, Monitor, MousePointerClick, SquareTerminal, Plus, Settings, Coffee, Sparkles } from "lucide-react";
+import { ChevronLeft, CircleCheck, Code, Download, FileDown, Globe, Menu, MessageCircle, Monitor, MousePointerClick, SquareTerminal, Plus, Settings, Coffee, Sparkles, Github } from "lucide-react";
 import { useIsMobile } from "./lib/use-is-mobile";
 import { useAuthStore } from "./store/auth-store";
 import { useActiveProject, useProjectStore } from "./store/project-store";
@@ -503,6 +503,15 @@ export function App() {
           <div className="hidden md:block">
             <GlobalSearchBar />
           </div>
+          <a
+            href="https://github.com/huiyu9144/Huiyu-PiwebUI-Forge"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden md:flex items-center justify-center rounded-md p-1.5 text-neutral-400 hover:text-neutral-100"
+            title="GitHub"
+          >
+            <Github size={16} />
+          </a>
           {/* MCP status badge stays visible in minimal — operators
               still want to see whether MCP servers are connected,
               they just can't reconfigure them from a locked-down

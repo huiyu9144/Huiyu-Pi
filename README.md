@@ -23,6 +23,17 @@
   <img src="docs/images/demo.gif" alt="Huiyu PiwebUI Forge Demo" width="100%">
 </p>
 
+<table>
+  <tr>
+    <td width="50%"><img src="docs/images/screenshot-session.jpg" alt="Session Management"></td>
+    <td width="50%"><img src="docs/images/screenshot-terminal.jpg" alt="Integrated Terminal"></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/images/screenshot-files.png" alt="File Browser + Editor"></td>
+    <td width="50%"><img src="docs/images/screenshot-git.jpg" alt="Git Integration"></td>
+  </tr>
+</table>
+
 ---
 
 ## Features
@@ -53,18 +64,6 @@ Dark and light themes controlled by CSS variables. Create your own skin without 
 
 ### 📦 Docker & K8s ready
 Dockerfile, docker-compose, Kubernetes and OpenShift deployment manifests included.
-
----
-
-## Screenshots
-
-<p align="center">
-  <img src="docs/images/screenshot-chat.png" alt="Chat Interface" width="100%">
-</p>
-
-<p align="center">
-  <img src="docs/images/screenshot-editor.jpg" alt="Code Editor" width="100%">
-</p>
 
 ---
 
