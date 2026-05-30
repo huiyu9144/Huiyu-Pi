@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync, FastifyReply } from "fastify";
 import { execSync } from "child_process";
+import { join } from "node:path";
 import {
   ChecksumMismatchError,
   DirectoryNotEmptyError,
@@ -437,7 +438,7 @@ export const fileRoutes: FastifyPluginAsync = async (fastify) => {
       const project = await resolveProject(req.query.projectId, reply);
       if (project === undefined) return reply;
       try {
-        const result = await readFile(req.query.path, project.path);
+        const result = await readFile(join(project.path, req.query.path), project.path);
         return result;
       } catch (err) {
         return mapError(reply, err);
@@ -477,7 +478,7 @@ export const fileRoutes: FastifyPluginAsync = async (fastify) => {
       const project = await resolveProject(req.body.projectId, reply);
       if (project === undefined) return reply;
       try {
-        await writeFile(req.body.path, project.path, req.body.content);
+        await writeFile(join(project.path, req.body.path), project.path, req.body.content);
         return { path: req.body.path };
       } catch (err) {
         return mapError(reply, err);

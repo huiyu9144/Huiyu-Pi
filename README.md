@@ -5,7 +5,11 @@
 <h1 align="center">Huiyu PiwebUI Forge</h1>
 
 <p align="center">
-  Self-hosted browser UI for AI coding agents — your data never leaves your machine.
+  <a href="README.zh.md">🇨🇳 中文说明</a>
+</p>
+
+<p align="center">
+  A local open-source Agent tool that lets you build your own Harness system from scratch. Built on Pi and pi-forge's WebUI, compared to IDE tools like Codex and Claude Code, context is reduced to nearly zero with massive speed improvements. Build from scratch cleanly without platform restrictions.
 </p>
 
 <p align="center">

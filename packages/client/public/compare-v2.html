@@ -10,7 +10,7 @@
 *{margin:0;padding:0;box-sizing:border-box}
 
 :root{
-  --bg:#0E1117;--surface:#131313;--surface-alt:#1a1a1a;
+  --bg:#0A0A0A;--surface:#131313;--surface-alt:#1a1a1a;
   --border:#1f1f1f;--border-subtle:#1a1a1a;
   --text-pri:#f5f5f5;--text-sec:#a3a3a3;--text-dim:#525252;
   --red:#ef4444;--red-soft:rgba(239,68,68,0.08);--red-border:rgba(239,68,68,0.25);
@@ -608,7 +608,7 @@ body{
 
 <script>
 (function(){
-  var lang='cn';
+  var lang=localStorage.getItem('pi-forge-compare-lang')||'cn';
   var TR={
     cn:{
       title:'\u26a1<span class="zero">0</span>\u4e0a\u4e0b\u6587 \u00b7 <span class="fast">\u6781\u901f</span><span class="sub">AI\u79d2\u56de\u590d</span>',
@@ -642,6 +642,7 @@ body{
 
   window.setLang=function(l){
     lang=l;
+    localStorage.setItem('pi-forge-compare-lang',l);
     var t=TR[l];
     mainTitle.innerHTML=t.title;
     beforeCtxLabel.textContent=t.ctx;
@@ -653,7 +654,8 @@ body{
     window._currentLang=t;
   };
 
-  window._currentLang=TR.cn;
+  window._currentLang=TR[lang];
+  window.setLang(lang);
 
   var origTick=window._animTick;
   window._animTick=function(m){
@@ -771,7 +773,7 @@ body{
         updateProgress(i/total,'Frame '+(i+1)+'/'+total+'\u2026');
         var c=document.createElement('canvas');c.width=960;c.height=680;
         var ctx=c.getContext('2d',{willReadFrequently:true});
-        var s=await html2canvas(el,{backgroundColor:'#0E1117',scale:1,useCORS:true,logging:false,width:960,height:680});
+        var s=await html2canvas(el,{backgroundColor:'#0A0A0A',scale:1,useCORS:true,logging:false,width:960,height:680});
         ctx.drawImage(s,0,0);
         gif.addFrame(c,{delay:Math.round(1000/FPS),copy:true});
       }
