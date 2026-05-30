@@ -1321,7 +1321,7 @@ function ToolCallBatchCard({ entries }: { entries: ToolBatchEntry[] }) {
     })
     .slice(0, 3);
   return (
-    <details className="group rounded border border-neutral-800 bg-neutral-950 text-xs">
+    <details className="-ml-4 group rounded border border-neutral-800 bg-neutral-950 text-xs">
       <summary className="flex cursor-pointer flex-col gap-2 px-3 py-2 text-neutral-300 sm:flex-row sm:items-center sm:justify-between">
         <span className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
           <span className="text-neutral-500">→</span>
@@ -1383,7 +1383,7 @@ function AssistantBlock({
 
   if (type === "thinking" && typeof block.thinking === "string") {
     return (
-      <details className="rounded border border-neutral-800 px-2 py-1 text-xs text-neutral-400">
+      <details className="rounded border border-neutral-800 px-2 py-1 text-xs text-neutral-400 -ml-4">
         <summary className="cursor-pointer">Thinking…</summary>
         <pre className="mt-1 whitespace-pre-wrap break-words font-sans text-[12px]">
           {block.thinking}
@@ -1506,7 +1506,7 @@ function ToolCallEntry({
         : "border-neutral-800";
 
   return (
-    <div className={`rounded border ${borderClass} bg-neutral-950 text-xs`}>
+    <div className={`-ml-4 rounded border ${borderClass} bg-neutral-950 text-xs`}>
       <div className="flex items-center justify-between px-3 py-2 text-neutral-300">
         <div className="min-w-0 flex-1 truncate">
           <span className="text-neutral-500">→ </span>
