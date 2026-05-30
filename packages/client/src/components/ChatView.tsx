@@ -1008,10 +1008,10 @@ function AssistantMessageBubble({
   const isDone = stopReason !== undefined || !isStreaming;
   return (
     <div
-      className="message-bubble group rounded-lg border-[0.5px] border-neutral-800 bg-neutral-900 px-4 py-3"
+      className="message-bubble group rounded-lg border-[0.5px] border-neutral-800 bg-neutral-900 py-3 pl-0 pr-4"
       data-message-role="assistant"
     >
-      <div className="mb-1 flex items-center justify-between">
+      <div className="mb-1 flex items-center justify-between pl-4">
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -1044,7 +1044,7 @@ function AssistantMessageBubble({
           </div>
           {inlineError !== undefined && (
             <div
-              className="mt-2 rounded border border-amber-700/40 bg-amber-900/20 px-3 py-2 text-xs text-amber-200 light:border-amber-300 light:bg-amber-50 light:text-amber-800"
+              className="mt-2 ml-4 rounded border border-amber-700/40 bg-amber-900/20 px-3 py-2 text-xs text-amber-200 light:border-amber-300 light:bg-amber-50 light:text-amber-800"
               role="alert"
             >
               <span className="font-medium">Provider error: </span>
@@ -1052,7 +1052,9 @@ function AssistantMessageBubble({
             </div>
           )}
           {isDone && sessionId !== undefined && (
-            <TurnDiffFooter sessionId={sessionId} />
+            <div className="ml-4">
+              <TurnDiffFooter sessionId={sessionId} />
+            </div>
           )}
         </>
       )}
@@ -1321,7 +1323,7 @@ function ToolCallBatchCard({ entries }: { entries: ToolBatchEntry[] }) {
     })
     .slice(0, 3);
   return (
-    <details className="-ml-4 group rounded border border-neutral-800 bg-neutral-950 text-xs">
+    <details className="group rounded border border-neutral-800 bg-neutral-950 text-xs">
       <summary className="flex cursor-pointer flex-col gap-2 px-3 py-2 text-neutral-300 sm:flex-row sm:items-center sm:justify-between">
         <span className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
           <span className="text-neutral-500">→</span>
@@ -1378,12 +1380,12 @@ function AssistantBlock({
   const type = block.type;
 
   if (type === "text" && typeof block.text === "string") {
-    return showRaw ? <RawText text={block.text} /> : <ChatMarkdown text={block.text} />;
+    return <div className="pl-4">{showRaw ? <RawText text={block.text} /> : <ChatMarkdown text={block.text} />}</div>;
   }
 
   if (type === "thinking" && typeof block.thinking === "string") {
     return (
-      <details className="rounded border border-neutral-800 px-2 py-1 text-xs text-neutral-400 -ml-4">
+      <details className="rounded border border-neutral-800 px-2 py-1 text-xs text-neutral-400">
         <summary className="cursor-pointer">Thinking…</summary>
         <pre className="mt-1 whitespace-pre-wrap break-words font-sans text-[12px]">
           {block.thinking}
@@ -1506,7 +1508,7 @@ function ToolCallEntry({
         : "border-neutral-800";
 
   return (
-    <div className={`-ml-4 rounded border ${borderClass} bg-neutral-950 text-xs`}>
+    <div className={`rounded border ${borderClass} bg-neutral-950 text-xs`}>
       <div className="flex items-center justify-between px-3 py-2 text-neutral-300">
         <div className="min-w-0 flex-1 truncate">
           <span className="text-neutral-500">→ </span>
