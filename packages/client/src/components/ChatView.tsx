@@ -1383,7 +1383,7 @@ function AssistantBlock({
 
   if (type === "thinking" && typeof block.thinking === "string") {
     return (
-      <details className="rounded border border-neutral-800 px-2 py-1 text-xs text-neutral-400">
+      <details className="rounded border border-neutral-800 py-1 pr-2 text-xs text-neutral-400">
         <summary className="cursor-pointer">Thinking…</summary>
         <pre className="mt-1 whitespace-pre-wrap break-words font-sans text-[12px]">
           {block.thinking}
@@ -1507,7 +1507,7 @@ function ToolCallEntry({
 
   return (
     <div className={`rounded border ${borderClass} bg-neutral-950 text-xs`}>
-      <div className="flex items-center justify-between px-3 py-2 text-neutral-300">
+      <div className="flex items-center justify-between py-2 pl-1 pr-3 text-neutral-300">
         <div className="min-w-0 flex-1 truncate">
           <span className="text-neutral-500">→ </span>
           <span className="font-mono">{name}</span>
