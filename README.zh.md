@@ -28,6 +28,31 @@
   <i>基于 <a href="https://github.com/Devin-Marks/pi-forge">pi-forge</a> 和 <a href="https://github.com/earendil-works/pi">pi</a> 构建。</i>
 </p>
 
+<p align="center">
+  <img src="docs/images/demo.gif" alt="Huiyu Pi 演示" width="100%">
+</p>
+
+## 界面展示
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/images/screenshot-session.jpg" alt="会话管理"></td>
+    <td width="50%"><img src="docs/images/screenshot-terminal.jpg" alt="集成终端"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>会话管理</b></td>
+    <td align="center"><b>集成终端</b></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/images/screenshot-files.png" alt="文件浏览器 + 编辑器"></td>
+    <td width="50%"><img src="docs/images/screenshot-git.jpg" alt="Git 集成"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>文件浏览器 + 编辑器</b></td>
+    <td align="center"><b>Git 集成</b></td>
+  </tr>
+</table>
+
 ---
 
 ## 为什么选择 Huiyu Pi？
@@ -70,33 +95,6 @@
 
 ### 🎨 完全可定制主题
 通过 CSS 变量控制深色和浅色主题。无需重新构建即可创建自己的皮肤。
-
----
-
-<p align="center">
-  <img src="docs/images/demo.gif" alt="Huiyu Pi 演示" width="100%">
-</p>
-
-## 界面展示
-
-<table>
-  <tr>
-    <td width="50%"><img src="docs/images/screenshot-session.jpg" alt="会话管理"></td>
-    <td width="50%"><img src="docs/images/screenshot-terminal.jpg" alt="集成终端"></td>
-  </tr>
-  <tr>
-    <td align="center"><b>会话管理</b></td>
-    <td align="center"><b>集成终端</b></td>
-  </tr>
-  <tr>
-    <td width="50%"><img src="docs/images/screenshot-files.png" alt="文件浏览器 + 编辑器"></td>
-    <td width="50%"><img src="docs/images/screenshot-git.jpg" alt="Git 集成"></td>
-  </tr>
-  <tr>
-    <td align="center"><b>文件浏览器 + 编辑器</b></td>
-    <td align="center"><b>Git 集成</b></td>
-  </tr>
-</table>
 
 ---
 

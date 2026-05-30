@@ -28,6 +28,31 @@
   <i>Built on top of <a href="https://github.com/Devin-Marks/pi-forge">pi-forge</a> and <a href="https://github.com/earendil-works/pi">pi</a>.</i>
 </p>
 
+<p align="center">
+  <img src="docs/images/demo.gif" alt="Huiyu Pi Demo" width="100%">
+</p>
+
+## Screenshots
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/images/screenshot-session.jpg" alt="Session Management"></td>
+    <td width="50%"><img src="docs/images/screenshot-terminal.jpg" alt="Integrated Terminal"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Session Management</b></td>
+    <td align="center"><b>Integrated Terminal</b></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/images/screenshot-files.png" alt="File Browser + Editor"></td>
+    <td width="50%"><img src="docs/images/screenshot-git.jpg" alt="Git Integration"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>File Browser + Editor</b></td>
+    <td align="center"><b>Git Integration</b></td>
+  </tr>
+</table>
+
 ---
 
 ## Why Choose Huiyu Pi?
@@ -70,33 +95,6 @@ Responsive design works on iOS/Android. Install as a PWA for a native-like exper
 
 ### 🎨 Fully Customizable Theme
 Dark and light themes controlled by CSS variables. Create your own skin without rebuilding.
-
----
-
-<p align="center">
-  <img src="docs/images/demo.gif" alt="Huiyu Pi Demo" width="100%">
-</p>
-
-## Screenshots
-
-<table>
-  <tr>
-    <td width="50%"><img src="docs/images/screenshot-session.jpg" alt="Session Management"></td>
-    <td width="50%"><img src="docs/images/screenshot-terminal.jpg" alt="Integrated Terminal"></td>
-  </tr>
-  <tr>
-    <td align="center"><b>Session Management</b></td>
-    <td align="center"><b>Integrated Terminal</b></td>
-  </tr>
-  <tr>
-    <td width="50%"><img src="docs/images/screenshot-files.png" alt="File Browser + Editor"></td>
-    <td width="50%"><img src="docs/images/screenshot-git.jpg" alt="Git Integration"></td>
-  </tr>
-  <tr>
-    <td align="center"><b>File Browser + Editor</b></td>
-    <td align="center"><b>Git Integration</b></td>
-  </tr>
-</table>
 
 ---
 
