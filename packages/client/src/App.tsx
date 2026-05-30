@@ -731,7 +731,7 @@ export function App() {
                     <div className="flex flex-1 items-center justify-center px-6 text-center">
                       <div className="flex flex-col items-center gap-4">
                         <img src="/icons/logo-rounded.png" alt="" className="h-16 w-16 rounded-2xl" />
-                        <span className="text-xl font-semibold text-neutral-100 light:text-neutral-900">Huiyu Pi</span>
+                        <span className="text-xl font-semibold text-neutral-100">Huiyu Pi</span>
                         <div className="space-y-3 text-sm text-neutral-400 light:text-neutral-500">
                           <p>No projects yet.</p>
                           <button
