@@ -3,7 +3,24 @@
   "version": "1.1.0",
   "private": true,
   "type": "module",
-  "description": "Self-hosted browser workbench for the pi coding agent",
+  "description": "Self-hosted browser workbench for the pi coding agent — a webui frontend for pi, pi-forge, and the coding agent ecosystem",
+  "keywords": [
+    "pi",
+    "pi-forge",
+    "webui",
+    "coding-agent",
+    "ai-agent",
+    "self-hosted",
+    "local-ai",
+    "code-assistant",
+    "terminal",
+    "ide",
+    "browser-ide",
+    "claude",
+    "openai",
+    "deepseek",
+    "anthropic"
+  ],
   "license": "MIT",
   "engines": {
     "node": ">=20"

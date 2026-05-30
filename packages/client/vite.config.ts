@@ -43,7 +43,7 @@ export default defineConfig({
         name: "Huiyu Pi",
         short_name: "Huiyu Pi",
         description:
-          "Self-hosted browser workbench for the pi coding agent — chat with the agent against your code, browse files, run a terminal, review diffs, all from one tab.",
+          "Self-hosted browser workbench for the pi coding agent — a webui frontend for pi, pi-forge, and the coding agent ecosystem. Chat with AI, browse files, run a terminal, review diffs, all from one tab.",
         // theme_color is the static fallback used during PWA install
         // and at first paint before applyTheme() runs in the React
         // boot path. Once the React app mounts, theme.ts swaps the

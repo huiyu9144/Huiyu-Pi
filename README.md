@@ -12,7 +12,7 @@
   <b>100% Free · Open Source · Self-Hosted</b><br>
   A local open-source Agent tool that lets you build your own Harness system from scratch.<br>
   Built on Pi and pi-forge — <b>context reduced to near-zero, speed boosted dramatically</b>.<br>
-  Build from scratch cleanly without platform restrictions.
+  A browser-based webui frontend for the pi coding agent. Build from scratch cleanly without platform restrictions.
 </p>
 
 <p align="center">
@@ -57,7 +57,7 @@
 
 ## Why Choose Huiyu Pi?
 
-Built on pi and pi-forge, fixing their lack of a frontend WebUI and clunky interaction details. It's blazing fast and feels great to use — that's why I'm sharing it.
+Built on pi and pi-forge, fixing their lack of a frontend WebUI and clunky interaction details. Huiyu Pi is a browser-based webui for the pi coding agent — it's blazing fast and feels great to use — that's why I'm sharing it.
 
 | | Advantage | Details |
 |---|---|---|
