@@ -105,7 +105,7 @@ Dark and light themes controlled by CSS variables. Create your own skin without 
 ### One-click Start (No Install)
 
 ```bash
-npx huiyu-piwebui-forge
+npx huiyu-pi
 ```
 
 Open `http://localhost:9144` in your browser. Configure API keys in **Settings â†’ Providers**.
@@ -113,12 +113,12 @@ Open `http://localhost:9144` in your browser. Configure API keys in **Settings â
 ### Global Install (Faster Subsequent Starts)
 
 ```bash
-npm install -g huiyu-piwebui-forge
-huiyu-piwebui-forge
+npm install -g huiyu-pi
+huiyu-pi
 
 # Override defaults:
-huiyu-piwebui-forge --port 4000 --workspace-path ~/Code
-huiyu-piwebui-forge --help       # View all options
+huiyu-pi --port 4000 --workspace-path ~/Code
+huiyu-pi --help       # View all options
 ```
 
 ### Manual Start (Development)

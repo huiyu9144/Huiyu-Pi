@@ -105,7 +105,7 @@
 ### 一键启动（无需安装）
 
 ```bash
-npx huiyu-piwebui-forge
+npx huiyu-pi
 ```
 
 在浏览器中打开 `http://localhost:9144`，在 **设置 → 提供商** 中配置 API 密钥即可使用。
@@ -113,12 +113,12 @@ npx huiyu-piwebui-forge
 ### 全局安装（后续启动更快）
 
 ```bash
-npm install -g huiyu-piwebui-forge
-huiyu-piwebui-forge
+npm install -g huiyu-pi
+huiyu-pi
 
 # 通过参数覆盖默认配置：
-huiyu-piwebui-forge --port 4000 --workspace-path ~/Code
-huiyu-piwebui-forge --help       # 查看全部参数
+huiyu-pi --port 4000 --workspace-path ~/Code
+huiyu-pi --help       # 查看全部参数
 ```
 
 ### 手动启动（开发模式）
