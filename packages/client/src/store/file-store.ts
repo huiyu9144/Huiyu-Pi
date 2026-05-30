@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { api, ApiError, type FileTreeNode } from "../lib/api-client";
 import { parseUnifiedDiff, type DiffLine } from "../lib/diff-parser";
+import { useProjectStore } from "./project-store";
 
 /**
  * Per-tab editor state. Tracks an in-memory `draft` separately from
@@ -297,17 +298,6 @@ export const useFileStore = create<FileState>((set, get) => ({
   },
 
   restoreTabs: async (projectId) => {
-    // Two cases:
-    // 1. Same project as the current in-memory state — preserve
-    //    whatever the user has open (cold-boot already ran, or this
-    //    is a redundant call). Early-return.
-    // 2. Different project (project switch) — clear in-memory state
-    //    in place so the editor pane stops showing the OLD project's
-    //    tabs while we load the new project's persisted list.
-    //    Crucially, we DON'T persist the empty state to the old
-    //    project's storage key; the old tabs were already persisted
-    //    by every prior edit, so the data is intact for when the
-    //    user switches back. We just clear what's in the store.
     if (currentProjectId === projectId && get().openFiles.length > 0) return;
     if (currentProjectId !== projectId) {
       set({ openFiles: [], activePath: undefined, externallyChanged: {}, gitDiffByPath: {} });
@@ -315,10 +305,10 @@ export const useFileStore = create<FileState>((set, get) => ({
     currentProjectId = projectId;
     const persisted = readPersistedTabs(projectId);
     if (persisted.paths.length === 0) return;
-    // Open files in order so the tab strip matches the persisted
-    // layout. Each openFile awaits the server fetch; if a file
-    // 404s (deleted since persist time), we drop it and continue.
+    const project = useProjectStore.getState().projects.find((p) => p.id === projectId);
+    const projectPath = project?.path;
     for (const path of persisted.paths) {
+      if (projectPath !== undefined && !path.startsWith(projectPath)) continue;
       try {
         await get().openFile(projectId, path);
       } catch {
