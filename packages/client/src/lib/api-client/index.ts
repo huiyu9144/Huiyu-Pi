@@ -2600,6 +2600,23 @@ export const api = {
     );
   },
 
+  /**
+   * Reveal a file in the OS file manager (explorer / Finder). The file
+   * path is resolved against the project root.
+   */
+  filesOpenInExplorer: (projectId: string, path: string) =>
+    request<{ ok: boolean }>(
+      "/api/v1/files/open-in-explorer",
+      (v, status) => {
+        if (!isObject(v) || v.ok !== true) fail(status, "expected { ok: true }");
+        return { ok: true };
+      },
+      {
+        method: "POST",
+        body: { projectId, path },
+      },
+    ),
+
   // ---------------- git ----------------
   gitInit: (projectId: string) =>
     request<{ alreadyInitialised: boolean; isGitRepo: boolean }>(

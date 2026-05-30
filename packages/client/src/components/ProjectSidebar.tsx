@@ -151,7 +151,7 @@ export function ProjectSidebar({ className = "" }: ProjectSidebarProps = {}) {
         paddingBottom: "env(safe-area-inset-bottom)",
       }}
     >
-      <div className="flex-1 overflow-y-auto py-1">
+      <div className="custom-scrollbar flex-1 overflow-y-auto py-1">
         {projects.length === 0 && (
           <p className="px-3 py-4 text-sm font-semibold text-[#545454] light:text-neutral-500">No projects yet.</p>
         )}

@@ -5,7 +5,7 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
 } from "react";
-import { ChevronDown, ChevronRight, MessageSquare, X } from "lucide-react";
+import { AlertCircle, ChevronDown, ChevronRight, Loader2, MessageSquare, X } from "lucide-react";
 import { EMPTY_SESSIONS, useSessionStore } from "../store/session-store";
 import { useProjectStore } from "../store/project-store";
 import { ConfirmDialog } from "./Modal";
@@ -27,6 +27,8 @@ export function SessionList({ projectId }: Props) {
   // for why we don't write `?? []` directly in Zustand selectors.
   const sessions = useSessionStore((s) => s.byProject[projectId] ?? EMPTY_SESSIONS);
   const activeSessionId = useSessionStore((s) => s.activeSessionId);
+  const streamingBySession = useSessionStore((s) => s.streamingBySession);
+  const bannerBySession = useSessionStore((s) => s.bannerBySession);
   const loadSessionsForProject = useSessionStore((s) => s.loadSessionsForProject);
   const setActiveSession = useSessionStore((s) => s.setActiveSession);
   const disposeSession = useSessionStore((s) => s.disposeSession);
@@ -305,6 +307,8 @@ export function SessionList({ projectId }: Props) {
             childCount={children.length}
             isExpanded={isExpanded}
             isChild={false}
+            isStreaming={streamingBySession[s.sessionId] ?? false}
+            hasError={bannerBySession[s.sessionId] !== undefined}
             onSelect={selectSession}
             onToggleSelect={toggleSelected}
             onStartRename={startRename}
@@ -329,6 +333,8 @@ export function SessionList({ projectId }: Props) {
                 childCount={0}
                 isExpanded={false}
                 isChild={true}
+                isStreaming={streamingBySession[c.sessionId] ?? false}
+                hasError={bannerBySession[c.sessionId] !== undefined}
                 onSelect={selectSession}
                 onToggleSelect={toggleSelected}
                 onStartRename={startRename}
@@ -370,6 +376,8 @@ interface SessionRowProps {
   isExpanded: boolean;
   /** When true, render with extra left indent + nested-row treatment. */
   isChild: boolean;
+  isStreaming: boolean;
+  hasError: boolean;
   onSelect: (sessionId: string) => void;
   onToggleSelect: (sessionId: string) => void;
   onStartRename: (sessionId: string, current: string) => void;
@@ -392,6 +400,8 @@ function SessionRow(props: SessionRowProps) {
     childCount,
     isExpanded,
     isChild,
+    isStreaming,
+    hasError,
     onSelect,
     onToggleSelect,
     onStartRename,
@@ -459,10 +469,20 @@ function SessionRow(props: SessionRowProps) {
             onSelect(s.sessionId);
           }}
           onDoubleClick={() => onStartRename(s.sessionId, s.name ?? "")}
-          className="flex flex-1 items-center gap-1 truncate text-left"
+          className="flex flex-1 items-center gap-1.5 truncate text-left"
           title={`${s.sessionId} — double-click to rename, Cmd/Ctrl+click to select for bulk delete`}
         >
-          {s.isLive && <MessageSquare size={10} className={`mr-1 shrink-0 ${isSelected || isActive ? "text-neutral-100" : "text-[#545454] light:text-neutral-500"}`} />}
+          {isStreaming ? (
+            <Loader2 size={10} className={`shrink-0 animate-spin ${isSelected || isActive ? "text-emerald-400" : "text-emerald-500"}`} />
+          ) : hasError ? (
+            <span title="Session has errors">
+              <AlertCircle size={10} className={`shrink-0 ${isSelected || isActive ? "text-amber-400" : "text-amber-500/70"}`} />
+            </span>
+          ) : s.isLive ? (
+            <MessageSquare size={10} className={`shrink-0 ${isSelected || isActive ? "text-neutral-100" : "text-[#545454]"}`} />
+          ) : (
+            <MessageSquare size={10} className={`shrink-0 ${isSelected || isActive ? "text-neutral-100" : "text-[#545454]"}`} />
+          )}
           {isChild && (
             <span className="mr-1 text-purple-400 light:text-purple-700" title="sub-agent">
               ↳

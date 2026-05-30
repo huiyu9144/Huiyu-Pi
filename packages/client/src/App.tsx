@@ -17,26 +17,15 @@ import { ChatInput } from "./components/ChatInput";
 import { ChangedFilesBadge } from "./components/ChangedFilesBadge";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { AskUserQuestionPanel } from "./components/AskUserQuestionPanel";
-import { TodoPanel } from "./components/TodoPanel";
-import { ProcessesPanel } from "./components/ProcessesPanel";
-import { countRunning, selectProcesses, useProcessesStore } from "./store/processes-store";
-import { FileBrowserPanel } from "./components/FileBrowserPanel";
+import { FilesPanelLayer } from "./components/FilesPanelLayer";
 import { EditorPanel } from "./components/EditorPanel";
 import { TerminalPanel } from "./components/TerminalPanel";
 import { GlobalSearchBar } from "./components/GlobalSearchBar";
 import { McpStatusBadge } from "./components/McpStatusBadge";
 import { useMcpStore } from "./store/mcp-store";
 import { useUiStore, type SettingsTab } from "./store/ui-store";
-import { TurnDiffPanel } from "./components/TurnDiffPanel";
-import { GitPanel } from "./components/GitPanel";
-import { SearchPanel } from "./components/SearchPanel";
-import { ContextInspectorPanel } from "./components/ContextInspectorPanel";
-import { PreviewPanel } from "./components/PreviewPanel";
 import { ResizableDivider } from "./components/ResizableDivider";
-import { useGitStatus } from "./hooks/useGitStatus";
 import { useInstallPrompt } from "./hooks/useInstallPrompt";
-
-type RightPaneTab = "files" | "search" | "changes" | "git" | "context" | "processes" | "preview";
 
 /* Persisted pane widths. Stored in localStorage so the user-tuned
    layout survives reloads. Defaults err on the side of "the chat is the
@@ -105,33 +94,6 @@ export function App() {
   const { canInstall, showInstall, install } = useInstallPrompt();
   const [installTooltip, setInstallTooltip] = useState(false);
   const installTooltipRef = useRef<HTMLDivElement>(null);
-  // Files pane visibility persists across reloads — opening it once is
-  // a strong signal the user wants it. localStorage > a session-scoped
-  // boolean so a refresh doesn't snap back to "hidden".
-  const [filesOpen, setFilesOpen] = useState<boolean>(
-    () => localStorage.getItem("pi-forge/files-open") === "true",
-  );
-  const setFilesOpenPersisted = (v: boolean): void => {
-    setFilesOpen(v);
-    localStorage.setItem("pi-forge/files-open", v ? "true" : "false");
-  };
-
-  const [rightTab, setRightTab] = useState<RightPaneTab>(() => {
-    const raw = localStorage.getItem("pi-forge/right-tab");
-    return raw === "files" ||
-      raw === "search" ||
-      raw === "changes" ||
-      raw === "git" ||
-      raw === "context" ||
-      raw === "processes" ||
-      raw === "preview"
-      ? raw
-      : "files";
-  });
-  const setRightTabPersisted = (next: RightPaneTab): void => {
-    setRightTab(next);
-    localStorage.setItem("pi-forge/right-tab", next);
-  };
 
   const [terminalOpen, setTerminalOpen] = useState<boolean>(
     () => localStorage.getItem("pi-forge/terminal-open") === "true",
@@ -200,12 +162,9 @@ export function App() {
   // change — the panel lives inside the right pane.
   const todoPanelOpen = useUiStore((s) => s.todoPanelOpen);
   useEffect(() => {
-    if (todoPanelOpen && !filesOpen && !isMobile) {
-      setFilesOpenPersisted(true);
+    if (todoPanelOpen && !useUiStore.getState().filesOpen && !isMobile) {
+      useUiStore.getState().setFilesOpen(true);
     }
-    // setFilesOpenPersisted is stable enough — we only react to the
-    // toggle flipping, not to filesOpen changes (a user closing the
-    // pane shouldn't immediately re-open it).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [todoPanelOpen]);
 
@@ -215,8 +174,8 @@ export function App() {
   const openProcessesTabSeq = useUiStore((s) => s.openProcessesTabSeq);
   useEffect(() => {
     if (openProcessesTabSeq === 0) return; // initial value, no request
-    if (!filesOpen && !isMobile) setFilesOpenPersisted(true);
-    setRightTabPersisted("processes");
+    if (!useUiStore.getState().filesOpen && !isMobile) useUiStore.getState().setFilesOpen(true);
+    useUiStore.getState().setRightTab("processes");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [openProcessesTabSeq]);
 
@@ -227,14 +186,6 @@ export function App() {
     if (openEditorPaneSeq === 0) return;
     setEditorOpenPersisted(true);
   }, [openEditorPaneSeq]);
-
-  const previewFilePath = useUiStore((s) => s.previewFilePath);
-  useEffect(() => {
-    if (previewFilePath === undefined) return;
-    if (!filesOpen && !isMobile) setFilesOpenPersisted(true);
-    setRightTabPersisted("preview");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [previewFilePath]);
 
   // Pane widths (px). Persisted on every drag-end via the ref; we keep
   // the live value in state so drags re-render the layout, and mirror
@@ -258,19 +209,22 @@ export function App() {
     localStorage.setItem(EDITOR_WIDTH_KEY, String(editorWidth));
   }, [editorWidth]);
 
+  // Cache window.innerWidth in state so the render path (divider
+  // maxSize, IIFE branching) doesn't trigger forced reflow on every
+  // render by reading the DOM synchronously.
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [windowHeight, setWindowHeight] = useState(window.innerHeight);
+  useEffect(() => {
+    const onResize = () => {
+      setWindowWidth(window.innerWidth);
+      setWindowHeight(window.innerHeight);
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
   const openFilesCount = useFileStore((s) => s.openFiles.length);
   const editorVisible = editorOpen && openFilesCount > 0;
-
-  // Drives the modified-file count badge on the Git tab. Polls every
-  // 5s via the hook regardless of which tab is currently visible —
-  // we want the badge to update even when the user is on Files.
-  const gitStatus = useGitStatus(active?.id);
-  const gitChangedCount = gitStatus.status?.files.length ?? 0;
-  // Running-process count drives the Processes tab badge and the
-  // chat-input top-right Activity icon. Reads the SSE-hydrated
-  // processes-store; empty for sessions with no managed processes.
-  const sessionProcesses = useProcessesStore((s) => selectProcesses(s, activeSessionId));
-  const runningProcessCount = countRunning(sessionProcesses);
 
   // Refresh the file tree on every agent_end the active project hears,
   // since the agent commonly writes/edits files mid-turn. The session
@@ -485,8 +439,15 @@ export function App() {
               keeps the logo + wordmark visually paired (tighter than
               the parent gap-3 used between brand and project picker). */}
           <div className="flex items-center gap-1.5">
-            <img src="/icons/logo.jpg" alt="" className="h-6 w-6 rounded-md" aria-hidden="true" />
-            <span className="text-sm font-semibold tracking-tight">Huiyu PiwebUI Forge</span>
+            <a
+              href="https://www.huiyu.ai"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5"
+            >
+              <img src="/icons/logo.jpg" alt="" className="h-6 w-6 rounded-md" aria-hidden="true" />
+              <span className="text-sm font-semibold tracking-tight">Huiyu PiwebUI Forge</span>
+            </a>
             <button
               onClick={() => useUiStore.getState().setProjectPickerOpen(true)}
               className="ml-1 rounded-md p-0.5 text-neutral-400 hover:text-neutral-100 transition-colors"
@@ -639,13 +600,7 @@ export function App() {
           >
             <Settings size={16} />
           </button>
-          <button
-            onClick={() => setFilesOpenPersisted(!filesOpen)}
-            className="flex items-center justify-center rounded-md p-1.5 text-neutral-400"
-            title={filesOpen ? "Collapse right panel" : "Expand right panel"}
-          >
-            <ChevronLeft size={16} className={`transition-transform duration-150 ${filesOpen ? "" : "rotate-180"}`} />
-          </button>
+          <FilesToggleButton />
         </div>
       </header>
 
@@ -774,10 +729,10 @@ export function App() {
                     {!minimal && (
                       <ChangedFilesBadge
                         sessionId={activeSessionId}
-                        alreadyOnChangesTab={filesOpen && rightTab === "changes"}
+                        alreadyOnChangesTab={useUiStore.getState().filesOpen && useUiStore.getState().rightTab === "changes"}
                         onOpen={() => {
-                          if (!filesOpen) setFilesOpenPersisted(true);
-                          setRightTabPersisted("changes");
+                          if (!useUiStore.getState().filesOpen) useUiStore.getState().setFilesOpen(true);
+                          useUiStore.getState().setRightTab("changes");
                         }}
                       />
                     )}
@@ -852,7 +807,7 @@ export function App() {
                       minSize={MIN_EDITOR_WIDTH}
                       maxSize={Math.max(
                         MIN_EDITOR_WIDTH,
-                        window.innerWidth - (filesOpen ? filesWidth : 0) - MIN_CHAT_WIDTH - 240, // 240 ≈ ProjectSidebar
+                        windowWidth - (useUiStore.getState().filesOpen ? filesWidth : 0) - MIN_CHAT_WIDTH - 240, // 240 ≈ ProjectSidebar
                       )}
                     />
                     <div
@@ -865,134 +820,21 @@ export function App() {
                 );
               })()}
 
-            {!isMobile &&
-              filesOpen &&
-              (() => {
-                const chatColumnVisible = chatOpen;
-                const filesIsLeftmost = !chatColumnVisible && !editorVisible;
-                // Inner content (tabs + selected panel) — identical in
-                // both layout branches. Extracted so we can wrap it in
-                // either a flex-1 container (leftmost) or a shrink-0
-                // fixed-width container (with a divider in front).
-                const filesContent = (
-                  <>
-                    <div className="flex flex-1 flex-col overflow-hidden">
-                      <div className="flex-1 overflow-hidden">
-                        {rightTab === "files" ? (
-                          <FileBrowserPanel />
-                        ) : rightTab === "search" ? (
-                          <SearchPanel />
-                        ) : !minimal && rightTab === "changes" ? (
-                          <TurnDiffPanel />
-                        ) : !minimal && rightTab === "git" ? (
-                          <GitPanel />
-                        ) : rightTab === "context" ? (
-                          <ContextInspectorPanel />
-                        ) : rightTab === "preview" ? (
-                          <PreviewPanel />
-                        ) : rightTab === "processes" && activeSessionId !== undefined ? (
-                          <ProcessesPanel sessionId={activeSessionId} />
-                        ) : (
-                          <FileBrowserPanel />
-                        )}
-                      </div>
-                      {todoPanelOpen && activeSessionId !== undefined && (
-                        <>
-                          <ResizableDivider
-                            orientation="horizontal"
-                            getStartSize={() => todoPanelHeightRef.current}
-                            onResize={(next) => setTodoPanelHeight(next)}
-                            direction={-1}
-                            minSize={MIN_TODO_PANEL_HEIGHT}
-                            maxSize={Math.max(MIN_TODO_PANEL_HEIGHT, window.innerHeight * 0.7)}
-                          />
-                          <div
-                            className="shrink-0 overflow-hidden border-t border-neutral-800 light:border-neutral-200"
-                            style={{ height: `${todoPanelHeight}px` }}
-                          >
-                            <TodoPanel
-                              sessionId={activeSessionId}
-                              onClose={() => useUiStore.getState().setTodoPanelOpen(false)}
-                            />
-                          </div>
-                        </>
-                      )}
-                    </div>
-                    <div className="flex border-t border-neutral-800 bg-neutral-900 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                      {(minimal
-                        ? (["files", "search", "processes", "context"] as const)
-                        : (["files", "search", "changes", "git", "processes", "context", "preview"] as const)
-                      ).map((t) => (
-                        <button
-                          key={t}
-                          onClick={() => setRightTabPersisted(t)}
-                          className={`flex items-center gap-1 px-3 py-1.5 text-[11px] uppercase tracking-wider ${
-                            rightTab === t ? "text-neutral-100" : "text-neutral-400"
-                          }`}
-                        >
-                          {t === "files"
-                            ? "Files"
-                            : t === "search"
-                              ? "Search"
-                              : t === "changes"
-                                ? "Turn"
-                                : t === "git"
-                                  ? "Git"
-                                  : t === "processes"
-                                    ? "Processes"
-                                    : t === "preview"
-                                      ? "Preview"
-                                      : "Context"}
-                          {t === "git" && gitChangedCount > 0 && (
-                            <span className="rounded bg-amber-900/40 px-1 py-0.5 text-[9px] text-amber-300 light:bg-amber-100 light:text-amber-800">
-                              {gitChangedCount}
-                            </span>
-                          )}
-                          {t === "processes" && runningProcessCount > 0 && (
-                            <span className="rounded bg-emerald-900/40 px-1 py-0.5 text-[9px] text-emerald-300 light:bg-emerald-100 light:text-emerald-800">
-                              {runningProcessCount}
-                            </span>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </>
-                );
-                if (filesIsLeftmost) {
-                  return <div className="flex flex-1 flex-col overflow-hidden bg-neutral-900 group">{filesContent}</div>;
-                }
-                return (
-                  <>
-                    <ResizableDivider
-                      getStartSize={() => filesWidthRef.current}
-                      onResize={(next) => {
-                        if (filesPanelRef.current) {
-                          filesPanelRef.current.style.width = `${next}px`;
-                        }
-                        filesWidthRef.current = next;
-                        localStorage.setItem(FILES_WIDTH_KEY, String(next));
-                        setFilesWidth(next);
-                      }}
-                      direction={-1}
-                      minSize={MIN_FILES_WIDTH}
-                      maxSize={Math.max(
-                        MIN_FILES_WIDTH,
-                        window.innerWidth -
-                          MIN_CHAT_WIDTH -
-                          240 -
-                          (editorVisible ? MIN_EDITOR_WIDTH : 0),
-                      )}
-                    />
-                    <div
-                      ref={filesPanelRef}
-                      className="group flex shrink-0 flex-col border-l-[0.5px] border-neutral-800 bg-neutral-900"
-                      style={{ width: `${filesWidth}px` }}
-                    >
-                      {filesContent}
-                    </div>
-                  </>
-                );
-              })()}
+            {!isMobile && (
+              <FilesPanelLayer
+                chatOpen={chatOpen}
+                editorVisible={editorVisible}
+                minimal={minimal}
+                todoPanelOpen={todoPanelOpen}
+                activeSessionId={activeSessionId}
+                todoPanelHeight={todoPanelHeight}
+                filesWidth={filesWidth}
+                filesPanelRef={filesPanelRef}
+                filesWidthRef={filesWidthRef}
+                setTodoPanelHeight={setTodoPanelHeight}
+                setFilesWidth={setFilesWidth}
+              />
+            )}
           </main>
         </div>
 
@@ -1004,7 +846,7 @@ export function App() {
               onResize={(next) => setTerminalHeight(next)}
               direction={-1}
               minSize={MIN_TERMINAL_HEIGHT}
-              maxSize={Math.max(MIN_TERMINAL_HEIGHT, Math.floor(window.innerHeight * 0.7))}
+              maxSize={Math.max(MIN_TERMINAL_HEIGHT, Math.floor(windowHeight * 0.7))}
             />
             <div
               className="shrink-0 border-t border-neutral-800"
@@ -1099,18 +941,31 @@ export function App() {
               </div>
             </div>
           )}
-          <a
-            href="https://www.buymeacoffee.com/huiyu"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-md border border-neutral-700 px-2.5 py-1.5 text-xs text-neutral-400 transition-colors hover:border-amber-600/50 hover:text-amber-400"
-            title="Buy me a coffee"
+          <span
+            className="inline-flex items-center gap-1.5 rounded-md border border-neutral-700 px-2.5 py-1.5 text-xs text-neutral-400"
+            title="Buy me a coffee, cheers🍻"
           >
             <Coffee size={13} />
-            Buy me a coffee
-          </a>
+            Buy me a coffee, cheers🍻
+          </span>
         </div>
       </div>
     </div>
+  );
+}
+
+/** Toggle button for the right-side panel. Reads `filesOpen` from
+ *  zustand reactively so App.tsx doesn't need to subscribe to it
+ *  (avoiding a full App.tsx re-render on every open/close). */
+function FilesToggleButton() {
+  const open = useUiStore((s) => s.filesOpen);
+  return (
+    <button
+      onClick={() => useUiStore.getState().setFilesOpen(!open)}
+      className="flex items-center justify-center rounded-md p-1.5 text-neutral-400"
+      title={open ? "Collapse right panel" : "Expand right panel"}
+    >
+      <ChevronLeft size={16} className={`transition-transform duration-150 ${open ? "" : "rotate-180"}`} />
+    </button>
   );
 }

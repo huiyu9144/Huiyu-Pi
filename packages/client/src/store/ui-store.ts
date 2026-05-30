@@ -15,6 +15,7 @@ import { create } from "zustand";
  */
 
 export type SettingsTab = "providers" | "agent" | "mcp" | "skills" | "prompts" | "appearance";
+export type RightPaneTab = "files" | "search" | "changes" | "git" | "context" | "processes" | "preview";
 
 interface SettingsRequest {
   /** Optional tab to switch to on open. Undefined = leave the
@@ -122,8 +123,17 @@ interface UiState {
   setTreeModalOpen: (open: boolean) => void;
 
   previewFilePath: string | undefined;
+  previewPanelOpen: boolean;
   openPreviewFile: (path: string) => void;
   closePreviewFile: () => void;
+
+  /** Right-side panel visibility & active tab. Stored here so
+   *  openPreviewFile can atomically update ALL state in one go
+   *  (→ 1 React render instead of a cascade). */
+  filesOpen: boolean;
+  setFilesOpen: (open: boolean) => void;
+  rightTab: RightPaneTab;
+  setRightTab: (tab: RightPaneTab) => void;
 }
 
 export const useUiStore = create<UiState>((set, get) => ({
@@ -175,6 +185,41 @@ export const useUiStore = create<UiState>((set, get) => ({
   treeModalOpen: false,
   setTreeModalOpen: (open) => set({ treeModalOpen: open }),
   previewFilePath: undefined,
-  openPreviewFile: (path) => set({ previewFilePath: path }),
-  closePreviewFile: () => set({ previewFilePath: undefined }),
+  previewPanelOpen: false,
+  openPreviewFile: (path) =>
+    set((state) => {
+      const alreadyOpen = state.previewFilePath === path;
+      const becomingOpen = !alreadyOpen;
+      try { localStorage.setItem("pi-forge/files-open", becomingOpen ? "true" : "false"); } catch {}
+      return {
+        previewFilePath: alreadyOpen ? undefined : path,
+        previewPanelOpen: becomingOpen,
+        filesOpen: becomingOpen,
+        rightTab: "preview",
+      };
+    }),
+  closePreviewFile: () =>
+    set((state) => {
+      if (state.previewFilePath === undefined) return state;
+      try { localStorage.setItem("pi-forge/files-open", "false"); } catch {}
+      return { previewFilePath: undefined, previewPanelOpen: false, filesOpen: false };
+    }),
+
+  filesOpen: (() => {
+    try { return localStorage.getItem("pi-forge/files-open") === "true"; } catch { return false; }
+  })(),
+  setFilesOpen: (open) => {
+    try { localStorage.setItem("pi-forge/files-open", open ? "true" : "false"); } catch {}
+    set({ filesOpen: open });
+  },
+  rightTab: (() => {
+    const raw = (() => { try { return localStorage.getItem("pi-forge/right-tab"); } catch { return null; } })();
+    const valid: readonly string[] = ["files", "search", "changes", "git", "context", "processes", "preview"];
+    if (raw !== null && valid.includes(raw)) return raw as RightPaneTab;
+    return "files";
+  })(),
+  setRightTab: (tab) => {
+    try { localStorage.setItem("pi-forge/right-tab", tab); } catch {}
+    set({ rightTab: tab });
+  },
 }));

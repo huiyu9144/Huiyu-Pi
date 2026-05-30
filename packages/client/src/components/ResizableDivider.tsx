@@ -38,6 +38,8 @@ interface Props {
   minSize: number;
   maxSize: number;
   orientation?: "vertical" | "horizontal";
+  /** Called when a drag finishes (pointer up). Receives the final size. */
+  onDragEnd?: (finalSize: number) => void;
 }
 
 export function ResizableDivider({
@@ -47,6 +49,7 @@ export function ResizableDivider({
   minSize,
   maxSize,
   orientation = "vertical",
+  onDragEnd,
 }: Props) {
   const dragRef = useRef<{ start: number; startSize: number } | null>(null);
   const horizontal = orientation === "horizontal";
@@ -98,6 +101,11 @@ export function ResizableDivider({
 
   const onPointerUp = (e: PointerEvent<HTMLDivElement>): void => {
     if (dragRef.current === null) return;
+    const cur = horizontal ? e.clientY : e.clientX;
+    const delta = cur - dragRef.current.start;
+    const finalSize = dragRef.current.startSize + delta * direction;
+    const clamped = Math.min(Math.max(finalSize, minSize), maxSize);
+    onDragEnd?.(clamped);
     e.currentTarget.releasePointerCapture(e.pointerId);
     dragRef.current = null;
     document.body.style.removeProperty("cursor");

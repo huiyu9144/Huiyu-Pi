@@ -629,7 +629,7 @@ export function GitPanel() {
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="custom-scrollbar flex-1 overflow-y-auto">
         {status === undefined && <p className="px-3 py-3 italic text-neutral-500">Loading…</p>}
 
         {status?.files.length === 0 && (

@@ -1,4 +1,5 @@
 import type { FastifyPluginAsync, FastifyReply } from "fastify";
+import { execSync } from "child_process";
 import {
   ChecksumMismatchError,
   DirectoryNotEmptyError,
@@ -16,6 +17,7 @@ import {
   moveEntry,
   readFile,
   renameEntry,
+  verifyPathSafe,
   writeFile,
   writeFileBytes,
 } from "../file-manager.js";
@@ -940,6 +942,51 @@ export const fileRoutes: FastifyPluginAsync = async (fastify) => {
             .send({ error: "no_files", message: "no file parts in the request" });
         }
         return { files: written };
+      } catch (err) {
+        return mapError(reply, err);
+      }
+    },
+  );
+
+  fastify.post<{ Body: { projectId: string; path: string } }>(
+    "/files/open-in-explorer",
+    {
+      schema: {
+        description:
+          "Reveal the file in the OS file manager (explorer / Finder / " +
+          "xdg-open). The `path` is resolved against the project root — " +
+          "403 if it escapes.",
+        tags: ["files"],
+        body: {
+          type: "object",
+          required: ["projectId", "path"],
+          additionalProperties: false,
+          properties: {
+            projectId: { type: "string", minLength: 1 },
+            path: { type: "string", minLength: 1 },
+          },
+        },
+        response: {
+          200: { type: "object", required: ["ok"], properties: { ok: { type: "boolean" } } },
+          400: errorSchema,
+          403: errorSchema,
+          500: errorSchema,
+        },
+      },
+    },
+    async (req, reply) => {
+      const project = await resolveProject(req.body.projectId, reply);
+      if (project === undefined) return reply;
+      try {
+        const resolved = await verifyPathSafe(req.body.path, project.path);
+        if (process.platform === "win32") {
+          execSync(`explorer.exe /select,"${resolved.replace(/\//g, "\\")}"`, { timeout: 5000 });
+        } else if (process.platform === "darwin") {
+          execSync(`open -R "${resolved}"`, { timeout: 5000 });
+        } else {
+          execSync(`xdg-open "${resolved}"`, { timeout: 5000 });
+        }
+        return { ok: true };
       } catch (err) {
         return mapError(reply, err);
       }

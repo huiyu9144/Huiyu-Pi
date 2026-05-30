@@ -65,6 +65,45 @@ Use the runner before opening a PR. Run Prettier/format checks for docs-only or
 config-only changes when full checks are unnecessary. When product behavior changes,
 update the relevant integration test in the same PR.
 
+## Version Management (Important!)
+
+**NEVER hand-edit version numbers in package.json files.** The project has 4
+files that must stay in sync (root/client/server/package-lock.json). Use the
+automated tools below.
+
+### Everyday push (no release)
+```bash
+git add -A && git commit -m "your message" && git push
+```
+
+### Push + create a new release
+Only do this when the user explicitly asks to "release" or "publish a version":
+
+```bash
+release.bat <new-version>
+# Example: release.bat 1.1.0
+```
+
+This automatically:
+1. Updates all 4 version files in lockstep
+2. Commits, tags (v1.1.0), and pushes
+3. Triggers GitHub Actions to build Docker images + create Release
+
+If the script fails with "CHANGELOG is empty", add `--allow-empty`:
+```bash
+release.bat 1.1.0 --allow-empty
+```
+
+### Safety checks built into the script
+The `scripts/bump-version.sh` called by release.bat protects against:
+- ❌ Version regression (e.g. 1.0.0 → 0.9.9)
+- ❌ Invalid SemVer format
+- ❌ Dirty working tree (uncommitted changes)
+- ❌ Version drift between the 4 files
+- ❌ Missing CHANGELOG entries (requires --allow-empty to bypass)
+
+So you can safely run it without worrying about mistakes.
+
 ---
 
 ## Critical Conventions

@@ -81,7 +81,7 @@ export function TodoPanel({ sessionId, onClose }: Props) {
           Failed to load todos: {loadError}
         </div>
       )}
-      <div className="flex-1 overflow-y-auto px-2 py-2">
+      <div className="custom-scrollbar flex-1 overflow-y-auto px-2 py-2">
         {counts.total === 0 ? (
           <p className="px-1 text-[11px] italic text-neutral-500 light:text-neutral-600">
             No todos yet. The agent will add tasks here when it&apos;s planning multi-step work.

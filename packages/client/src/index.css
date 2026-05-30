@@ -547,6 +547,39 @@ header.border-b { border-bottom-color: transparent; }
   -webkit-appearance: none;
 }
 
+/* -------- Custom scrollbar: for right panel, session list, etc. -------- */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+.custom-scrollbar:hover {
+  scrollbar-color: #404040 #171717;
+}
+.custom-scrollbar::-webkit-scrollbar {
+  width: 0;
+}
+.custom-scrollbar:hover::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #171717;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #404040;
+  border-radius: 3px;
+}
+.custom-scrollbar::-webkit-scrollbar-button {
+  background: #171717;
+  color: #171717;
+  height: 0;
+}
+.custom-scrollbar::-webkit-scrollbar-button:vertical:decrement,
+.custom-scrollbar::-webkit-scrollbar-button:vertical:increment {
+  background: #171717;
+  color: #171717;
+  -webkit-appearance: none;
+}
+
 /* Light-theme scrollbar — adapt track + thumb to #e0e0e0 bg */
 [data-theme="light"] .chat-scroll-container:hover {
   scrollbar-color: var(--color-neutral-700) #e0e0e0;
@@ -565,6 +598,28 @@ header.border-b { border-bottom-color: transparent; }
 }
 [data-theme="light"] .chat-scroll-container::-webkit-scrollbar-button:vertical:decrement,
 [data-theme="light"] .chat-scroll-container::-webkit-scrollbar-button:vertical:increment {
+  background: #e0e0e0;
+  color: #e0e0e0;
+  -webkit-appearance: none;
+}
+
+[data-theme="light"] .custom-scrollbar:hover {
+  scrollbar-color: var(--color-neutral-700) #e0e0e0;
+}
+[data-theme="light"] .custom-scrollbar::-webkit-scrollbar-track {
+  background: #e0e0e0;
+}
+[data-theme="light"] .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--color-neutral-700);
+  border-radius: 3px;
+}
+[data-theme="light"] .custom-scrollbar::-webkit-scrollbar-button {
+  background: #e0e0e0;
+  color: #e0e0e0;
+  height: 0;
+}
+[data-theme="light"] .custom-scrollbar::-webkit-scrollbar-button:vertical:decrement,
+[data-theme="light"] .custom-scrollbar::-webkit-scrollbar-button:vertical:increment {
   background: #e0e0e0;
   color: #e0e0e0;
   -webkit-appearance: none;

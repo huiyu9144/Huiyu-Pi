@@ -488,7 +488,7 @@ export function FileBrowserPanel() {
         </div>
       )}
       <div
-        className="flex-1 overflow-y-auto py-1"
+        className="custom-scrollbar flex-1 overflow-y-auto py-1"
         // Empty-area context menu — only fires when the right-click
         // didn't land on a tree row (rows stopPropagation in their own
         // openContextMenu). Useful for empty projects or below-last-row

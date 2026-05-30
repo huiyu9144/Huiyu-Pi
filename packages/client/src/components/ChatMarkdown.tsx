@@ -53,10 +53,24 @@ const FILE_REF_PREFIX = "forge-preview:";
 
 const FILE_PATH_RE = /📄\s+([^\s`<>]+\.\w+)/g;
 
+const BARE_PATH_RE = /((?:[A-Za-z]:[\\/]|[~\/])[^\s`<>|"]+?\.(?:html?|mdx?|md|markdown|mdown|htm))\b/g;
+
+function normalizePath(p: string): string {
+  return p.replace(/\\/g, "/");
+}
+
 function wrapFilePaths(text: string): string {
-  return text.replace(FILE_PATH_RE, (_match, path: string) => {
-    return `[📄 ${path}](${FILE_REF_PREFIX}${path})`;
+  let result = text.replace(FILE_PATH_RE, (_match, path: string) => {
+    return `[📄 ${path}](<${FILE_REF_PREFIX}${normalizePath(path)}>)`;
   });
+  result = result.replace(BARE_PATH_RE, (_match, filePath: string) => {
+    const normalized = normalizePath(filePath);
+    if (result.includes(`(${FILE_REF_PREFIX}${normalized})`)) return _match;
+    if (result.includes(`(<${FILE_REF_PREFIX}${normalized}>)`)) return _match;
+    const fileName = filePath.split(/[\\/]/).pop() ?? filePath;
+    return `[📄 ${fileName}](<${FILE_REF_PREFIX}${normalized}>)`;
+  });
+  return result;
 }
 
 /**
@@ -139,6 +153,14 @@ interface Props {
    * on the standard line-break semantics.
    */
   chatStyleBreaks?: boolean;
+  /**
+   * Skip the file-path-detection pass (`wrapFilePaths`). Use this in
+   * contexts like PreviewPanel where the content is a file being
+   * displayed verbatim — we don't need to detect paths in it, and the
+   * path regex can corrupt inline code spans that happen to contain
+   * a file path.
+   */
+  disablePathDetection?: boolean;
 }
 
 /**
@@ -318,15 +340,28 @@ const components: Components = {
   pre: ({ children }) => <>{children}</>,
 };
 
-export function ChatMarkdown({ text, size = "sm", chatStyleBreaks = false }: Props) {
+export function ChatMarkdown({ text, size = "sm", chatStyleBreaks = false, disablePathDetection = false }: Props) {
   const sizeClass = size === "xs" ? "text-xs" : "text-sm";
   const plugins = chatStyleBreaks ? [remarkGfm, remarkMath, remarkBreaks] : [remarkGfm, remarkMath];
-  const processed = wrapFilePaths(text);
+  const processed = disablePathDetection ? text : wrapFilePaths(text);
+
+  const linkRe = /^\[📄 ([^\]]+)\]\(<?forge-preview:([^>)]+?)>?\)$/;
+
+  const segments = processed.split(/(\[📄 [^\]]+\]\(<?forge-preview:[^>)]+?>?\))/g).filter(Boolean);
+
   return (
     <div className={`${sizeClass} break-words [overflow-wrap:anywhere]`}>
-      <ReactMarkdown remarkPlugins={plugins} rehypePlugins={[rehypeKatex]} components={components}>
-        {processed}
-      </ReactMarkdown>
+      {segments.map((segment, i) => {
+        const m = segment.match(linkRe);
+        if (m !== null && m[1] !== undefined && m[2] !== undefined) {
+          return <FilePreviewLink key={i} filePath={m[2]}>{m[1]}</FilePreviewLink>;
+        }
+        return (
+          <ReactMarkdown key={i} remarkPlugins={plugins} rehypePlugins={[rehypeKatex]} components={components}>
+            {segment}
+          </ReactMarkdown>
+        );
+      })}
     </div>
   );
 }

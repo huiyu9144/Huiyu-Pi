@@ -76,7 +76,7 @@ if exist "%SC_PATH%" (
     exit /b 0
 )
 echo Creating desktop shortcut...
-powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $sc = $ws.CreateShortcut('%SC_PATH%'); $sc.TargetPath = '%~dp0start.bat'; $sc.WorkingDirectory = '%~dp0'; $sc.Description = 'Huiyu PiwebUI Forge Dev Server'; $sc.IconLocation = '%~dp0packages\client\public\icons\logo.jpg,0'; $sc.Save()"
+powershell -NoProfile -Command "$ws = New-Object -ComObject WScript.Shell; $sc = $ws.CreateShortcut('%SC_PATH%'); $sc.TargetPath = '%~dp0start.bat'; $sc.WorkingDirectory = '%~dp0'; $sc.Description = 'Huiyu PiwebUI Forge Dev Server'; $sc.IconLocation = '%~dp0packages\client\public\icons\logo.ico,0'; $sc.Save()"
 if exist "%SC_PATH%" (
     echo [2/3] Desktop shortcut created.
 ) else (

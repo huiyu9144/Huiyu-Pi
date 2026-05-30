@@ -14,6 +14,7 @@
  *   - Width clamps to the viewport so the popover doesn't overflow.
  */
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { api, ApiError } from "../lib/api-client";
 import {
@@ -70,18 +71,24 @@ function PopoverShell({
 
   if (!open) return null;
 
-  return (
+  const anchor = anchorRef.current;
+  const rect = anchor?.getBoundingClientRect();
+  const style: React.CSSProperties = rect
+    ? {
+        position: "fixed",
+        bottom: window.innerHeight - rect.top + 4,
+        right: window.innerWidth - rect.right,
+        zIndex: 9999,
+      }
+    : { position: "fixed", bottom: 80, right: 16, zIndex: 9999 };
+
+  return createPortal(
     <div
       ref={popoverRef}
       role="dialog"
       aria-label={title}
-      // `bottom-full` parks the popover ABOVE the button (the chat-
-      // input badges live at the bottom of the input footer, so the
-      // popover would otherwise need to extend below the input
-      // bezel). `right-0` right-aligns to the button — works for
-      // both processes and todos since they're both on the right
-      // edge of the footer.
-      className="absolute bottom-full right-0 z-30 mb-1 w-72 max-w-[calc(100vw-1rem)] overflow-hidden rounded-md border border-neutral-700 bg-neutral-900 shadow-xl light:border-neutral-300 light:bg-white"
+      className="w-72 max-w-[calc(100vw-1rem)] overflow-hidden rounded-md border border-neutral-700 bg-neutral-900 shadow-xl light:border-neutral-300 light:bg-white"
+      style={style}
     >
       <header className="flex items-center justify-between gap-2 border-b border-neutral-800 px-3 py-2 text-[11px] uppercase tracking-wider text-neutral-400 light:border-neutral-200 light:text-neutral-500">
         <span>{title}</span>
@@ -95,7 +102,8 @@ function PopoverShell({
         </button>
       </header>
       <div className="max-h-72 overflow-y-auto">{children}</div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

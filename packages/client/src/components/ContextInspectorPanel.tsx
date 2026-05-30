@@ -157,7 +157,7 @@ export function ContextInspectorPanel() {
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="custom-scrollbar flex-1 overflow-y-auto">
         {data === undefined ? (
           <div className="px-4 py-6 text-center text-xs italic text-neutral-500">
             {loading ? "Loading…" : "No data — try refresh."}

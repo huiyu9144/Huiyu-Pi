@@ -254,8 +254,26 @@ export function ChatInput({ sessionId }: Props) {
   const abortSession = useSessionStore((s) => s.abortSession);
   const error = useSessionStore((s) => s.error);
 
-  const [text, setText] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const DRAFT_KEY_PREFIX = "pi-forge/draft/";
+
+const [text, setText] = useState(() => {
+  try {
+    return localStorage.getItem(DRAFT_KEY_PREFIX + sessionId) ?? "";
+  } catch {
+    return "";
+  }
+});
+const [submitting, setSubmitting] = useState(false);
+
+useEffect(() => {
+  try {
+    if (text === "") {
+      localStorage.removeItem(DRAFT_KEY_PREFIX + sessionId);
+    } else {
+      localStorage.setItem(DRAFT_KEY_PREFIX + sessionId, text);
+    }
+  } catch {}
+}, [text, sessionId]);
 
   // Todo toggle — appears in the top-right of the chat-input
   // header when the active session has at least one non-deleted
@@ -1900,6 +1918,79 @@ export function ChatInput({ sessionId }: Props) {
               <GitBranch size={11} />
               Tree
             </button>
+            {modelError !== undefined && (
+              <span className="text-[11px] text-red-400">{modelError}</span>
+            )}
+            {thinkingError !== undefined && (
+              <span className="text-[11px] text-red-400">{thinkingError}</span>
+            )}
+            {!isMobile && textareaHeight !== undefined && (
+              <button
+                type="button"
+                onClick={resetTextareaHeight}
+                className="rounded p-1 text-neutral-400"
+                title="Reset chat input height to default"
+                aria-label="Reset chat input height to default"
+              >
+                <RotateCcw size={12} />
+              </button>
+            )}
+            {runningProcesses > 0 && (
+              <div className="relative">
+                <button
+                  ref={processesButtonRef}
+                  type="button"
+                  onClick={() => {
+                    if (isMobile) setProcessesPopoverOpen((v) => !v);
+                    else openProcessesTab();
+                  }}
+                  className={`flex items-center gap-1 rounded px-1.5 py-1 text-[11px] ${
+                    isMobile && processesPopoverOpen
+                      ? "text-neutral-100"
+                      : "text-neutral-400"
+                  }`}
+                  title={
+                    isMobile
+                      ? `${runningProcesses} background process(es) running — show list`
+                      : `${runningProcesses} background process(es) running — view processes panel`
+                  }
+                  aria-label={isMobile ? "Show processes list" : "View processes panel"}
+                  aria-expanded={isMobile ? processesPopoverOpen : undefined}
+                >
+                  <Activity size={12} className="text-emerald-400 light:text-emerald-700" />
+                </button>
+              </div>
+            )}
+            {todoCounts.total > 0 && (
+              <div className="relative">
+                <button
+                  ref={todosButtonRef}
+                  type="button"
+                  onClick={() => {
+                    setTodosPopoverOpen((v) => !v);
+                  }}
+                  className={`flex items-center gap-1 rounded px-1.5 py-1 text-[11px] ${
+                    todosPopoverOpen ? "text-neutral-100" : "text-neutral-400"
+                  }`}
+                  title={`${todoCounts.pending} pending, ${todoCounts.inProgress} in-progress, ${todoCounts.completed} done`}
+                  aria-label="Show tasks list"
+                  aria-expanded={todosPopoverOpen}
+                >
+                  <ListChecks size={12} className="text-emerald-400 light:text-emerald-700" />
+                  <span className="text-neutral-500 light:text-neutral-600">
+                    {todoCounts.pending + todoCounts.inProgress}/{todoCounts.total}
+                  </span>
+                </button>
+                {todosPopoverOpen && (
+                  <TodosPopover
+                    open={todosPopoverOpen}
+                    onClose={() => setTodosPopoverOpen(false)}
+                    anchorRef={todosButtonRef}
+                    sessionId={sessionId}
+                  />
+                )}
+              </div>
+            )}
           </div>
           {fileRefs.length > 0 && (
             <div className="flex flex-wrap items-center gap-1">
@@ -1921,114 +2012,6 @@ export function ChatInput({ sessionId }: Props) {
                   </button>
                 </span>
               ))}
-            </div>
-          )}
-          {(modelError !== undefined ||
-            thinkingError !== undefined ||
-            textareaHeight !== undefined ||
-            todoCounts.total > 0 ||
-            runningProcesses > 0) && (
-            <div className="ml-auto flex items-center gap-2">
-              {modelError !== undefined && (
-                <span className="text-[11px] text-red-400">{modelError}</span>
-              )}
-              {thinkingError !== undefined && (
-                <span className="text-[11px] text-red-400">{thinkingError}</span>
-              )}
-              {!isMobile && textareaHeight !== undefined && (
-                <button
-                  type="button"
-                  onClick={resetTextareaHeight}
-                  className="rounded p-1 text-neutral-400"
-                  title="Reset chat input height to default"
-                  aria-label="Reset chat input height to default"
-                >
-                  <RotateCcw size={12} />
-                </button>
-              )}
-              {runningProcesses > 0 && (
-                <div className="relative">
-                  <button
-                    ref={processesButtonRef}
-                    type="button"
-                    onClick={() => {
-                      if (isMobile) setProcessesPopoverOpen((v) => !v);
-                      else openProcessesTab();
-                    }}
-                    className={`flex items-center gap-1 rounded px-1.5 py-1 text-[11px] ${
-                      isMobile && processesPopoverOpen
-                        ? "text-neutral-100"
-                        : "text-neutral-400"
-                    }`}
-                    title={
-                      isMobile
-                        ? `${runningProcesses} background process(es) running — show list`
-                        : `${runningProcesses} background process(es) running — view processes panel`
-                    }
-                    aria-label={isMobile ? "Show processes list" : "View processes panel"}
-                    aria-expanded={isMobile ? processesPopoverOpen : undefined}
-                  >
-                    <Activity size={12} className="text-emerald-400 light:text-emerald-700" />
-                    <span>{runningProcesses}</span>
-                  </button>
-                  {isMobile && (
-                    <ProcessesPopover
-                      open={processesPopoverOpen}
-                      onClose={() => setProcessesPopoverOpen(false)}
-                      anchorRef={processesButtonRef}
-                      sessionId={sessionId}
-                    />
-                  )}
-                </div>
-              )}
-              {todoCounts.total > 0 && (
-                <div className="relative">
-                  <button
-                    ref={todosButtonRef}
-                    type="button"
-                    onClick={() => {
-                      if (isMobile) setTodosPopoverOpen((v) => !v);
-                      else setTodoPanelOpen(!todoPanelOpen);
-                    }}
-                    className={`flex items-center gap-1 rounded px-1.5 py-1 text-[11px] ${
-                      (isMobile ? todosPopoverOpen : todoPanelOpen)
-                        ? "bg-amber-900/40 text-amber-200 light:bg-amber-100 light:text-amber-900"
-                        : "text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200 light:text-neutral-600 light:hover:bg-neutral-200 light:hover:text-neutral-900"
-                    }`}
-                    title={
-                      isMobile
-                        ? `Tasks: ${todoCounts.completed}/${todoCounts.total} done${
-                            todoCounts.inProgress > 0
-                              ? `, ${todoCounts.inProgress} in progress`
-                              : ""
-                          }`
-                        : todoPanelOpen
-                          ? "Hide todo panel"
-                          : `Show todo panel (${todoCounts.completed}/${todoCounts.total} done${
-                              todoCounts.inProgress > 0
-                                ? `, ${todoCounts.inProgress} in progress`
-                                : ""
-                            })`
-                    }
-                    aria-label={isMobile ? "Show tasks list" : "Toggle todo panel"}
-                    aria-expanded={isMobile ? todosPopoverOpen : undefined}
-                    aria-pressed={isMobile ? undefined : todoPanelOpen}
-                  >
-                    <ListChecks size={12} />
-                    <span>
-                      {todoCounts.completed}/{todoCounts.total}
-                    </span>
-                  </button>
-                  {isMobile && (
-                    <TodosPopover
-                      open={todosPopoverOpen}
-                      onClose={() => setTodosPopoverOpen(false)}
-                      anchorRef={todosButtonRef}
-                      sessionId={sessionId}
-                    />
-                  )}
-                </div>
-              )}
             </div>
           )}
         </div>

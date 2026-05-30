@@ -149,7 +149,7 @@ export function TurnDiffPanel() {
           {error}
         </div>
       )}
-      <div className="flex-1 overflow-y-auto">
+      <div className="custom-scrollbar flex-1 overflow-y-auto">
         {entries.length === 0 && (
           <p className="px-3 py-3 italic text-neutral-500">
             {loading

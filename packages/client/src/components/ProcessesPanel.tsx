@@ -138,7 +138,7 @@ export function ProcessesPanel({ sessionId }: Props) {
           </button>
         </div>
       )}
-      <div className="flex-1 overflow-y-auto px-2 py-2">
+      <div className="custom-scrollbar flex-1 overflow-y-auto px-2 py-2">
         {processes.length === 0 ? (
           <p className="px-1 text-[11px] italic text-neutral-500 light:text-neutral-600">
             No background processes yet. The agent will add them here when it starts dev servers,

@@ -196,7 +196,7 @@ export function assertInsideRoot(target: string, root: string): string {
  * attacker = user, this is acceptable; the SDK ships under the same
  * threat model.
  */
-async function verifyPathSafe(target: string, root: string): Promise<string> {
+export async function verifyPathSafe(target: string, root: string): Promise<string> {
   // Lexical pre-check (cheap, fails fast — also handles NUL byte
   // rejection so fs.* doesn't throw a non-Error.code shape that
   // mapError would surface as a 500).

@@ -12,6 +12,7 @@ import {
   Users,
   X,
 } from "lucide-react";
+import { FileResultCard } from "./FileResultCard";
 import {
   EMPTY_COMPACTIONS,
   EMPTY_MESSAGES,
@@ -779,7 +780,7 @@ function Message({
     }
     return (
       <div
-        className="message-bubble group rounded-lg border-[0.5px] border-neutral-800 bg-[#14171f] light:bg-neutral-100 px-4 py-3"
+        className="message-bubble group rounded-lg border-[0.5px] border-[#1c202b] bg-[#14171f] light:bg-neutral-100 px-4 py-3"
         data-message-role="user"
       >
         <div className="mb-1 flex items-center justify-between">
@@ -954,6 +955,13 @@ function AssistantMessageBubble({
     stopReason === "error" && typeof errorMessage === "string" && errorMessage.length > 0
       ? errorMessage
       : undefined;
+  // Determine if the agent has finished its turn. When the session is
+  // no longer streaming, the last assistant response is complete.
+  const sessionId = useSessionStore((s) => s.activeSessionId);
+  const isStreaming = useSessionStore((s) =>
+    sessionId !== undefined ? (s.streamingBySession[sessionId] ?? false) : false,
+  );
+  const isDone = stopReason !== undefined || !isStreaming;
   return (
     <div
       className="message-bubble group rounded-lg border-[0.5px] border-neutral-800 bg-neutral-900 px-4 py-3"
@@ -970,7 +978,7 @@ function AssistantMessageBubble({
           >
             {collapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
           </button>
-          <span className="text-[10px] uppercase tracking-wider text-neutral-500">assistant</span>
+          <span className="text-[10px] uppercase tracking-wider text-neutral-500">{isDone ? "completed" : "assistant"}</span>
           <MessageTimestamp ts={(message as { timestamp?: unknown }).timestamp} />
         </div>
         {hasTextBlock && (
@@ -1230,6 +1238,13 @@ function toolPreviewFromArgs(name: string, args: unknown): string | undefined {
     return path ?? pattern;
   }
   return undefined;
+}
+
+const PREVIEWABLE_FILE_EXTS = new Set([".html", ".htm", ".md", ".mdx", ".markdown", ".mdown"]);
+
+function isPreviewableFile(filePath: string): boolean {
+  const dot = filePath.lastIndexOf(".");
+  return dot >= 0 && PREVIEWABLE_FILE_EXTS.has(filePath.slice(dot).toLowerCase());
 }
 
 /**
@@ -1535,6 +1550,9 @@ function ToolResult({ message }: { message: AgentMessageLike }) {
 
   if (toolName === "read") {
     const fn = extractFilename(message);
+    if (fn !== undefined && isPreviewableFile(fn)) {
+      return <FileResultCard filePath={fn} content={text} toolName={toolName} />;
+    }
     return (
       <details className="rounded border border-neutral-800 bg-neutral-950 text-xs">
         <summary className="cursor-pointer px-3 py-2 text-neutral-300">
@@ -1565,6 +1583,9 @@ function ToolResult({ message }: { message: AgentMessageLike }) {
 
   if (toolName === "write") {
     const fn = extractFilename(message);
+    if (fn !== undefined && isPreviewableFile(fn)) {
+      return <FileResultCard filePath={fn} content={text} toolName={toolName} />;
+    }
     return (
       <details className="rounded border border-neutral-800 bg-neutral-950 text-xs">
         <summary className="cursor-pointer px-3 py-2 text-neutral-300">

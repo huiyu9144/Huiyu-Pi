@@ -213,96 +213,37 @@ jobs:
           prerelease: ${{ contains(github.ref_name, '-') }}
           fail_on_unmatched_files: false
 
-  npm-publish:
-    name: Publish pi-forge to npm
-    needs: check-version
-    runs-on: ubuntu-latest
-    # Trusted Publisher (npm OIDC) is configured on the npm side to
-    # require this environment claim. The `production` GitHub
-    # Environment must exist under repo Settings → Environments — if
-    # it's missing the workflow fails with "Environment 'production'
-    # not found" before any step runs. Match this name to whatever
-    # was set in the trusted publisher config on npmjs.com.
-    environment: production
-    permissions:
-      # `id-token: write` is what `npm publish` uses to mint a sigstore
-      # OIDC token. With trusted publishers configured, npm exchanges
-      # that token for a short-lived publish credential — no long-lived
-      # NPM_TOKEN secret in the repo. Provenance attestation is the
-      # same mechanism, attached automatically when this permission +
-      # publishConfig.provenance are both set.
-      id-token: write
-      contents: read
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Set up Node.js
-        # Setting registry-url switches the npm CLI's auth flow into
-        # the registry-aware mode required for OIDC. Without this,
-        # `npm publish` would silently use the default user-level
-        # config and fail authentication.
-        #
-        # node-version is pinned (not `22`) because Node 22.22.2 ships
-        # with a broken bundled npm tree — `promise-retry` is missing
-        # from `@npmcli/arborist`'s node_modules, so any
-        # `npm install -g npm@<anything>` crashes with MODULE_NOT_FOUND
-        # before it can do the upgrade. Confirmed regression vs 22.22.1:
-        #   - https://github.com/nodejs/node/issues/62425
-        #   - https://github.com/actions/runner-images/issues/13883
-        # 22.22.1 is the last known-good 22.x. Drop the pin (back to
-        # `22`) once 22.22.3 ships with the fix from nodejs/node#62463.
-        uses: actions/setup-node@v6
-        with:
-          node-version: 22.22.1
-          cache: npm
-          registry-url: https://registry.npmjs.org
-
-      - name: Upgrade npm to a version that supports Trusted Publishers
-        # Node 22 LTS ships with npm 10.x by default, which predates
-        # Trusted Publisher OIDC support (added in npm 11.5.1, July
-        # 2025). On npm 10.x, `npm publish` silently ignores the
-        # GitHub OIDC token even with `id-token: write` granted, sends
-        # an unauthenticated PUT, and the registry replies 404
-        # (npm doesn't leak package existence to anonymous requesters,
-        # so "not authorized" surfaces as "not found"). The first
-        # v1.1.2 tag hit exactly this — Docker shipped, npm-publish
-        # 404'd. Upgrading globally before any subsequent npm command
-        # also applies the new version to `npm ci` and `npm publish`.
-        run: npm install -g npm@latest
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build workspace
-        # Produces packages/server/dist/ + packages/client/dist/, the
-        # inputs to the publish-dir assembler.
-        run: npm run build
-
-      - name: Assemble publish/ staging dir
-        # Synthesizes publish/package.json (name=pi-forge, version
-        # from root, server's deps hoisted), copies built server +
-        # client artifacts, copies the bin shim and LICENSE.
-        run: npm run build:publish
-
-      - name: Verify staged version matches tag
-        # Belt-and-suspenders. check-version already verified all three
-        # source package.json files agree with the tag, but the synthetic
-        # publish/package.json is a NEW input — assert it independently
-        # so a bug in build-publish-dir.mjs can't ship a mislabeled
-        # tarball.
-        run: |
-          tag="${GITHUB_REF_NAME#v}"
-          synth=$(node -p "require('./publish/package.json').version")
-          if [ "$synth" != "$tag" ]; then
-            echo "::error::publish/package.json version $synth does not match tag $tag" >&2
-            exit 1
-          fi
-          echo "publish/package.json version $synth ✓"
-
-      - name: Publish to npm
-        # publishConfig in the synthetic package.json sets access=public
-        # and provenance=true, so this is a one-line invocation. The
-        # OIDC dance happens automatically because of `id-token: write`
-        # and the trusted publisher config on the npm side.
-        working-directory: publish
-        run: npm publish
+  # npm-publish temporarily disabled.
+  # Re-enable after setting up Trusted Publisher on npmjs.com for the
+  # pi-forge package. See the commented job below for the full config.
+  #
+  #  npm-publish:
+  #    name: Publish pi-forge to npm
+  #    needs: check-version
+  #    runs-on: ubuntu-latest
+  #    environment: production
+  #    permissions:
+  #      id-token: write
+  #      contents: read
+  #    steps:
+  #      - uses: actions/checkout@v6
+  #      - uses: actions/setup-node@v6
+  #        with:
+  #          node-version: 22.22.1
+  #          cache: npm
+  #          registry-url: https://registry.npmjs.org
+  #      - run: npm install -g npm@latest
+  #      - run: npm ci
+  #      - run: npm run build
+  #      - run: npm run build:publish
+  #      - name: Verify staged version matches tag
+  #        run: |
+  #          tag="${GITHUB_REF_NAME#v}"
+  #          synth=$(node -p "require('./publish/package.json').version")
+  #          if [ "$synth" != "$tag" ]; then
+  #            echo "::error::publish/package.json version $synth does not match tag $tag" >&2
+  #            exit 1
+  #          fi
+  #          echo "publish/package.json version $synth ✓"
+  #      - working-directory: publish
+  #        run: npm publish
