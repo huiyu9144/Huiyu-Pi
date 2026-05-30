@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  A local open-source Agent tool that lets you build your own Harness system from scratch. Built on Pi and pi-forge's WebUI, compared to IDE tools like Codex and Claude Code, context is reduced to nearly zero with massive speed improvements. Build from scratch cleanly without platform restrictions.
+  A local open-source Agent tool that lets you build your own Harness system from scratch. Built on Pi and pi-forge, compared to IDE tools like Codex and Claude Code, context is reduced to nearly zero with massive speed improvements. Build from scratch cleanly without platform restrictions.
 </p>
 
 <p align="center">
