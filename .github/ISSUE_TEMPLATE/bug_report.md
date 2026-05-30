@@ -1,58 +1,44 @@
 ---
-name: Bug report
-about: Something isn't working the way the docs say it should
-title: "bug: <short summary>"
+name: Bug Report
+about: Report a bug to help us improve
+title: "[BUG] "
 labels: bug
 assignees: ''
 ---
 
-## What happened
+## Bug Description
 
-<!-- One or two sentences. What did you do, what did you expect, what
-happened instead? -->
+A clear and concise description of what the bug is.
 
-## Steps to reproduce
+## Steps to Reproduce
 
-1.
-2.
-3.
+1. Go to '...'
+2. Click on '...'
+3. Scroll down to '...'
+4. See error
 
-## Expected vs actual
+## Expected Behavior
 
-- **Expected:**
-- **Actual:**
+A clear and concise description of what you expected to happen.
+
+## Actual Behavior
+
+A clear and concise description of what actually happened.
+
+## Screenshots
+
+If applicable, add screenshots to help explain your problem.
 
 ## Environment
 
-- pi-forge version / commit SHA:
-- Install method: [ ] Docker compose  [ ] `npm run dev`  [ ] Kubernetes  [ ] other:
-- Host OS + version:
-- Node version (if running outside Docker): `node --version`
-- Browser + version (if a UI bug):
-- Provider being used (Anthropic / OpenAI / custom OpenAI-compatible / ...):
-- Model being used:
+- **OS**: [e.g., Windows 11, macOS 14, Ubuntu 22.04]
+- **Browser**: [e.g., Chrome 120, Firefox 121, Safari 17]
+- **Node.js Version**: [e.g., 18.19.0]
+- **Project Version**: [e.g., v1.0.0]
 
-## Logs / screenshots
+## Additional Context
 
-<!-- Server logs (`docker compose logs pi-forge` or your terminal),
-browser devtools console output, screenshots — whatever helps.
-
-PLEASE redact API keys, JWTs, and any private code or paths before
-pasting. The maintainers cannot un-see what you post here. -->
-
-```
-<paste relevant logs here>
-```
-
-## Additional context
-
-<!-- Anything else: was this working in a previous version? Does it only
-happen for some sessions / projects / models? Any local patches applied? -->
-
----
-
-### Before submitting
-
-- [ ] I searched [open and closed issues](https://github.com/Devin-Marks/pi-forge/issues?q=) for duplicates
-- [ ] I redacted API keys, tokens, and private code from logs/screenshots
-- [ ] If this is a security vulnerability, I am using the [private vulnerability reporting](../../security/advisories/new) flow instead — see [`SECURITY.md`](../../SECURITY.md)
+Add any other context about the problem here. If applicable, include:
+- Console errors
+- Network requests
+- Configuration files (redact API keys)

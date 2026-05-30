@@ -15,8 +15,10 @@
 <p align="center">
   <a href="https://discord.gg/BdJDs4AKbS"><img src="https://img.shields.io/discord/1334932402172137576?style=flat-square&logo=discord&logoColor=white&label=Discord&color=5865F2" alt="Discord"></a>
   <a href="https://github.com/huiyu9144/Huiyu-PiwebUI-Forge/stargazers"><img src="https://img.shields.io/github/stars/huiyu9144/Huiyu-PiwebUI-Forge?style=flat-square&logo=github&color=f1c40f&labelColor=555555" alt="GitHub Stars"></a>
-  <a href="https://github.com/huiyu9144/Huiyu-PiwebUI-Forge/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-20B2AA?style=flat-square" alt="MIT License"></a>
-  <a href="https://github.com/huiyu9144/Huiyu-PiwebUI-Forge/releases"><img src="https://img.shields.io/github/v/release/huiyu9144/Huiyu-PiwebUI-Forge?style=flat-square&color=blue" alt="Release"></a>
+  <a href="https://github.com/huiyu9144/Huiyu-PiwebUI-Forge/network/members"><img src="https://img.shields.io/github/forks/huiyu9144/Huiyu-PiwebUI-Forge?style=flat-square&logo=github&color=20B2AA&label=Forks" alt="GitHub Forks"></a>
+  <a href="https://github.com/huiyu9144/Huiyu-PiwebUI-Forge/blob/main/LICENSE"><img src="https://img.shields.io/github/license/huiyu9144/Huiyu-PiwebUI-Forge?style=flat-square&color=20B2AA" alt="MIT License"></a>
+  <a href="https://github.com/huiyu9144/Huiyu-PiwebUI-Forge/releases"><img src="https://img.shields.io/github/v/release/huiyu9144/Huiyu-PiwebUI-Forge?style=flat-square&color=20B2AA" alt="Release"></a>
+  <a href="https://github.com/huiyu9144/Huiyu-PiwebUI-Forge/issues"><img src="https://img.shields.io/github/issues/huiyu9144/Huiyu-PiwebUI-Forge?style=flat-square&color=20B2AA" alt="Issues"></a>
 </p>
 
 <p align="center">
@@ -73,6 +75,26 @@ Dockerfile, docker-compose, Kubernetes and OpenShift deployment manifests includ
 
 ## Getting Started
 
+### Quick Start (no install required)
+
+```bash
+npx huiyu-piwebui-forge
+```
+
+Opens your browser at `http://localhost:9144`. Provider API keys go into Settings → Providers.
+
+### One-time global install (faster subsequent launches)
+
+```bash
+npm install -g huiyu-piwebui-forge
+huiyu-piwebui-forge
+
+# Override defaults via flags:
+huiyu-piwebui-forge --port 4000 --workspace-path ~/Code
+huiyu-piwebui-forge --api-key @/run/secrets/api-key --no-expose-docs
+huiyu-piwebui-forge --help       # full flag table
+```
+
 ### Prerequisites
 
 - [Node.js](https://nodejs.org/) 18+
@@ -80,19 +102,23 @@ Dockerfile, docker-compose, Kubernetes and OpenShift deployment manifests includ
 
 ### One-click Start (Windows)
 
-Clone the repo, double-click `start.bat` — the script installs everything and opens your browser at `http://localhost:9144`.
+Clone the repo, double-click `start.bat` — the script installs everything and opens your browser at `http://localhost:9145`.
+
+### One-click Start (macOS / Linux)
+
+Clone the repo, run `bash start.sh` from the terminal — the script installs everything and opens your browser at `http://localhost:9145`.
 
 ### Manual Start
 
 ```bash
 git clone https://github.com/huiyu9144/Huiyu-PiwebUI-Forge.git
 cd Huiyu-PiwebUI-Forge
-npm install && cd server && npm install && cd ..
-npm run dev:all
+npm install
+npm run dev
 ```
 
-- Frontend: http://localhost:9144
-- Backend: http://localhost:9145
+- Client (dev server with hot reload): http://localhost:9145
+- API server: http://localhost:9144
 
 ### API Key Setup
 

@@ -1,48 +1,33 @@
 ---
-name: Feature request
-about: Suggest a new capability or behavior change
-title: "feat: <short summary>"
+name: Feature Request
+about: Suggest an idea for this project
+title: "[FEATURE] "
 labels: enhancement
 assignees: ''
 ---
 
-## The problem
+## Problem Statement
 
-<!-- What can't you do today, or what is awkward about how the pi-forge
-behaves? Describe the situation, not the solution. -->
+A clear and concise description of what problem this feature would solve.
+Example: "I'm always frustrated when [...]"
 
-## What you'd want instead
+## Proposed Solution
 
-<!-- The smallest change that would solve the problem. If you have a
-specific UI / API in mind, sketch it — but the problem matters more
-than the solution. -->
+A clear and concise description of what you want to happen.
 
-## Why this fits pi-forge
+## Alternatives Considered
 
-<!-- pi-forge is intentionally single-tenant, container-native, and
-a thin bridge over the pi SDK. Features that require multi-tenant auth,
-re-implement SDK behavior, or expand the threat model are usually
-deferred — see the **Known Limitations & Deferred Work** section of
-[`CLAUDE.md`](../../CLAUDE.md) for the running list.
+A clear and concise description of any alternative solutions or features you've considered.
 
-If your idea touches any of those, say a sentence about why it's worth
-revisiting. -->
+## Use Case
 
-## Alternatives you've considered
+Describe the use case(s) where this feature would be most valuable.
 
-<!-- Existing workarounds, related community packages (e.g.
-`@nicobailon/pi-mcp-adapter`), or features in adjacent tools that solve
-this differently. -->
+## Additional Context
 
-## Additional context
+Add any other context, mockups, or screenshots about the feature request here.
 
-<!-- Mockups, links to similar features in other tools, related issues,
-upstream pi SDK tickets — anything that gives the idea more shape. -->
+## Checklist
 
----
-
-### Before submitting
-
-- [ ] I searched [open and closed issues](https://github.com/Devin-Marks/pi-forge/issues?q=) for similar requests
-- [ ] I checked the **Known Limitations & Deferred Work** section of [`CLAUDE.md`](../../CLAUDE.md)
-- [ ] This is a feature, not a bug (use the bug report template instead) and not a security report (use the [private vulnerability reporting](../../security/advisories/new) flow)
+- [ ] I have searched the [existing issues](https://github.com/huiyu9144/Huiyu-PiwebUI-Forge/issues) to make sure this feature has not been requested
+- [ ] This feature aligns with the project's goals of being self-hosted and privacy-focused

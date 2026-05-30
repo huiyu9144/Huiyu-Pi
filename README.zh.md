@@ -15,8 +15,10 @@
 <p align="center">
   <a href="https://discord.gg/BdJDs4AKbS"><img src="https://img.shields.io/discord/1334932402172137576?style=flat-square&logo=discord&logoColor=white&label=Discord&color=5865F2" alt="Discord"></a>
   <a href="https://github.com/huiyu9144/Huiyu-PiwebUI-Forge/stargazers"><img src="https://img.shields.io/github/stars/huiyu9144/Huiyu-PiwebUI-Forge?style=flat-square&logo=github&color=f1c40f&labelColor=555555" alt="GitHub Stars"></a>
-  <a href="https://github.com/huiyu9144/Huiyu-PiwebUI-Forge/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-20B2AA?style=flat-square" alt="MIT License"></a>
-  <a href="https://github.com/huiyu9144/Huiyu-PiwebUI-Forge/releases"><img src="https://img.shields.io/github/v/release/huiyu9144/Huiyu-PiwebUI-Forge?style=flat-square&color=blue" alt="Release"></a>
+  <a href="https://github.com/huiyu9144/Huiyu-PiwebUI-Forge/network/members"><img src="https://img.shields.io/github/forks/huiyu9144/Huiyu-PiwebUI-Forge?style=flat-square&logo=github&color=20B2AA&label=Forks" alt="GitHub Forks"></a>
+  <a href="https://github.com/huiyu9144/Huiyu-PiwebUI-Forge/blob/main/LICENSE"><img src="https://img.shields.io/github/license/huiyu9144/Huiyu-PiwebUI-Forge?style=flat-square&color=20B2AA" alt="MIT License"></a>
+  <a href="https://github.com/huiyu9144/Huiyu-PiwebUI-Forge/releases"><img src="https://img.shields.io/github/v/release/huiyu9144/Huiyu-PiwebUI-Forge?style=flat-square&color=20B2AA" alt="Release"></a>
+  <a href="https://github.com/huiyu9144/Huiyu-PiwebUI-Forge/issues"><img src="https://img.shields.io/github/issues/huiyu9144/Huiyu-PiwebUI-Forge?style=flat-square&color=20B2AA" alt="Issues"></a>
 </p>
 
 <p align="center">
@@ -73,6 +75,26 @@
 
 ## 快速开始
 
+### 一键启动（无需安装）
+
+```bash
+npx huiyu-piwebui-forge
+```
+
+在浏览器中打开 `http://localhost:9144`。在 Settings → Providers 中配置 API 密钥即可使用。
+
+### 全局安装（后续启动更快）
+
+```bash
+npm install -g huiyu-piwebui-forge
+huiyu-piwebui-forge
+
+# 通过参数覆盖默认配置：
+huiyu-piwebui-forge --port 4000 --workspace-path ~/Code
+huiyu-piwebui-forge --api-key @/run/secrets/api-key --no-expose-docs
+huiyu-piwebui-forge --help       # 查看全部参数
+```
+
 ### 前置要求
 
 - [Node.js](https://nodejs.org/) 18+
@@ -80,19 +102,23 @@
 
 ### 一键启动 (Windows)
 
-克隆仓库，双击 `start.bat` — 脚本会安装所有依赖并在浏览器中打开 `http://localhost:9144`。
+克隆仓库，双击 `start.bat` — 脚本会安装所有依赖并在浏览器中打开 `http://localhost:9145`。
+
+### 一键启动 (macOS / Linux)
+
+克隆仓库，在终端中运行 `bash start.sh` — 脚本会安装所有依赖并在浏览器中打开 `http://localhost:9145`。
 
 ### 手动启动
 
 ```bash
 git clone https://github.com/huiyu9144/Huiyu-PiwebUI-Forge.git
 cd Huiyu-PiwebUI-Forge
-npm install && cd server && npm install && cd ..
-npm run dev:all
+npm install
+npm run dev
 ```
 
-- 前端: http://localhost:9144
-- 后端: http://localhost:9145
+- 客户端（热重载开发服务器）: http://localhost:9145
+- API 服务器: http://localhost:9144
 
 ### API 密钥配置
 

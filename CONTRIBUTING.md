@@ -1,161 +1,142 @@
-# Contributing to pi-forge
+# Contributing to Huiyu PiwebUI Forge
 
-Thanks for the interest. This document covers everything you need to send a
-pull request that has a good chance of landing quickly.
+Thank you for your interest in contributing! This document provides guidelines and information for contributors.
 
-## Quick start
+## Getting Started
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) 18+
+- [pnpm](https://pnpm.io/) (recommended) or npm
+- Git
+
+### Development Setup
 
 ```bash
-git clone https://github.com/<your-fork>/pi-forge.git
-cd pi-forge
+git clone https://github.com/huiyu9144/Huiyu-PiwebUI-Forge.git
+cd Huiyu-PiwebUI-Forge
 npm install
-npm rebuild node-pty # rebuild native PTY binding for your local Node/runtime
-npm run dev          # server on :3000, client on :5173
+cd server && npm install && cd ..
+npm run dev:all
 ```
 
-The Vite dev server proxies `/api/*` to Fastify (including WebSocket upgrades
-for the integrated terminal), so the client calls `/api/v1/...` directly with
-no base-URL config. Environment variables are in
-[`docs/configuration.md`](./docs/configuration.md); the Docker-compose path
-is in [`docs/containers.md`](./docs/containers.md).
+- Frontend: http://localhost:9144
+- Backend: http://localhost:9145
 
-### Running dev:remote behind a proxy
+## How to Contribute
 
-`npm run dev:remote` exposes Vite on `0.0.0.0` so other devices on
-your LAN can hit it directly by IP. Vite's anti-DNS-rebinding
-allowlist permits `localhost` + LAN-IP requests by default, but
-*blocks* requests whose `Host:` header is a hostname (e.g. a
-reverse-proxied `dev.example.com`) with `Blocked request. This host
-(...) is not allowed.`
+### Reporting Bugs
 
-Pass extra allowed hosts via `VITE_DEV_ALLOWED_HOSTS`:
+1. Check [existing issues](https://github.com/huiyu9144/Huiyu-PiwebUI-Forge/issues) to avoid duplicates
+2. Open a new issue using the **Bug Report** template
+3. Include:
+   - Steps to reproduce
+   - Expected behavior
+   - Actual behavior
+   - Environment (OS, browser, Node version)
+   - Screenshots if applicable
 
-```bash
-# Specific hostnames (comma-separated, whitespace-tolerant):
-VITE_DEV_ALLOWED_HOSTS=dev.example.com,staging.example.com npm run dev:remote
+### Suggesting Features
 
-# Or disable the check entirely (dev convenience; accepts the
-# DNS-rebinding risk — only use on trusted networks):
-VITE_DEV_ALLOWED_HOSTS=all npm run dev:remote
+1. Check [existing issues](https://github.com/huiyu9144/Huiyu-PiwebUI-Forge/issues) for similar requests
+2. Open a new issue using the **Feature Request** template
+3. Describe the problem you're solving and your proposed solution
+
+### Submitting Code
+
+1. Fork the repository
+2. Create a feature branch from `main`:
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+3. Make your changes
+4. Test your changes thoroughly
+5. Commit with a clear message:
+   ```bash
+   git commit -m "feat: add new feature"
+   ```
+6. Push to your fork:
+   ```bash
+   git push origin feature/your-feature-name
+   ```
+7. Open a Pull Request
+
+## Commit Convention
+
+We follow [Conventional Commits](https://www.conventionalcommits.org/):
+
+| Prefix | Description |
+|--------|-------------|
+| `feat:` | New feature |
+| `fix:` | Bug fix |
+| `docs:` | Documentation changes |
+| `style:` | Code style changes (formatting, etc.) |
+| `refactor:` | Code refactoring |
+| `perf:` | Performance improvements |
+| `test:` | Adding or updating tests |
+| `chore:` | Maintenance tasks |
+
+Examples:
+```
+feat: add Dark Mode toggle
+fix: resolve terminal connection issue on Windows
+docs: update installation guide
 ```
 
-Unset, the default Vite behaviour stays in effect. Production builds
-are unaffected — this is dev-server only.
+## Code Style
 
-### Native module gotcha (node-pty)
+### TypeScript/React
 
-The integrated terminal needs `node-pty`'s prebuilt binary to be
-executable. The shipped npm-install postinstall (`bin/fix-pty-perms.mjs`)
-handles this. If you hit `posix_spawnp failed.` after a manual install,
-run `node bin/fix-pty-perms.mjs` from the repo root.
+- Use TypeScript for all new code
+- Follow existing code patterns in the project
+- Use functional components with hooks
+- Keep components focused and small
 
-After `npm install`, run `npm rebuild node-pty` once to make sure the
-native PTY binding is compiled for your local Node/runtime. You usually
-only need to rerun it after deleting `node_modules`, changing Node
-versions, or moving between OS/architecture/container environments.
+### CSS
 
-The rebuild needs Python plus a C++ toolchain: Xcode CLT on macOS, or
-`python3`, `make`, `gcc`, and `g++` / `build-essential` on Linux. The
-Docker image avoids both issues — its build stage compiles node-pty
-against the runtime Node automatically.
+- Use Tailwind CSS classes when possible
+- Follow existing naming conventions
+- Keep styles consistent with the design system
 
-## Before you open a PR
+## Project Structure
 
-```bash
-npm run check        # tsc + eslint + prettier --check
-npm run build        # full client + server build (catches Vite-only failures)
-npm run test:ci      # full integration suite (~40s; same set CI runs)
+```
+pi-forge/
+├── packages/
+│   ├── client/          # Frontend (React + Vite)
+│   │   ├── src/
+│   │   │   ├── components/
+│   │   │   ├── lib/
+│   │   │   └── ...
+│   │   └── public/
+│   └── server/          # Backend (Fastify)
+│       └── src/
+│           ├── routes/
+│           ├── lib/
+│           └── ...
+├── docs/
+└── kubernetes/
 ```
 
-All three must pass. CI re-runs `test:ci` on every PR; running it
-locally first catches the failures faster.
+## Pull Request Guidelines
 
-For iteration during development, run a focused subset rather than
-the full loop:
+- Keep PRs focused on a single change
+- Include a clear description of what changed and why
+- Add screenshots for UI changes
+- Ensure no breaking changes without discussion
+- Update documentation if needed
+- Follow existing code style
 
-```bash
-scripts/run-tests.sh --only auth,session     # one or comma-separated
-scripts/run-tests.sh --skip docker           # everything except docker
-```
+## Code of Conduct
 
-The full test catalogue (one-line per script) lives in
-[`CLAUDE.md`](./CLAUDE.md#test-script-catalogue). When you change
-behaviour that an existing script tests, **update the script in the
-same PR** — drift here is the single most common source of test
-failures landing weeks later.
+- Be respectful and inclusive
+- Welcome newcomers and help them get started
+- Focus on constructive feedback
+- Respect different viewpoints and experiences
 
-## Branch + commit conventions
+## Questions?
 
-- Branch off `main`. Name your branch with intent (`fix/session-fork-hijack`,
-  `feat/context-inspector-search`).
-- Use [Conventional Commits](https://www.conventionalcommits.org/): `feat:`,
-  `fix:`, `refactor:`, `docs:`, `test:`, `chore:`, `perf:`, `ci:`. The
-  history is full of examples — match the prevailing style.
-- **Atomic commits** — one logical change per commit. The commit message
-  explains the *why*, not just the *what*. Bug fixes should describe the
-  root cause and the symptom users saw.
-- No `Co-Authored-By` or AI-attribution lines. The repo's commit history is
-  unsigned and human-attributed.
+- Join our [Discord](https://discord.gg/BdJDs4AKbS) for real-time discussion
+- Open an issue for bugs or feature requests
 
-## Pull request checklist
-
-The PR template walks you through this; the short version:
-
-- [ ] `npm run check` and `npm run build` pass locally
-- [ ] Relevant test script(s) pass (list which ones in the PR description)
-- [ ] Public route changes ship with `schema.description` + JSON-Schema
-      `body` / `response` so the OpenAPI spec at `/api/docs` stays accurate
-
-## Architecture and conventions
-
-[`CLAUDE.md`](./CLAUDE.md) is the canonical contributor reference —
-repository layout, critical conventions (path validation, atomic
-writes, single-source-of-truth modules, Zustand-only state, no
-default exports, etc.), Pi SDK gotchas. Read it once before sending
-a non-trivial PR; many recurring review comments are addressed there
-already.
-
-[`docs/architecture.md`](./docs/architecture.md) covers the *why*
-behind the layout — request lifecycles, persistence model, threading.
-
-## Reporting issues
-
-- **Security vulnerabilities:** see [`SECURITY.md`](./SECURITY.md). Do NOT
-  open a public issue.
-- **Bugs:** GitHub Issues. Use the bug-report template; include the
-  reproduction steps, expected behaviour, observed behaviour, and the
-  output of `GET /api/v1/health` if relevant.
-- **Feature requests:** GitHub Issues with the feature-request template.
-  Linking to a real use-case helps prioritise.
-
-## Community
-
-Join our [Discord server](https://discord.gg/BdJDs4AKbS) to chat with other contributors and users.
-
-## Code of conduct
-
-By participating you agree to abide by the
-[`CODE_OF_CONDUCT.md`](./CODE_OF_CONDUCT.md).
-
-## Contribution terms
-
-No separate CLA. By opening a PR you represent that:
-
-- **Original work.** It's yours (or otherwise rightfully submittable
-  under MIT). No GPL/AGPL pasted into runtime files; no someone-else's
-  proprietary code.
-- **MIT licensed.** You license your contribution under the same MIT
-  [LICENSE](./LICENSE) as the rest of the codebase; you retain
-  copyright.
-- **Patent grant.** To the extent you hold patent claims reading on
-  your contribution, you grant a perpetual, worldwide, royalty-free
-  license under those claims for downstream use. Mirrors Apache-2.0
-  §3 — protects the project if a contributor later asserts a patent
-  against their own code.
-- **No warranty from you.** "As-is" — no support / indemnification
-  obligation.
-
-Trivial fixes (typos, formatting, comments) don't need to think about
-this — submitting them is the representation. If your employer
-claims rights in code you write, get their sign-off before opening
-the PR.
+Thank you for contributing! 🎉

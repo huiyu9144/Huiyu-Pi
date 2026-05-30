@@ -1,4 +1,4 @@
-# Dependabot config for pi-forge.
+# Dependabot config for Huiyu PiwebUI Forge.
 #
 # Three ecosystems, daily cadence each. The npm entry covers root
 # plus every workspace under packages/* — Dependabot's npm support
