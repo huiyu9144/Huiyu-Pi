@@ -620,9 +620,9 @@ useEffect(() => {
         run: () => {
           setAttachmentError(
             minimalUi
-              ? "/<cmd> runs a Huiyu PiwebUI Forge command (compact, abort, settings, …). " +
+              ? "/<cmd> runs a Huiyu Pi command (compact, abort, settings, …). " +
                   "@<path> references a project file (autocomplete from the popover)."
-              : "/<cmd> runs a Huiyu PiwebUI Forge command (compact, abort, settings, …). " +
+              : "/<cmd> runs a Huiyu Pi command (compact, abort, settings, …). " +
                   "!cmd runs bash (output → next LLM context); !!cmd runs bash local-only. " +
                   "@<path> references a project file (autocomplete from the popover).",
           );
@@ -980,28 +980,28 @@ useEffect(() => {
   >(undefined);
 
   useEffect(() => {
-    void api
-      .getProviders()
-      .then(setProviders)
-      .catch((err: unknown) => {
-        // Surface as a non-fatal hint; chat still works with the default model.
-        const code = err instanceof ApiError ? err.code : (err as Error).message;
-        setModelError(`models unavailable (${code})`);
-      });
-    // settings.json — split fetch from providers because the picker UI
-    // needs to render even when settings is empty / missing.
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      void api
+        .getProviders()
+        .then((p) => { if (!cancelled) setProviders(p); })
+        .catch((err: unknown) => {
+          if (cancelled) return;
+          const code = err instanceof ApiError ? err.code : (err as Error).message;
+          setModelError(`models unavailable (${code})`);
+        });
+    }, 2000);
     void api
       .getSettings()
       .then((s) => {
+        if (cancelled) return;
         setDefaultModel({
           provider: typeof s.defaultProvider === "string" ? s.defaultProvider : "",
           modelId: typeof s.defaultModel === "string" ? s.defaultModel : "",
         });
       })
-      .catch(() => {
-        // Settings unreadable — keep defaultModel undefined; the picker
-        // gracefully falls back to "Use agent default" with no name.
-      });
+      .catch(() => {});
+    return () => { cancelled = true; clearTimeout(timer); };
   }, []);
 
   // On session change: re-read the per-session selection from storage and
@@ -1752,7 +1752,7 @@ useEffect(() => {
                 if (textareaRef.current !== document.activeElement) acClose();
               }, 0);
             }}
-            placeholder="Ask Huiyu PiwebUI Forge ..."
+            placeholder="Ask Huiyu Pi ..."
             title={
               isAutoRetrying
                 ? "The agent is auto-retrying after a provider error. New messages are queued and delivered when the retry succeeds."
