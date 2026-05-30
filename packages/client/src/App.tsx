@@ -446,7 +446,7 @@ export function App() {
               className="flex items-center gap-1.5"
             >
               <img src="/icons/logo-rounded.png" alt="" className="h-6 w-6 rounded-md" aria-hidden="true" />
-              <span className="text-sm font-semibold tracking-tight">Huiyu PiwebUI Forge</span>
+              <span className="text-sm font-semibold tracking-tight">Huiyu Pi</span>
             </a>
             <button
               onClick={() => useUiStore.getState().setProjectPickerOpen(true)}
@@ -541,7 +541,7 @@ export function App() {
                       <Monitor size={16} />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-neutral-100">Install Huiyu PiwebUI Forge</p>
+                      <p className="text-sm font-medium text-neutral-100">Install Huiyu Pi</p>
                       <p className="text-[11px] text-neutral-500">Add to your desktop for quick access</p>
                     </div>
                   </div>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>0上下文 · 极速 · pi-forge</title>
+<title>Huiyu Pi</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
@@ -284,8 +284,8 @@ body{
 <div class="container" id="captureArea">
 
   <div class="brand-bar">
-    <img src="/icons/logo-rounded.png" alt="Huiyu PiwebUI Forge">
-    <span class="bn">Huiyu <em>PiwebUI</em> Forge</span>
+    <img src="/icons/logo-rounded.png" alt="Huiyu Pi">
+    <span class="bn">Huiyu <em>Pi</em></span>
   </div>
 
   <div class="header">
@@ -356,7 +356,7 @@ body{
             <span class="pulse-ring"></span>
             🤖
           </div>
-          <span class="panel-brand after-brand">Huiyu PiwebUI Forge</span>
+          <span class="panel-brand after-brand">Huiyu Pi</span>
           <span class="speed-badge fast" id="fastBadge">fast</span>
         </div>
         <div class="panel-body">
@@ -781,7 +781,7 @@ body{
       var blob=await encodeGIF(gif);
       updateProgress(1,'Downloading\u2026');
       var url=URL.createObjectURL(blob);
-      var a=document.createElement('a');a.href=url;a.download='huiyu-piwebui-forge-before-after.gif';
+      var a=document.createElement('a');a.href=url;a.download='huiyu-pi-before-after.gif';
       document.body.appendChild(a);a.click();document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }catch(e){console.error(e)}
