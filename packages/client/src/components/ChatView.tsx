@@ -1008,10 +1008,10 @@ function AssistantMessageBubble({
   const isDone = stopReason !== undefined || !isStreaming;
   return (
     <div
-      className="message-bubble group rounded-lg border-[0.5px] border-neutral-800 bg-neutral-900 py-3 pl-0 pr-4"
+      className="message-bubble group rounded-lg border-[0.5px] border-neutral-800 bg-neutral-900 px-4 py-3"
       data-message-role="assistant"
     >
-      <div className="mb-1 flex items-center justify-between pl-4">
+      <div className="mb-1 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -1044,7 +1044,7 @@ function AssistantMessageBubble({
           </div>
           {inlineError !== undefined && (
             <div
-              className="mt-2 ml-4 rounded border border-amber-700/40 bg-amber-900/20 px-3 py-2 text-xs text-amber-200 light:border-amber-300 light:bg-amber-50 light:text-amber-800"
+              className="mt-2 rounded border border-amber-700/40 bg-amber-900/20 px-3 py-2 text-xs text-amber-200 light:border-amber-300 light:bg-amber-50 light:text-amber-800"
               role="alert"
             >
               <span className="font-medium">Provider error: </span>
@@ -1052,9 +1052,7 @@ function AssistantMessageBubble({
             </div>
           )}
           {isDone && sessionId !== undefined && (
-            <div className="ml-4">
-              <TurnDiffFooter sessionId={sessionId} />
-            </div>
+            <TurnDiffFooter sessionId={sessionId} />
           )}
         </>
       )}
@@ -1380,7 +1378,7 @@ function AssistantBlock({
   const type = block.type;
 
   if (type === "text" && typeof block.text === "string") {
-    return <div className="pl-4">{showRaw ? <RawText text={block.text} /> : <ChatMarkdown text={block.text} />}</div>;
+    return showRaw ? <RawText text={block.text} /> : <ChatMarkdown text={block.text} />;
   }
 
   if (type === "thinking" && typeof block.thinking === "string") {
