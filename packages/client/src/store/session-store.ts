@@ -535,6 +535,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       onEvent: (event) => applyEvent(set, get, sessionId, event),
       onClose: onTerminate,
       onReconnect: ({ attempt, delayMs, reason }) => {
+        if (attempt < 3) return;
         set((s) => ({
           bannerBySession: {
             ...s.bannerBySession,
