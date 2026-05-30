@@ -252,7 +252,6 @@ export function ChatInput({ sessionId }: Props) {
   const sendSteer = useSessionStore((s) => s.sendSteer);
   const reloadMessages = useSessionStore((s) => s.reloadMessages);
   const abortSession = useSessionStore((s) => s.abortSession);
-  const error = useSessionStore((s) => s.error);
 
   const DRAFT_KEY_PREFIX = "pi-forge/draft/";
 
@@ -1663,7 +1662,6 @@ useEffect(() => {
         style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
       >
         <div>
-          {error !== undefined && <p className="text-xs text-red-400">Error: {error}</p>}
           {attachmentError !== undefined && (
             <p className="text-xs text-amber-400">{attachmentError}</p>
           )}
