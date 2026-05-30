@@ -439,6 +439,8 @@ export async function buildServer(): Promise<FastifyInstance> {
       if (path.startsWith("/api/")) return;
       if (path.startsWith("/assets/")) {
         reply.header("Cache-Control", "public, max-age=31536000, immutable");
+      } else if (path === "/sw.js" || path === "/sw.js.map" || path === "/workbox-6d7155ed.js") {
+        reply.header("Cache-Control", "no-cache, no-store, must-revalidate");
       } else if (reply.getHeader("content-type")?.toString().startsWith("text/html") === true) {
         reply.header("Cache-Control", "no-cache");
       }

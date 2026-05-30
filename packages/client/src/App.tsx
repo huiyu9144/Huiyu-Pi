@@ -33,7 +33,9 @@ const FILES_WIDTH_KEY = "pi-forge/files-width";
 const EDITOR_WIDTH_KEY = "pi-forge/editor-width";
 const TERMINAL_HEIGHT_KEY = "pi-forge/terminal-height";
 const TODO_PANEL_HEIGHT_KEY = "pi-forge/todo-panel-height";
-const DEFAULT_FILES_WIDTH = 280;
+const LAYOUT_VERSION_KEY = "pi-forge/layout-version";
+const LAYOUT_VERSION = 2;
+const DEFAULT_FILES_WIDTH = 560;
 const DEFAULT_EDITOR_WIDTH = 960;
 const DEFAULT_TERMINAL_HEIGHT = 280;
 const DEFAULT_TODO_PANEL_HEIGHT = 200;
@@ -52,6 +54,15 @@ function readPersistedWidth(key: string, fallback: number): number {
 
 export function App() {
   const ready = useAuthStore((s) => s.ready);
+
+  try {
+    const storedVersion = Number.parseInt(localStorage.getItem(LAYOUT_VERSION_KEY) ?? "0", 10);
+    if (storedVersion < LAYOUT_VERSION) {
+      localStorage.removeItem(FILES_WIDTH_KEY);
+      localStorage.removeItem(EDITOR_WIDTH_KEY);
+      localStorage.setItem(LAYOUT_VERSION_KEY, String(LAYOUT_VERSION));
+    }
+  } catch {}
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const mustChangePassword = useAuthStore((s) => s.mustChangePassword);
   const bootstrap = useAuthStore((s) => s.bootstrap);
