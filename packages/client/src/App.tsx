@@ -729,14 +729,18 @@ export function App() {
                     // header buttons (settings, theme, etc.) stay
                     // reachable from this state too.
                     <div className="flex flex-1 items-center justify-center px-6 text-center">
-                      <div className="space-y-3 text-sm text-neutral-400">
-                        <p>No projects yet.</p>
-                        <button
-                          onClick={() => setSetupPickerDismissed(false)}
-                          className="rounded-md bg-neutral-100 px-3 py-1.5 text-sm font-medium text-neutral-900 hover:bg-white"
-                        >
-                          + New project
-                        </button>
+                      <div className="flex flex-col items-center gap-4">
+                        <img src="/icons/logo-rounded.png" alt="" className="h-16 w-16 rounded-2xl" />
+                        <span className="text-xl font-semibold text-neutral-100 light:text-neutral-900">Huiyu Pi</span>
+                        <div className="space-y-3 text-sm text-neutral-400 light:text-neutral-500">
+                          <p>No projects yet.</p>
+                          <button
+                            onClick={() => setSetupPickerDismissed(false)}
+                            className="rounded-md bg-neutral-200 px-3 py-1.5 text-sm font-medium text-neutral-900 hover:bg-neutral-300 light:bg-neutral-200 light:hover:bg-neutral-300 transition-colors"
+                          >
+                            + New project
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ) : (
