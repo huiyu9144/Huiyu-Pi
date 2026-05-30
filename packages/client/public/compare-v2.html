@@ -781,7 +781,7 @@ body{
       var blob=await encodeGIF(gif);
       updateProgress(1,'Downloading\u2026');
       var url=URL.createObjectURL(blob);
-      var a=document.createElement('a');a.href=url;a.download='pi-forge-before-after.gif';
+      var a=document.createElement('a');a.href=url;a.download='huiyu-piwebui-forge-before-after.gif';
       document.body.appendChild(a);a.click();document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }catch(e){console.error(e)}

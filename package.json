@@ -1,11 +1,19 @@
 {
-  "name": "pi-forge",
+  "name": "huiyu-piwebui-forge",
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "description": "Self-hosted browser workbench for the pi coding agent",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
   "workspaces": [
     "packages/*"
   ],
+  "bin": {
+    "huiyu-piwebui-forge": "bin/huiyu-piwebui-forge.mjs"
+  },
   "scripts": {
     "build": "npm run build --workspaces --if-present",
     "dev": "concurrently \"PORT=${PORT:-9144} npm run dev -w packages/server\" \"PORT=${PORT:-9144} npm run dev -w packages/client\"",
@@ -18,7 +26,8 @@
     "test": "scripts/run-tests.sh",
     "test:ci": "scripts/run-tests.sh --ci",
     "build:site": "node scripts/build-site.mjs",
-    "build:publish": "node scripts/build-publish-dir.mjs"
+    "build:publish": "npm run build && node scripts/build-publish-dir.mjs",
+    "publish:npm": "npm run build:publish && cd publish && npm publish"
   },
   "overrides": {
     "serialize-javascript": ">=6.0.2",

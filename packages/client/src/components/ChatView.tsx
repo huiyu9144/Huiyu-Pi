@@ -978,7 +978,9 @@ function AssistantMessageBubble({
           >
             {collapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
           </button>
-          <span className="text-[10px] uppercase tracking-wider text-neutral-500">{isDone ? "completed" : "assistant"}</span>
+          <span className="text-[10px] uppercase tracking-wider text-neutral-500 flex items-center gap-1">
+            {isDone ? <><span>completed</span><Check size={11} className="text-emerald-400" /></> : "assistant"}
+          </span>
           <MessageTimestamp ts={(message as { timestamp?: unknown }).timestamp} />
         </div>
         {hasTextBlock && (
