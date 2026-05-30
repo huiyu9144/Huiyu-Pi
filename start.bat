@@ -69,7 +69,7 @@ call npm run dev -w packages/client
 exit /b 0
 
 :create_shortcut
-set "SC_NAME=Huiyu PiwebUI Forge"
+set "SC_NAME=Huiyu Pi"
 set "SC_PATH=%USERPROFILE%\Desktop\%SC_NAME%.lnk"
 if exist "%SC_PATH%" (
     echo [2/3] Desktop shortcut already exists, skip.

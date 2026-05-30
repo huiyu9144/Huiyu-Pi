@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 echo "========================================"
-echo "  Huiyu PiwebUI Forge"
+echo "  Huiyu Pi"
 echo "  API    - http://localhost:9144"
 echo "  Client - http://localhost:9145"
 echo "========================================"
@@ -43,6 +43,10 @@ echo "Waiting for API server..."
 for i in $(seq 1 30); do
   if curl -s -o /dev/null -w "%{http_code}" http://localhost:9144/api/v1/health 2>/dev/null | grep -q "200"; then
     break
+  fi
+  if [ "$i" -eq 30 ]; then
+    echo "[ERROR] API server failed to start within 30 seconds."
+    exit 1
   fi
   sleep 1
 done
