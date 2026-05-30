@@ -28,12 +28,21 @@ export function ChangedFilesBadge({
   const agentEndCount = useSessionStore((s) => s.agentEndCountBySession[sessionId] ?? 0);
 
   const [count, setCount] = useState<number>(0);
-  const [dismissed, setDismissed] = useState(false);
+  const [dismissed, setDismissed] = useState(() => {
+    try {
+      return localStorage.getItem(`pi-forge/dismissed-badge/${sessionId}`) === "1";
+    } catch {
+      return false;
+    }
+  });
 
   useEffect(() => {
-    // Reset on session switch so the previous session's count doesn't
-    // leak briefly into the new one.
     setCount(0);
+    try {
+      setDismissed(localStorage.getItem(`pi-forge/dismissed-badge/${sessionId}`) === "1");
+    } catch {
+      setDismissed(false);
+    }
   }, [sessionId]);
 
   useEffect(() => {
@@ -83,7 +92,12 @@ export function ChangedFilesBadge({
             <span className="text-[10px] text-neutral-500">— review</span>
           </button>
           <button
-            onClick={() => setDismissed(true)}
+            onClick={() => {
+              setDismissed(true);
+              try {
+                localStorage.setItem(`pi-forge/dismissed-badge/${sessionId}`, "1");
+              } catch {}
+            }}
             className="absolute -top-1.5 -right-1.5 hidden h-4 w-4 items-center justify-center rounded-full border border-neutral-700 bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-neutral-200 group-hover:inline-flex"
             title="Dismiss"
           >
