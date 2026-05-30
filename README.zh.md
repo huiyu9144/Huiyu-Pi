@@ -1,15 +1,18 @@
 <p align="center">
-  <img src="packages/client/public/icons/logo-rounded.png" alt="Huiyu PiwebUI Forge" width="120">
+  <img src="packages/client/public/icons/logo-rounded.png" alt="Huiyu Pi" width="120">
 </p>
 
-<h1 align="center">Huiyu PiwebUI Forge</h1>
+<h1 align="center">Huiyu Pi</h1>
 
 <p align="center">
-  <a href="README.md">🇬🇧 English</a>
+  <a href="README.md">🇬🇧 English</a> · <a href="https://www.huiyu.ai">🌐 官网</a>
 </p>
 
 <p align="center">
-  一个本地开源的 Agent 工具，可以从 0 搭建自己的 Harness 系统。基于 Pi 和 pi-forge 的 WebUI，相比 Codex 及 Claude Code 等 IDE 工具，上下文减少到接近 0，速度提升巨大，从 0 搭建更加干净无需受限于平台。
+  <b>完全免费 · 开源 · 自托管</b><br>
+  一个本地开源的 Agent 工具，可以从 0 搭建自己的 Harness 系统。<br>
+  基于 Pi 和 pi-forge 打造 — 上下文减少到接近 0，速度提升巨大。<br>
+  从 0 搭建更加干净，无需受限于平台。
 </p>
 
 <p align="center">
@@ -26,19 +29,23 @@
 </p>
 
 <p align="center">
-  <img src="docs/images/demo.gif" alt="Huiyu PiwebUI Forge 演示" width="100%">
+  <img src="docs/images/demo.gif" alt="Huiyu Pi 演示" width="100%">
 </p>
 
-<table>
-  <tr>
-    <td width="50%"><img src="docs/images/screenshot-session.jpg" alt="会话管理"></td>
-    <td width="50%"><img src="docs/images/screenshot-terminal.jpg" alt="集成终端"></td>
-  </tr>
-  <tr>
-    <td width="50%"><img src="docs/images/screenshot-files.png" alt="文件浏览器 + 编辑器"></td>
-    <td width="50%"><img src="docs/images/screenshot-git.jpg" alt="Git 集成"></td>
-  </tr>
-</table>
+---
+
+## 为什么选择 Huiyu Pi？
+
+基于 pi 和 pi-forge 打造，弥补它们缺少前台 WebUI 和交互细节体验不足的问题。用起来快得飞起，非常顺手，所以分享给大家。
+
+| | 核心优势 | 详情 |
+|---|---|---|
+| **1** | **性能更快** | 默认上下文及 Prompt 从 ~20K 压缩到接近于 0，仅保留最基础的几个命令。AI 响应时长大幅缩短。 |
+| **2** | **Token 消耗更少** | 去除了绝大多数不常用的上下文，使得每次的 Token 消耗都大幅度降低。告别一句话就是一美金的时代。 |
+| **3** | **上下文越少，AI 越专注** | 上下文越多，AI 的注意力就会被稀释。极致精简上下文，让 AI 聚焦核心指令，执行更精准。 |
+| **4** | **本地部署安全** | 纯粹本地部署，任何信息都在本地。杜绝 API Key 等敏感信息与网络产生关系，数据零泄露风险。 |
+| **5** | **从 0 搭建你的 AI 帝国** | 从 0 搭建自己的 Harness 和 Agent，告别臃肿的不可修改的各类平台。完全自定义，完全掌控。 |
+| **6** | **弥补原版不足，体验更丝滑** | 弥补 pi 缺少前台 WebUI 以及 pi-forge 交互细节体验不方便等问题。用过都说爽。 |
 
 ---
 
@@ -68,8 +75,28 @@
 ### 🎨 完全可定制主题
 通过 CSS 变量控制深色和浅色主题。无需重新构建即可创建自己的皮肤。
 
-### 📦 Docker & K8s 就绪
-包含 Dockerfile、docker-compose、Kubernetes 和 OpenShift 部署清单。
+---
+
+## 界面展示
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/images/screenshot-session.jpg" alt="会话管理"></td>
+    <td width="50%"><img src="docs/images/screenshot-terminal.jpg" alt="集成终端"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>会话管理</b></td>
+    <td align="center"><b>集成终端</b></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/images/screenshot-files.png" alt="文件浏览器 + 编辑器"></td>
+    <td width="50%"><img src="docs/images/screenshot-git.jpg" alt="Git 集成"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>文件浏览器 + 编辑器</b></td>
+    <td align="center"><b>Git 集成</b></td>
+  </tr>
+</table>
 
 ---
 
@@ -81,7 +108,7 @@
 npx huiyu-piwebui-forge
 ```
 
-在浏览器中打开 `http://localhost:9144`。在 Settings → Providers 中配置 API 密钥即可使用。
+在浏览器中打开 `http://localhost:9144`，在 **设置 → 提供商** 中配置 API 密钥即可使用。
 
 ### 全局安装（后续启动更快）
 
@@ -91,36 +118,28 @@ huiyu-piwebui-forge
 
 # 通过参数覆盖默认配置：
 huiyu-piwebui-forge --port 4000 --workspace-path ~/Code
-huiyu-piwebui-forge --api-key @/run/secrets/api-key --no-expose-docs
 huiyu-piwebui-forge --help       # 查看全部参数
 ```
 
-### 前置要求
-
-- [Node.js](https://nodejs.org/) 18+
-- 支持的提供商的 API 密钥（Anthropic、OpenAI、DeepSeek、Google 等）
-
-### 一键启动 (Windows)
-
-克隆仓库，双击 `start.bat` — 脚本会安装所有依赖并在浏览器中打开 `http://localhost:9145`。
-
-### 一键启动 (macOS / Linux)
-
-克隆仓库，在终端中运行 `bash start.sh` — 脚本会安装所有依赖并在浏览器中打开 `http://localhost:9145`。
-
-### 手动启动
+### 手动启动（开发模式）
 
 ```bash
 git clone https://github.com/huiyu9144/Huiyu-PiwebUI-Forge.git
 cd Huiyu-PiwebUI-Forge
-npm install
-npm run dev
+npm install && cd server && npm install && cd ..
+npm run dev:all
 ```
 
-- 客户端（热重载开发服务器）: http://localhost:9145
-- API 服务器: http://localhost:9144
+- 前端: http://localhost:9144
+- 后端: http://localhost:9145
 
-### API 密钥配置
+### Windows 一键启动
+
+克隆仓库，双击 `start.bat` — 自动安装依赖并打开浏览器。
+
+---
+
+## API 密钥配置
 
 创建 `~/.pi/agent/auth.json`:
 
@@ -155,13 +174,11 @@ export DEEPSEEK_API_KEY=sk-your-api-key
 :root {
   --bg-primary: #0a0a0a;
   --accent: #60A5FA;
-  /* ... */
 }
 
 html[data-theme="light"] {
   --bg-primary: #ffffff;
   --accent: #2563EB;
-  /* ... */
 }
 ```
 
@@ -182,6 +199,13 @@ html[data-theme="light"] {
 
 - 💬 [加入 Discord](https://discord.gg/BdJDs4AKbS) — 提问、分享技巧、与用户和贡献者交流。
 - ⭐ [在 GitHub 上 Star](https://github.com/huiyu9144/Huiyu-PiwebUI-Forge) — 帮助更多人发现这个项目。
+- 🌐 [访问官网](https://www.huiyu.ai) — 了解更多关于 Huiyu Pi 的信息。
+
+---
+
+## 贡献
+
+欢迎参与贡献！请查看 [CONTRIBUTING.md](CONTRIBUTING.md) 了解指南。
 
 ---
 
