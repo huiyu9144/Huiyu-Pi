@@ -1,6 +1,11 @@
 import { create } from "zustand";
 import { api, ApiError } from "../lib/api-client";
-import type { SnapshotMeta, SnapshotStorageInfo, SnapshotDelta, SessionDelta } from "../lib/api-client";
+import type {
+  SnapshotMeta,
+  SnapshotStorageInfo,
+  SnapshotDelta,
+  SessionDelta,
+} from "../lib/api-client";
 
 interface SnapshotState {
   snapshots: SnapshotMeta[];
@@ -13,9 +18,22 @@ interface SnapshotState {
   snapshotIdByMsgKey: Record<string, string>;
 
   loadSnapshots: (projectId: string) => Promise<void>;
-  createSnapshot: (projectId: string, label: string, trigger?: "manual" | "pre-agent" | "post-agent", sessionId?: string) => Promise<SnapshotMeta | undefined>;
-  snapBeforeAgent: (projectId: string, label: string, sessionId?: string) => Promise<string | undefined>;
-  snapAfterAgent: (projectId: string, label: string, sessionId?: string) => Promise<string | undefined>;
+  createSnapshot: (
+    projectId: string,
+    label: string,
+    trigger?: "manual" | "pre-agent" | "post-agent",
+    sessionId?: string,
+  ) => Promise<SnapshotMeta | undefined>;
+  snapBeforeAgent: (
+    projectId: string,
+    label: string,
+    sessionId?: string,
+  ) => Promise<string | undefined>;
+  snapAfterAgent: (
+    projectId: string,
+    label: string,
+    sessionId?: string,
+  ) => Promise<string | undefined>;
   restoreSnapshot: (
     projectId: string,
     snapshotId: string,
@@ -25,7 +43,11 @@ interface SnapshotState {
   getStorageInfo: (projectId: string) => Promise<void>;
   getDelta: (projectId: string, snapshotId: string) => Promise<SnapshotDelta | undefined>;
   getSessionDelta: (projectId: string, targetId: string) => Promise<SessionDelta | undefined>;
-  restoreSessionDiff: (projectId: string, targetId: string, projectPath: string) => Promise<SessionDelta | undefined>;
+  restoreSessionDiff: (
+    projectId: string,
+    targetId: string,
+    projectPath: string,
+  ) => Promise<SessionDelta | undefined>;
   setSnapshotForMsg: (sessionId: string, msgIndex: number, snapshotId: string) => void;
   getSnapshotForMsg: (sessionId: string, msgIndex: number) => string | undefined;
   clearError: () => void;
@@ -50,7 +72,7 @@ export const useSnapshotStore = create<SnapshotState>((set, get) => ({
       const { snapshots } = await api.listSnapshots(projectId);
       set({ snapshots, loading: false });
     } catch (err) {
-      const msg = err instanceof ApiError ? err.message ?? err.code : (err as Error).message;
+      const msg = err instanceof ApiError ? (err.message ?? err.code) : (err as Error).message;
       set({ error: msg, loading: false });
     }
   },
@@ -67,7 +89,7 @@ export const useSnapshotStore = create<SnapshotState>((set, get) => ({
       void get().getStorageInfo(projectId);
       return snapshot;
     } catch (err) {
-      const msg = err instanceof ApiError ? err.message ?? err.code : (err as Error).message;
+      const msg = err instanceof ApiError ? (err.message ?? err.code) : (err as Error).message;
       set({ error: msg, creating: false });
       return undefined;
     }
@@ -94,7 +116,7 @@ export const useSnapshotStore = create<SnapshotState>((set, get) => ({
       set({ restoring: false });
       return { safetySnapshot: result.safetySnapshot, warnings: result.warnings };
     } catch (err) {
-      const msg = err instanceof ApiError ? err.message ?? err.code : (err as Error).message;
+      const msg = err instanceof ApiError ? (err.message ?? err.code) : (err as Error).message;
       set({ error: msg, restoring: false });
       return undefined;
     }
@@ -107,7 +129,7 @@ export const useSnapshotStore = create<SnapshotState>((set, get) => ({
       set({ snapshots: get().snapshots.filter((s) => s.id !== snapshotId) });
       void get().getStorageInfo(projectId);
     } catch (err) {
-      const msg = err instanceof ApiError ? err.message ?? err.code : (err as Error).message;
+      const msg = err instanceof ApiError ? (err.message ?? err.code) : (err as Error).message;
       set({ error: msg });
     }
   },
@@ -142,7 +164,11 @@ export const useSnapshotStore = create<SnapshotState>((set, get) => ({
   restoreSessionDiff: async (projectId, targetId, projectPath) => {
     set({ restoring: true, error: undefined });
     try {
-      const { restored, safetySnapshot, warnings } = await api.restoreSessionDiff(projectId, targetId, projectPath);
+      const { restored, safetySnapshot, warnings } = await api.restoreSessionDiff(
+        projectId,
+        targetId,
+        projectPath,
+      );
       set((s) => ({
         restoring: false,
         snapshots: [safetySnapshot, ...s.snapshots],
@@ -152,7 +178,7 @@ export const useSnapshotStore = create<SnapshotState>((set, get) => ({
       }
       return restored;
     } catch (err) {
-      const msg = err instanceof ApiError ? err.message ?? err.code : (err as Error).message;
+      const msg = err instanceof ApiError ? (err.message ?? err.code) : (err as Error).message;
       set({ error: msg, restoring: false });
       return undefined;
     }

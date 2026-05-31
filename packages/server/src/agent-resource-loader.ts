@@ -1,45 +1,55 @@
 /**
  * Huiyu Pi-customized ResourceLoader for the agent.
  *
- * Why this exists: pi's `DefaultResourceLoader` accepts an
- * `appendSystemPrompt: string[]` that gets concatenated onto the
- * agent's base system prompt. We optionally use this hook to inject
- * one Huiyu Pi-specific behavioral rule about secret hygiene — a
- * soft safeguard that tells the model to treat env-var values as
- * credentials by default and not echo them back into responses /
- * tool output.
+ * **Custom system prompt.** Replaces the SDK's verbose default system prompt
+ * (which includes ~150 tokens of pi SDK documentation instructions) with a
+ * streamlined version that keeps the identity, tools list, and guidelines but
+ * drops the pi-docs section — irrelevant for Huiyu Pi users. The SDK's
+ * `buildSystemPrompt` still appends project context files, skills, date/cwd,
+ * and the appendSystemPrompt section automatically.
  *
- * **Opt-in.** Default behavior matches stock pi (no addendum). The
- * rule is appended only when the operator sets
- * `AGENT_SECRET_HYGIENE_RULE=true`. Kept opt-in so we don't ship
- * invisible behavioral rules that constrain the agent in ways the
- * user never asked for. See `SECURITY.md` for the discoverable
- * documentation and the threat-model framing.
+ * **Pi-docs skill.** The removed pi-docs section is preserved as a
+ * standalone skill (`skills/pi-docs/SKILL.md`) registered via
+ * `additionalSkillPaths`. The AI can load it on demand when users ask
+ * about pi SDK internals (extensions, themes, skills, prompt templates,
+ * etc.), keeping the default prompt lean while retaining full
+ * documentation access.
+ *
+ * **Append-only addendum (secret hygiene).** The `appendSystemPrompt` hook
+ * optionally injects one Huiyu Pi-specific behavioral rule about secret
+ * hygiene — a soft safeguard that tells the model to treat env-var values as
+ * credentials by default and not echo them back into responses / tool output.
+ *
+ * **Opt-in.** The hygiene rule is appended only when the operator sets
+ * `AGENT_SECRET_HYGIENE_RULE=true`. Kept opt-in so we don't ship invisible
+ * behavioral rules that constrain the agent in ways the user never asked for.
+ * See `SECURITY.md` for the discoverable documentation and the threat-model
+ * framing.
  *
  * **What this is and is not (when enabled).**
  *
- * - It IS a behavioral nudge that catches the realistic failure
- *   mode: the agent decides on its own to `printenv` or `echo $X`
- *   while debugging and dumps secrets into the assistant transcript
- *   (which the user may screen-share, copy into Slack, paste into a
- *   bug report, etc.).
- * - It is NOT a security control. The model can be talked out of it
- *   by a determined user, by a prompt injection landed in a tool
- *   result, or by its own reasoning that "the user clearly wants me
- *   to print this var, the rule must not apply." Operators with
- *   adversarial threat models should not rely on this rule alone.
+ * - It IS a behavioral nudge that catches the realistic failure mode: the
+ *   agent decides on its own to `printenv` or `echo $X` while debugging and
+ *   dumps secrets into the assistant transcript (which the user may
+ *   screen-share, copy into Slack, paste into a bug report, etc.).
+ * - It is NOT a security control. The model can be talked out of it by a
+ *   determined user, by a prompt injection landed in a tool result, or by its
+ *   own reasoning that "the user clearly wants me to print this var, the rule
+ *   must not apply." Operators with adversarial threat models should not rely
+ *   on this rule alone.
  *
- * Phrased deliberately around *displaying values*, not around
- * accessing or referencing variables — skills that legitimately
- * need to check whether `$GITHUB_TOKEN` is set, or pass `$X` to a
- * subcommand, must continue to work. The rule only constrains
- * surfacing values to the user.
+ * Phrased deliberately around *displaying values*, not around accessing or
+ * referencing variables — skills that legitimately need to check whether
+ * `$GITHUB_TOKEN` is set, or pass `$X` to a subcommand, must continue to
+ * work. The rule only constrains surfacing values to the user.
  *
- * If you change this text, write it as guidance the model will buy
- * into ("treat as credentials by default") rather than as an
- * absolute prohibition ("never print env vars") — the latter
- * generalizes badly and gets argued away by smart-enough sessions.
+ * If you change this text, write it as guidance the model will buy into
+ * ("treat as credentials by default") rather than as an absolute prohibition
+ * ("never print env vars") — the latter generalizes badly and gets argued
+ * away by smart-enough sessions.
  */
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   DefaultResourceLoader,
   type ResourceLoader,
@@ -50,6 +60,9 @@ import { getProjectDisabledSkillNames } from "./skill-overrides.js";
 import { getProjectDisabledPromptNames } from "./prompt-overrides.js";
 import { getProjectSystemPromptAddendum } from "./system-prompt-overrides.js";
 import { compactionContinuationExtension } from "./agent-extensions/compaction-continuation.js";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const PI_DOCS_SKILL_PATH = join(__dirname, "skills", "pi-docs", "SKILL.md");
 
 /**
  * Plain string (not a backtick template) so what's stored is exactly
@@ -73,6 +86,58 @@ export const FORGE_SECRET_HYGIENE_RULE =
   'misconfigured, prefer reporting "$X is unset" or "$X is set (length N)" ' +
   "over reflecting the value. The transcript may be screen-shared, logged, " +
   "or pasted into bug reports.";
+
+/**
+ * Streamlined system prompt that replaces the SDK's default verbosity.
+ *
+ * Compared to pi's `buildSystemPrompt`, this version:
+ * - Keeps the identity statement, tool list, and core guidelines
+ * - Drops the ~150-token "Pi documentation" section (irrelevant for
+ *   Huiyu Pi users — model doesn't need instructions on reading the
+ *   pi SDK's own docs)
+ * - Tool definitions are sent separately as LLM function-calling
+ *   schemas, so the prompt-level list is a lightweight reference
+ *
+ * The SDK's `buildSystemPrompt` still appends after this:
+ *   - appendSystemPrompt (secret hygiene + project addendum)
+ *   - Project context files (CLAUDE.md / AGENTS.md)
+ *   - Skills section
+ *   - Current date + working directory
+ */
+export const FORGE_SYSTEM_PROMPT =
+  "You are an expert coding assistant operating inside pi, a coding agent " +
+  "harness. You help users by reading files, executing commands, editing " +
+  "code, and writing new files." +
+  "\n\n" +
+  "Available tools:" +
+  "\n" +
+  "- read: Read file contents" +
+  "\n" +
+  "- bash: Execute bash commands (ls, grep, find, etc.)" +
+  "\n" +
+  "- edit: Make precise file edits with exact text replacement, including " +
+  "multiple disjoint edits in one call" +
+  "\n" +
+  "- write: Create or overwrite files" +
+  "\n" +
+  "- grep: Search file contents for patterns (respects .gitignore)" +
+  "\n" +
+  "- find: Find files by glob pattern (respects .gitignore)" +
+  "\n" +
+  "- ls: List directory contents" +
+  "\n\n" +
+  "In addition to the tools above, you may have access to other custom " +
+  "tools depending on the project." +
+  "\n\n" +
+  "Guidelines:" +
+  "\n" +
+  "- Be concise in your responses" +
+  "\n" +
+  "- Show file paths clearly when working with files" +
+  "\n" +
+  "- Use read to examine files instead of cat or sed." +
+  "\n" +
+  "- Use write only for new files or complete rewrites.";
 
 /**
  * Build a ResourceLoader pre-loaded with the Huiyu Pi's optional
@@ -118,7 +183,9 @@ export async function buildForgeResourceLoader(
     cwd,
     agentDir,
     settingsManager,
+    systemPrompt: FORGE_SYSTEM_PROMPT,
     appendSystemPrompt,
+    additionalSkillPaths: [PI_DOCS_SKILL_PATH],
     // In-process pi extensions Huiyu Pi always registers. The
     // `compactionContinuationExtension` hooks the `context` event and
     // appends a one-line imperative nudge to LLM input when the last
@@ -175,8 +242,12 @@ export function logSecretHygieneState(): void {
     );
   } else {
     console.log(
-      "[agent-resource-loader] AGENT_SECRET_HYGIENE_RULE not set — agent system " +
-        "prompt unmodified (set =true to opt in; see SECURITY.md)",
+      "[agent-resource-loader] AGENT_SECRET_HYGIENE_RULE not set — " +
+        "agent system prompt unmodified (set =true to opt in; see SECURITY.md)",
     );
   }
+  console.log(
+    `[agent-resource-loader] Using streamlined system prompt (${FORGE_SYSTEM_PROMPT.length} chars, ` +
+      "~150 tokens saved by removing pi SDK documentation instructions)",
+  );
 }

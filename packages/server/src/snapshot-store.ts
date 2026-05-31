@@ -7,12 +7,12 @@ import {
   writeFile as fsWriteFile,
 } from "node:fs/promises";
 import { createReadStream, createWriteStream } from "node:fs";
-import { join, relative, resolve, dirname } from "node:path";
+import { join, resolve, dirname } from "node:path";
 import { createHash, randomUUID } from "node:crypto";
 import { Transform, type TransformCallback } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { config } from "./config.js";
-import { getTree, deleteEntry, verifyPathSafe, writeFile, assertInsideRoot } from "./file-manager.js";
+import { getTree, deleteEntry, verifyPathSafe, writeFile } from "./file-manager.js";
 
 /* ----------------------------- types ----------------------------- */
 
@@ -197,7 +197,7 @@ function flattenTree(node: TreeNode, prefix = ""): TreeNode[] {
   return out;
 }
 
-function shouldSkipDir(name: string): boolean {
+function _shouldSkipDir(name: string): boolean {
   return SNAPSHOT_SKIP_DIRS.has(name);
 }
 
@@ -270,12 +270,19 @@ export async function createSnapshot(
   if (existing.length >= MAX_SNAPSHOTS_PER_PROJECT) {
     // Clean up oldest pre-agent and pre-restore snapshots, keeping 5 newest of each
     const cleanable = existing
-      .filter((s) => s.trigger === "pre-agent" || s.trigger === "pre-restore" || s.trigger === "post-agent")
+      .filter(
+        (s) =>
+          s.trigger === "pre-agent" || s.trigger === "pre-restore" || s.trigger === "post-agent",
+      )
       .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
     if (cleanable.length > 10) {
       const toRemove = cleanable.slice(0, cleanable.length - 10);
       for (const s of toRemove) {
-        try { await deleteSnapshot(projectId, s.id); } catch { /* best-effort */ }
+        try {
+          await deleteSnapshot(projectId, s.id);
+        } catch {
+          /* best-effort */
+        }
       }
     } else {
       throw new SnapshotLimitError(existing.length, MAX_SNAPSHOTS_PER_PROJECT);
@@ -284,7 +291,7 @@ export async function createSnapshot(
 
   const tree = await getTree(projectPath, { maxDepth: Infinity });
   const snapshotId = randomUUID();
-  const sDir = snapshotDir(snapshotId);
+  const _sDir = snapshotDir(snapshotId);
   const fDir = filesDir(snapshotId);
   await mkdir(fDir, { recursive: true });
 
@@ -304,18 +311,29 @@ export async function createSnapshot(
   const allFiles = flattenTree(tree).filter((f) => f.type === "file");
 
   // Phase 1: stat all files in parallel, collect metadata
-  type FileMeta = { relPath: string; absPath: string; size: number };
+  interface FileMeta {
+    relPath: string;
+    absPath: string;
+    size: number;
+  }
   const fileMetas: FileMeta[] = [];
   for (const file of allFiles) {
     const relPath = file.path;
     const absPath = resolve(projectPath, relPath);
     let fileStat;
-    try { fileStat = await stat(absPath); } catch {
+    try {
+      fileStat = await stat(absPath);
+    } catch {
       warnings.push(`跳过: ${relPath} (无法读取)`);
       continue;
     }
     if (fileStat.size > SKIP_FILE_BYTES) {
-      manifest.files[relPath] = { hash: "", size: fileStat.size, encoding: "binary", skipped: true };
+      manifest.files[relPath] = {
+        hash: "",
+        size: fileStat.size,
+        encoding: "binary",
+        skipped: true,
+      };
       warnings.push(`跳过大文件: ${relPath} (${(fileStat.size / 1024 / 1024).toFixed(1)}MB)`);
       continue;
     }
@@ -337,26 +355,32 @@ export async function createSnapshot(
 
   // Phase 2: copy + hash files in parallel with concurrency limit
   const COPY_CONCURRENCY = 8;
-  type CopyResult = { relPath: string; size: number; hash: string } | { relPath: string; error: string };
-  const copyResults = await concurrentMap(toCopy, async (meta): Promise<CopyResult> => {
-    const { relPath, absPath, size } = meta;
-    try {
-      const destDirPath = join(fDir, dirname(relPath));
-      await mkdir(destDirPath, { recursive: true });
-      const destPath = join(fDir, relPath);
+  type CopyResult =
+    | { relPath: string; size: number; hash: string }
+    | { relPath: string; error: string };
+  const copyResults = await concurrentMap(
+    toCopy,
+    async (meta): Promise<CopyResult> => {
+      const { relPath, absPath, size } = meta;
+      try {
+        const destDirPath = join(fDir, dirname(relPath));
+        await mkdir(destDirPath, { recursive: true });
+        const destPath = join(fDir, relPath);
 
-      // Copy + hash in one pass through the file
-      const srcStream = createReadStream(absPath);
-      const destStream = createWriteStream(destPath);
-      const hashStream = new HashStream();
-      await pipeline(srcStream, hashStream, destStream);
-      const hash = hashStream.digest();
+        // Copy + hash in one pass through the file
+        const srcStream = createReadStream(absPath);
+        const destStream = createWriteStream(destPath);
+        const hashStream = new HashStream();
+        await pipeline(srcStream, hashStream, destStream);
+        const hash = hashStream.digest();
 
-      return { relPath, size, hash } as CopyResult;
-    } catch (err) {
-      return { relPath, error: (err as Error).message } as CopyResult;
-    }
-  }, COPY_CONCURRENCY);
+        return { relPath, size, hash };
+      } catch (err) {
+        return { relPath, error: (err as Error).message };
+      }
+    },
+    COPY_CONCURRENCY,
+  );
 
   // Accumulate results
   let totalSize = 0;
@@ -414,10 +438,7 @@ export async function getSnapshot(
   return manifest;
 }
 
-export async function deleteSnapshot(
-  projectId: string,
-  snapshotId: string,
-): Promise<string> {
+export async function deleteSnapshot(projectId: string, snapshotId: string): Promise<string> {
   const manifest = await readManifest(snapshotId);
   if (manifest.projectId !== projectId) {
     throw new SnapshotNotFoundError(snapshotId);
@@ -647,12 +668,18 @@ export async function computeSessionDelta(
 
     const targetHash = targetManifest.files[path]?.hash ?? "";
     const liveFile = currentByPath.get(path);
-    const liveHash = liveFile !== undefined && projectPath !== undefined
-      ? await computeHash(resolve(projectPath, path)).catch(() => "")
-      : "";
+    const liveHash =
+      liveFile !== undefined && projectPath !== undefined
+        ? await computeHash(resolve(projectPath, path)).catch(() => "")
+        : "";
 
     if (targetHash !== liveHash && targetHash !== "") {
-      entries.push({ path, status: "modified", snapshotSize: targetManifest.files[path]?.size ?? 0, currentSize: targetManifest.files[path]?.size ?? 0 });
+      entries.push({
+        path,
+        status: "modified",
+        snapshotSize: targetManifest.files[path]?.size ?? 0,
+        currentSize: targetManifest.files[path]?.size ?? 0,
+      });
     }
   }
 
@@ -680,7 +707,12 @@ export async function restoreSessionDelta(
     throw new ConfirmPathMismatchError();
   }
 
-  const safetyResult = await createSnapshot(projectId, projectPath, "restore pre-backup", "pre-restore");
+  const safetyResult = await createSnapshot(
+    projectId,
+    projectPath,
+    "restore pre-backup",
+    "pre-restore",
+  );
 
   const currentTree = await getTree(projectPath, { maxDepth: Infinity });
   const delta = await computeSessionDelta(projectId, targetSnapshotId, currentTree, projectPath);

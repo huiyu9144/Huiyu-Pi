@@ -1,367 +1,966 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>pi-forge · Product Demo</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-:root{
-  --bg:#0a0a0a;--surface:#171717;--surface2:#262626;--surface3:#404040;
-  --text:#f5f5f5;--text2:#a3a3a3;--text3:#525252;--text4:#737373;
-  --border:#262626;--border2:#1c202b;
-  --user-bubble:#14171f;--link:#7BB8FF;--code-bg:#0d0d0d;
-  --emerald:#34d399;--amber:#fbbf24;--blue:#3b82f6;
-}
-body{background:var(--bg);color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;overflow:hidden;height:100vh}
-.header{height:44px;display:flex;align-items:center;padding:0 12px;border-bottom:0.5px solid var(--border);background:var(--bg);position:relative;z-index:50}
-.header-left{display:flex;align-items:center;gap:6px}
-.header-logo{width:24px;height:24px;border-radius:6px;object-fit:cover}
-.header-title{font-size:13px;font-weight:600;color:var(--text)}
-.header-actions{display:flex;align-items:center;gap:4px;margin-left:auto}
-.header-btn{width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:transparent;border:none;color:var(--text2);cursor:pointer;font-size:14px}
-.header-btn:hover{background:rgba(255,255,255,0.05)}
-.header-btn.active{color:var(--text)}
-.main{display:flex;height:calc(100vh - 44px)}
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>pi-forge · Product Demo</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      :root {
+        --bg: #0a0a0a;
+        --surface: #171717;
+        --surface2: #262626;
+        --surface3: #404040;
+        --text: #f5f5f5;
+        --text2: #a3a3a3;
+        --text3: #525252;
+        --text4: #737373;
+        --border: #262626;
+        --border2: #1c202b;
+        --user-bubble: #14171f;
+        --link: #7bb8ff;
+        --code-bg: #0d0d0d;
+        --emerald: #34d399;
+        --amber: #fbbf24;
+        --blue: #3b82f6;
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          sans-serif;
+        overflow: hidden;
+        height: 100vh;
+      }
+      .header {
+        height: 44px;
+        display: flex;
+        align-items: center;
+        padding: 0 12px;
+        border-bottom: 0.5px solid var(--border);
+        background: var(--bg);
+        position: relative;
+        z-index: 50;
+      }
+      .header-left {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .header-logo {
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        object-fit: cover;
+      }
+      .header-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text);
+      }
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-left: auto;
+      }
+      .header-btn {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        background: transparent;
+        border: none;
+        color: var(--text2);
+        cursor: pointer;
+        font-size: 14px;
+      }
+      .header-btn:hover {
+        background: rgba(255, 255, 255, 0.05);
+      }
+      .header-btn.active {
+        color: var(--text);
+      }
+      .main {
+        display: flex;
+        height: calc(100vh - 44px);
+      }
 
-.sidebar{width:256px;min-width:256px;border-right:0.5px solid var(--border);background:var(--surface);display:flex;flex-direction:column;overflow:hidden}
-.sidebar-header{padding:8px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:0.5px solid var(--border)}
-.sidebar-title{font-size:12px;font-weight:600;color:var(--text)}
-.sidebar-content{flex:1;overflow-y:auto;padding:4px 0}
-.sidebar-section{padding:0 8px}
-.sidebar-section-title{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;padding:8px 8px 4px}
-.project-row{display:flex;align-items:center;gap:6px;padding:4px 8px;border-radius:4px;cursor:pointer;font-size:12px;color:var(--text2)}
-.project-row:hover{background:rgba(255,255,255,0.03)}
-.project-row.active{color:var(--text);background:rgba(255,255,255,0.05)}
-.project-icon{font-size:12px}
-.session-row{display:flex;align-items:center;gap:6px;padding:2px 8px 2px 12px;border-left:2px solid transparent;border-radius:0;font-size:12px;color:var(--text3);cursor:pointer}
-.session-row.active{border-left-color:var(--blue);background:rgba(59,130,246,0.08);color:var(--text);font-weight:600}
-.session-dot{width:6px;height:6px;border-radius:50%;background:var(--emerald);flex-shrink:0}
+      .sidebar {
+        width: 256px;
+        min-width: 256px;
+        border-right: 0.5px solid var(--border);
+        background: var(--surface);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .sidebar-header {
+        padding: 8px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 0.5px solid var(--border);
+      }
+      .sidebar-title {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text);
+      }
+      .sidebar-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 4px 0;
+      }
+      .sidebar-section {
+        padding: 0 8px;
+      }
+      .sidebar-section-title {
+        font-size: 10px;
+        font-weight: 600;
+        color: var(--text3);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 8px 8px 4px;
+      }
+      .project-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        color: var(--text2);
+      }
+      .project-row:hover {
+        background: rgba(255, 255, 255, 0.03);
+      }
+      .project-row.active {
+        color: var(--text);
+        background: rgba(255, 255, 255, 0.05);
+      }
+      .project-icon {
+        font-size: 12px;
+      }
+      .session-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 2px 8px 2px 12px;
+        border-left: 2px solid transparent;
+        border-radius: 0;
+        font-size: 12px;
+        color: var(--text3);
+        cursor: pointer;
+      }
+      .session-row.active {
+        border-left-color: var(--blue);
+        background: rgba(59, 130, 246, 0.08);
+        color: var(--text);
+        font-weight: 600;
+      }
+      .session-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--emerald);
+        flex-shrink: 0;
+      }
 
-.file-tree{padding:0 4px}
-.file-row{display:flex;align-items:center;gap:4px;padding:2px 8px;border-left:2px solid transparent;font-size:12px;color:var(--text2);cursor:pointer;border-radius:0}
-.file-row:hover{background:rgba(255,255,255,0.03)}
-.file-row.selected{border-left-color:var(--blue);background:rgba(59,130,246,0.08);color:var(--text)}
-.file-icon{font-size:11px;width:14px;text-align:center;flex-shrink:0}
-.folder-icon{color:var(--amber)}
-.file-icon-doc{color:var(--text4)}
+      .file-tree {
+        padding: 0 4px;
+      }
+      .file-row {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 8px;
+        border-left: 2px solid transparent;
+        font-size: 12px;
+        color: var(--text2);
+        cursor: pointer;
+        border-radius: 0;
+      }
+      .file-row:hover {
+        background: rgba(255, 255, 255, 0.03);
+      }
+      .file-row.selected {
+        border-left-color: var(--blue);
+        background: rgba(59, 130, 246, 0.08);
+        color: var(--text);
+      }
+      .file-icon {
+        font-size: 11px;
+        width: 14px;
+        text-align: center;
+        flex-shrink: 0;
+      }
+      .folder-icon {
+        color: var(--amber);
+      }
+      .file-icon-doc {
+        color: var(--text4);
+      }
 
-.chat-area{flex:1;display:flex;flex-direction:column;min-width:0}
-.chat-scroll{flex:1;overflow-y:auto;padding:16px 24px}
-.chat-messages{max-width:768px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
-.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;opacity:0;transition:opacity .3s}
-.empty-state img{width:64px;height:64px;border-radius:12px;margin-bottom:16px}
-.empty-state .es-title{font-size:18px;font-weight:600;color:var(--text);margin-bottom:4px}
-.empty-state .es-sub{font-size:13px;color:var(--text4)}
+      .chat-area {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+      }
+      .chat-scroll {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px 24px;
+      }
+      .chat-messages {
+        max-width: 768px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+      .empty-state img {
+        width: 64px;
+        height: 64px;
+        border-radius: 12px;
+        margin-bottom: 16px;
+      }
+      .empty-state .es-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 4px;
+      }
+      .empty-state .es-sub {
+        font-size: 13px;
+        color: var(--text4);
+      }
 
-.msg{border-radius:8px;border:0.5px solid;padding:12px 16px;opacity:0;transform:translateY(8px);transition:all .3s ease}
-.msg.show{opacity:1;transform:translateY(0)}
-.msg-user{background:var(--user-bubble);border-color:var(--border2)}
-.msg-ai{background:var(--surface);border-color:var(--border)}
-.msg-label{font-size:10px;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
-.msg-user .msg-label{color:var(--text4)}
-.msg-ai .msg-label{color:var(--text3)}
-.msg-text{font-size:14px;line-height:1.6;color:var(--text)}
-.msg-text p{margin:8px 0}
-.msg-text p:first-child{margin-top:0}
-.msg-text p:last-child{margin-bottom:0}
-.msg-text strong{font-weight:600}
-.msg-text code{background:var(--surface2);padding:1px 5px;border-radius:3px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:0.9em}
-.msg-text a{color:var(--link);text-decoration:none}
-.msg-text ul{margin:8px 0;padding-left:20px}
-.msg-text li{margin:4px 0;font-size:14px;line-height:1.5}
-.msg-text h3{font-size:14px;font-weight:600;margin:12px 0 6px}
-.msg-text h3:first-child{margin-top:0}
+      .msg {
+        border-radius: 8px;
+        border: 0.5px solid;
+        padding: 12px 16px;
+        opacity: 0;
+        transform: translateY(8px);
+        transition: all 0.3s ease;
+      }
+      .msg.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      .msg-user {
+        background: var(--user-bubble);
+        border-color: var(--border2);
+      }
+      .msg-ai {
+        background: var(--surface);
+        border-color: var(--border);
+      }
+      .msg-label {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 6px;
+      }
+      .msg-user .msg-label {
+        color: var(--text4);
+      }
+      .msg-ai .msg-label {
+        color: var(--text3);
+      }
+      .msg-text {
+        font-size: 14px;
+        line-height: 1.6;
+        color: var(--text);
+      }
+      .msg-text p {
+        margin: 8px 0;
+      }
+      .msg-text p:first-child {
+        margin-top: 0;
+      }
+      .msg-text p:last-child {
+        margin-bottom: 0;
+      }
+      .msg-text strong {
+        font-weight: 600;
+      }
+      .msg-text code {
+        background: var(--surface2);
+        padding: 1px 5px;
+        border-radius: 3px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.9em;
+      }
+      .msg-text a {
+        color: var(--link);
+        text-decoration: none;
+      }
+      .msg-text ul {
+        margin: 8px 0;
+        padding-left: 20px;
+      }
+      .msg-text li {
+        margin: 4px 0;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+      .msg-text h3 {
+        font-size: 14px;
+        font-weight: 600;
+        margin: 12px 0 6px;
+      }
+      .msg-text h3:first-child {
+        margin-top: 0;
+      }
 
-.thinking{display:flex;align-items:center;gap:6px;padding:4px 0;font-size:12px;font-style:italic;color:var(--text3)}
-.thinking-dots{display:flex;gap:3px}
-.thinking-dots span{width:4px;height:4px;border-radius:50%;background:var(--text3);animation:tdot 1.4s ease-in-out infinite}
-.thinking-dots span:nth-child(2){animation-delay:.2s}
-.thinking-dots span:nth-child(3){animation-delay:.4s}
-@keyframes tdot{0%,80%,100%{opacity:.2}40%{opacity:1}}
+      .thinking {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 0;
+        font-size: 12px;
+        font-style: italic;
+        color: var(--text3);
+      }
+      .thinking-dots {
+        display: flex;
+        gap: 3px;
+      }
+      .thinking-dots span {
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: var(--text3);
+        animation: tdot 1.4s ease-in-out infinite;
+      }
+      .thinking-dots span:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      .thinking-dots span:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+      @keyframes tdot {
+        0%,
+        80%,
+        100% {
+          opacity: 0.2;
+        }
+        40% {
+          opacity: 1;
+        }
+      }
 
-.tool-card{border:1px solid var(--border);border-radius:4px;background:var(--bg);padding:8px 10px;font-size:12px;margin:8px 0}
-.tool-card-header{display:flex;align-items:center;gap:6px;color:var(--text2);margin-bottom:4px}
-.tool-card-header .tc-icon{color:var(--emerald)}
-.tool-card-body{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11px;color:var(--text2);white-space:pre-wrap}
+      .tool-card {
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        background: var(--bg);
+        padding: 8px 10px;
+        font-size: 12px;
+        margin: 8px 0;
+      }
+      .tool-card-header {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--text2);
+        margin-bottom: 4px;
+      }
+      .tool-card-header .tc-icon {
+        color: var(--emerald);
+      }
+      .tool-card-body {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 11px;
+        color: var(--text2);
+        white-space: pre-wrap;
+      }
 
-.input-area{padding:0 24px 16px}
-.input-wrapper{max-width:768px;margin:0 auto;position:relative}
-.input-box{width:100%;min-height:44px;max-height:200px;border-radius:6px;border:0.5px solid var(--border);background:var(--surface);padding:8px 40px 8px 12px;font-size:14px;color:var(--text);font-family:inherit;resize:none;outline:none;line-height:1.5;overflow:hidden}
-.input-box:focus{border-color:var(--text3)}
-.input-box::placeholder{color:var(--text3)}
-.send-btn{position:absolute;bottom:8px;right:8px;width:32px;height:32px;border-radius:6px;background:var(--text);color:var(--bg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s}
-.send-btn.show{opacity:1}
-.send-btn:hover{background:#e5e5e5}
-.send-arrow{width:16px;height:16px}
+      .input-area {
+        padding: 0 24px 16px;
+      }
+      .input-wrapper {
+        max-width: 768px;
+        margin: 0 auto;
+        position: relative;
+      }
+      .input-box {
+        width: 100%;
+        min-height: 44px;
+        max-height: 200px;
+        border-radius: 6px;
+        border: 0.5px solid var(--border);
+        background: var(--surface);
+        padding: 8px 40px 8px 12px;
+        font-size: 14px;
+        color: var(--text);
+        font-family: inherit;
+        resize: none;
+        outline: none;
+        line-height: 1.5;
+        overflow: hidden;
+      }
+      .input-box:focus {
+        border-color: var(--text3);
+      }
+      .input-box::placeholder {
+        color: var(--text3);
+      }
+      .send-btn {
+        position: absolute;
+        bottom: 8px;
+        right: 8px;
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        background: var(--text);
+        color: var(--bg);
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.2s;
+      }
+      .send-btn.show {
+        opacity: 1;
+      }
+      .send-btn:hover {
+        background: #e5e5e5;
+      }
+      .send-arrow {
+        width: 16px;
+        height: 16px;
+      }
 
-.editor-panel{width:480px;min-width:320px;border-left:0.5px solid var(--border);background:var(--bg);display:flex;flex-direction:column;opacity:0;transition:opacity .3s}
-.editor-panel.show{opacity:1}
-.editor-tabs{display:flex;border-bottom:1px solid var(--border);background:rgba(23,23,23,0.4)}
-.editor-tab{padding:6px 14px;font-size:12px;color:var(--text4);cursor:pointer;border-bottom:2px solid transparent;display:flex;align-items:center;gap:6px}
-.editor-tab.active{color:var(--text);background:var(--bg);border-bottom-color:var(--text)}
-.tab-icon{font-size:11px}
-.editor-content{flex:1;overflow-y:auto;padding:16px;font-size:14px;line-height:1.7;color:var(--text)}
-.editor-content h1{font-size:18px;font-weight:600;margin:0 0 12px;color:var(--text)}
-.editor-content h2{font-size:15px;font-weight:600;margin:16px 0 8px;color:var(--text)}
-.editor-content h3{font-size:14px;font-weight:600;margin:12px 0 6px;color:var(--text)}
-.editor-content p{margin:8px 0;color:var(--text2)}
-.editor-content ul{margin:8px 0;padding-left:20px}
-.editor-content li{margin:4px 0;color:var(--text2)}
-.editor-content code{background:var(--surface2);padding:1px 5px;border-radius:3px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:0.85em;color:var(--text)}
-.editor-content pre{background:var(--code-bg);border:1px solid var(--border);border-radius:6px;padding:12px;margin:10px 0;overflow-x:auto;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;line-height:1.5;color:var(--text2)}
-.editor-content pre code{background:transparent;padding:0;border-radius:0}
-.editor-content table{width:100%;border-collapse:collapse;margin:10px 0;font-size:12px}
-.editor-content th,.editor-content td{border:1px solid var(--border);padding:6px 10px;text-align:left}
-.editor-content th{background:var(--bg);font-weight:600;color:var(--text)}
-.editor-content td{color:var(--text2)}
-.editor-content strong{color:var(--text);font-weight:600}
-.editor-content a{color:var(--link);text-decoration:none}
-.editor-content blockquote{border-left:2px solid var(--surface3);padding-left:12px;color:var(--text4);margin:8px 0}
-.status-bar{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);background:rgba(23,23,23,0.4);padding:2px 12px;font-size:11px;color:var(--text4)}
+      .editor-panel {
+        width: 480px;
+        min-width: 320px;
+        border-left: 0.5px solid var(--border);
+        background: var(--bg);
+        display: flex;
+        flex-direction: column;
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+      .editor-panel.show {
+        opacity: 1;
+      }
+      .editor-tabs {
+        display: flex;
+        border-bottom: 1px solid var(--border);
+        background: rgba(23, 23, 23, 0.4);
+      }
+      .editor-tab {
+        padding: 6px 14px;
+        font-size: 12px;
+        color: var(--text4);
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .editor-tab.active {
+        color: var(--text);
+        background: var(--bg);
+        border-bottom-color: var(--text);
+      }
+      .tab-icon {
+        font-size: 11px;
+      }
+      .editor-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px;
+        font-size: 14px;
+        line-height: 1.7;
+        color: var(--text);
+      }
+      .editor-content h1 {
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0 0 12px;
+        color: var(--text);
+      }
+      .editor-content h2 {
+        font-size: 15px;
+        font-weight: 600;
+        margin: 16px 0 8px;
+        color: var(--text);
+      }
+      .editor-content h3 {
+        font-size: 14px;
+        font-weight: 600;
+        margin: 12px 0 6px;
+        color: var(--text);
+      }
+      .editor-content p {
+        margin: 8px 0;
+        color: var(--text2);
+      }
+      .editor-content ul {
+        margin: 8px 0;
+        padding-left: 20px;
+      }
+      .editor-content li {
+        margin: 4px 0;
+        color: var(--text2);
+      }
+      .editor-content code {
+        background: var(--surface2);
+        padding: 1px 5px;
+        border-radius: 3px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.85em;
+        color: var(--text);
+      }
+      .editor-content pre {
+        background: var(--code-bg);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 12px;
+        margin: 10px 0;
+        overflow-x: auto;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 12px;
+        line-height: 1.5;
+        color: var(--text2);
+      }
+      .editor-content pre code {
+        background: transparent;
+        padding: 0;
+        border-radius: 0;
+      }
+      .editor-content table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 10px 0;
+        font-size: 12px;
+      }
+      .editor-content th,
+      .editor-content td {
+        border: 1px solid var(--border);
+        padding: 6px 10px;
+        text-align: left;
+      }
+      .editor-content th {
+        background: var(--bg);
+        font-weight: 600;
+        color: var(--text);
+      }
+      .editor-content td {
+        color: var(--text2);
+      }
+      .editor-content strong {
+        color: var(--text);
+        font-weight: 600;
+      }
+      .editor-content a {
+        color: var(--link);
+        text-decoration: none;
+      }
+      .editor-content blockquote {
+        border-left: 2px solid var(--surface3);
+        padding-left: 12px;
+        color: var(--text4);
+        margin: 8px 0;
+      }
+      .status-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-top: 1px solid var(--border);
+        background: rgba(23, 23, 23, 0.4);
+        padding: 2px 12px;
+        font-size: 11px;
+        color: var(--text4);
+      }
 
-.cursor-blink{display:inline-block;width:2px;height:14px;background:var(--text);animation:cb .8s step-end infinite;vertical-align:text-bottom;margin-left:1px}
-@keyframes cb{50%{opacity:0}}
+      .cursor-blink {
+        display: inline-block;
+        width: 2px;
+        height: 14px;
+        background: var(--text);
+        animation: cb 0.8s step-end infinite;
+        vertical-align: text-bottom;
+        margin-left: 1px;
+      }
+      @keyframes cb {
+        50% {
+          opacity: 0;
+        }
+      }
 
-@media(max-width:900px){
-  .sidebar{display:none}
-  .editor-panel{display:none}
-}
-</style>
-</head>
-<body>
-
-<div class="header">
-  <div class="header-left">
-    <img src="/icons/logo-rounded.png" class="header-logo" alt="logo">
-    <span class="header-title">Huiyu Pi</span>
-  </div>
-  <div class="header-actions">
-    <button class="header-btn" title="New">+</button>
-    <button class="header-btn active" title="Chat">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-    </button>
-    <button class="header-btn" title="Editor">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-    </button>
-    <button class="header-btn" title="Terminal">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="18" rx="2"/><path d="m7 8 3 3-3 3"/><line x1="13" y1="14" x2="17" y2="14"/></svg>
-    </button>
-    <button class="header-btn" title="Settings">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-    </button>
-  </div>
-</div>
-
-<div class="main">
-  <div class="sidebar">
-    <div class="sidebar-content">
-      <div class="sidebar-section">
-        <div class="sidebar-section-title">Projects</div>
-        <div class="project-row active">
-          <span class="project-icon">📁</span>
-          <span>my-webapp</span>
-        </div>
-        <div class="project-row">
-          <span class="project-icon">📁</span>
-          <span>api-server</span>
-        </div>
+      @media (max-width: 900px) {
+        .sidebar {
+          display: none;
+        }
+        .editor-panel {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <div class="header-left">
+        <img src="/icons/logo-rounded.png" class="header-logo" alt="logo" />
+        <span class="header-title">Huiyu Pi</span>
       </div>
-      <div class="sidebar-section" style="margin-top:8px">
-        <div class="sidebar-section-title">Sessions</div>
-        <div class="session-row active" id="session1">
-          <span class="session-dot"></span>
-          <span>Setup project scaffolding</span>
-        </div>
-        <div class="session-row" id="session2">
-          <span>Implement auth flow</span>
-        </div>
-      </div>
-      <div class="sidebar-section" style="margin-top:8px">
-        <div class="sidebar-section-title">Files</div>
-        <div class="file-tree" id="fileTree">
-          <div class="file-row" data-file="readme" id="file-readme" style="padding-left:6px">
-            <span class="file-icon file-icon-doc">📄</span>
-            <span>README.md</span>
-          </div>
-          <div class="file-row" data-file="package" id="file-package" style="padding-left:6px">
-            <span class="file-icon file-icon-doc">📄</span>
-            <span>package.json</span>
-          </div>
-          <div class="file-row" data-file="src" id="file-src" style="padding-left:6px">
-            <span class="file-icon folder-icon">📁</span>
-            <span>src</span>
-          </div>
-          <div class="file-row" data-file="app" id="file-app" style="padding-left:18px">
-            <span class="file-icon file-icon-doc">📄</span>
-            <span>App.tsx</span>
-          </div>
-          <div class="file-row" data-file="auth" id="file-auth" style="padding-left:18px">
-            <span class="file-icon file-icon-doc">📄</span>
-            <span>auth.ts</span>
-          </div>
-          <div class="file-row" data-file="config" id="file-config" style="padding-left:18px">
-            <span class="file-icon file-icon-doc">📄</span>
-            <span>config.ts</span>
-          </div>
-          <div class="file-row" data-file="tests" id="file-tests" style="padding-left:6px">
-            <span class="file-icon folder-icon">📁</span>
-            <span>tests</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="chat-area">
-    <div class="chat-scroll" id="chatScroll">
-      <div class="chat-messages" id="chatMessages">
-        <div class="empty-state" id="emptyState">
-          <img src="/icons/logo-rounded.png" alt="logo">
-          <div class="es-title">Huiyu Pi</div>
-          <div class="es-sub">Start a conversation to build something great</div>
-        </div>
-      </div>
-    </div>
-    <div class="input-area">
-      <div class="input-wrapper">
-        <textarea class="input-box" id="chatInput" placeholder="Ask Huiyu Pi ..." rows="2" readonly></textarea>
-        <button class="send-btn" id="sendBtn">
-          <svg class="send-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+      <div class="header-actions">
+        <button class="header-btn" title="New">+</button>
+        <button class="header-btn active" title="Chat">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
+        </button>
+        <button class="header-btn" title="Editor">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <polyline points="16 18 22 12 16 6" />
+            <polyline points="8 6 2 12 8 18" />
+          </svg>
+        </button>
+        <button class="header-btn" title="Terminal">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <rect x="2" y="3" width="20" height="18" rx="2" />
+            <path d="m7 8 3 3-3 3" />
+            <line x1="13" y1="14" x2="17" y2="14" />
+          </svg>
+        </button>
+        <button class="header-btn" title="Settings">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <circle cx="12" cy="12" r="3" />
+            <path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+            />
+          </svg>
         </button>
       </div>
     </div>
-  </div>
 
-  <div class="editor-panel" id="editorPanel">
-    <div class="editor-tabs">
-      <div class="editor-tab active" id="editorTab">
-        <span class="tab-icon">📄</span>
-        <span id="editorTabName">README.md</span>
+    <div class="main">
+      <div class="sidebar">
+        <div class="sidebar-content">
+          <div class="sidebar-section">
+            <div class="sidebar-section-title">Projects</div>
+            <div class="project-row active">
+              <span class="project-icon">📁</span>
+              <span>my-webapp</span>
+            </div>
+            <div class="project-row">
+              <span class="project-icon">📁</span>
+              <span>api-server</span>
+            </div>
+          </div>
+          <div class="sidebar-section" style="margin-top: 8px">
+            <div class="sidebar-section-title">Sessions</div>
+            <div class="session-row active" id="session1">
+              <span class="session-dot"></span>
+              <span>Setup project scaffolding</span>
+            </div>
+            <div class="session-row" id="session2">
+              <span>Implement auth flow</span>
+            </div>
+          </div>
+          <div class="sidebar-section" style="margin-top: 8px">
+            <div class="sidebar-section-title">Files</div>
+            <div class="file-tree" id="fileTree">
+              <div class="file-row" data-file="readme" id="file-readme" style="padding-left: 6px">
+                <span class="file-icon file-icon-doc">📄</span>
+                <span>README.md</span>
+              </div>
+              <div class="file-row" data-file="package" id="file-package" style="padding-left: 6px">
+                <span class="file-icon file-icon-doc">📄</span>
+                <span>package.json</span>
+              </div>
+              <div class="file-row" data-file="src" id="file-src" style="padding-left: 6px">
+                <span class="file-icon folder-icon">📁</span>
+                <span>src</span>
+              </div>
+              <div class="file-row" data-file="app" id="file-app" style="padding-left: 18px">
+                <span class="file-icon file-icon-doc">📄</span>
+                <span>App.tsx</span>
+              </div>
+              <div class="file-row" data-file="auth" id="file-auth" style="padding-left: 18px">
+                <span class="file-icon file-icon-doc">📄</span>
+                <span>auth.ts</span>
+              </div>
+              <div class="file-row" data-file="config" id="file-config" style="padding-left: 18px">
+                <span class="file-icon file-icon-doc">📄</span>
+                <span>config.ts</span>
+              </div>
+              <div class="file-row" data-file="tests" id="file-tests" style="padding-left: 6px">
+                <span class="file-icon folder-icon">📁</span>
+                <span>tests</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chat-area">
+        <div class="chat-scroll" id="chatScroll">
+          <div class="chat-messages" id="chatMessages">
+            <div class="empty-state" id="emptyState">
+              <img src="/icons/logo-rounded.png" alt="logo" />
+              <div class="es-title">Huiyu Pi</div>
+              <div class="es-sub">Start a conversation to build something great</div>
+            </div>
+          </div>
+        </div>
+        <div class="input-area">
+          <div class="input-wrapper">
+            <textarea
+              class="input-box"
+              id="chatInput"
+              placeholder="Ask Huiyu Pi ..."
+              rows="2"
+              readonly
+            ></textarea>
+            <button class="send-btn" id="sendBtn">
+              <svg
+                class="send-arrow"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+              >
+                <line x1="12" y1="19" x2="12" y2="5" />
+                <polyline points="5 12 12 5 19 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="editor-panel" id="editorPanel">
+        <div class="editor-tabs">
+          <div class="editor-tab active" id="editorTab">
+            <span class="tab-icon">📄</span>
+            <span id="editorTabName">README.md</span>
+          </div>
+        </div>
+        <div class="editor-content" id="editorContent"></div>
+        <div class="status-bar">
+          <span id="statusLang">Markdown</span>
+          <span id="statusInfo">UTF-8</span>
+        </div>
       </div>
     </div>
-    <div class="editor-content" id="editorContent"></div>
-    <div class="status-bar">
-      <span id="statusLang">Markdown</span>
-      <span id="statusInfo">UTF-8</span>
-    </div>
-  </div>
-</div>
 
-<script>
-(function(){
-  var PROMPT='Add user authentication with JWT tokens';
-  var AI_RESPONSE='<h3>Authentication Setup</h3><p>I\'ll set up JWT-based authentication for your project. Here\'s the implementation:</p><h3>1. Install Dependencies</h3><pre><code>npm install jsonwebtoken bcryptjs express-validator</code></pre><h3>2. Auth Middleware</h3><pre><code>import jwt from \'jsonwebtoken\';\n\nexport const authMiddleware = (req, res, next) => {\n  const token = req.headers.authorization?.split(\' \')[1];\n  if (!token) return res.status(401).json({ error: \'No token\' });\n  \n  try {\n    const decoded = jwt.verify(token, process.env.JWT_SECRET);\n    req.userId = decoded.id;\n    next();\n  } catch (err) {\n    res.status(401).json({ error: \'Invalid token\' });\n  }\n};</code></pre><h3>3. Login Endpoint</h3><pre><code>app.post(\'/api/auth/login\', async (req, res) => {\n  const { email, password } = req.body;\n  const user = await User.findOne({ email });\n  \n  if (!user || !await bcrypt.compare(password, user.hash)) {\n    return res.status(401).json({ error: \'Invalid credentials\' });\n  }\n  \n  const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {\n    expiresIn: \'7d\'\n  });\n  \n  res.json({ token, user: { id: user.id, email } });\n});</code></pre><p>Files created: <code>src/middleware/auth.ts</code>, <code>src/routes/auth.ts</code></p><p>The auth system is now ready. Protected routes can use the <code>authMiddleware</code> guard.</p>';
+    <script>
+      (function () {
+        var PROMPT = "Add user authentication with JWT tokens";
+        var AI_RESPONSE =
+          "<h3>Authentication Setup</h3><p>I'll set up JWT-based authentication for your project. Here's the implementation:</p><h3>1. Install Dependencies</h3><pre><code>npm install jsonwebtoken bcryptjs express-validator</code></pre><h3>2. Auth Middleware</h3><pre><code>import jwt from 'jsonwebtoken';\n\nexport const authMiddleware = (req, res, next) => {\n  const token = req.headers.authorization?.split(' ')[1];\n  if (!token) return res.status(401).json({ error: 'No token' });\n  \n  try {\n    const decoded = jwt.verify(token, process.env.JWT_SECRET);\n    req.userId = decoded.id;\n    next();\n  } catch (err) {\n    res.status(401).json({ error: 'Invalid token' });\n  }\n};</code></pre><h3>3. Login Endpoint</h3><pre><code>app.post('/api/auth/login', async (req, res) => {\n  const { email, password } = req.body;\n  const user = await User.findOne({ email });\n  \n  if (!user || !await bcrypt.compare(password, user.hash)) {\n    return res.status(401).json({ error: 'Invalid credentials' });\n  }\n  \n  const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {\n    expiresIn: '7d'\n  });\n  \n  res.json({ token, user: { id: user.id, email } });\n});</code></pre><p>Files created: <code>src/middleware/auth.ts</code>, <code>src/routes/auth.ts</code></p><p>The auth system is now ready. Protected routes can use the <code>authMiddleware</code> guard.</p>";
 
-  var FILE_CONTENTS={
-    readme:'<h1>My Webapp</h1><p>A modern web application built with TypeScript and React.</p><h2>Features</h2><ul><li>JWT-based authentication</li><li>Real-time updates via WebSocket</li><li>Responsive design with Tailwind CSS</li><li>Full test coverage</li></ul><h2>Quick Start</h2><pre><code>npm install\nnpm run dev</code></pre><p>Open <a href="#">http://localhost:3000</a> to view the app.</p><h2>Project Structure</h2><table><tr><th>Directory</th><th>Description</th></tr><tr><td><code>src/</code></td><td>Application source code</td></tr><tr><td><code>src/middleware/</code></td><td>Express middleware (auth, etc.)</td></tr><tr><td><code>src/routes/</code></td><td>API route handlers</td></tr><tr><td><code>tests/</code></td><td>Test files</td></tr></table><h2>Environment Variables</h2><pre><code>JWT_SECRET=your-secret-key\nDB_URL=mongodb://localhost:27017/myapp\nPORT=3000</code></pre><blockquote><p>Built with Huiyu Pi — zero context, lightning fast AI.</p></blockquote>',
-    package:'<h2>package.json</h2><pre><code>{\n  "name": "my-webapp",\n  "version": "1.0.0",\n  "scripts": {\n    "dev": "vite",\n    "build": "tsc && vite build",\n    "test": "vitest",\n    "lint": "eslint src/"\n  },\n  "dependencies": {\n    "react": "^18.2.0",\n    "jsonwebtoken": "^9.0.0",\n    "bcryptjs": "^2.4.3"\n  }\n}</code></pre>',
-    app:'<h2>App.tsx</h2><pre><code>import { BrowserRouter, Routes, Route } from \'react-router-dom\';\nimport { AuthProvider } from \'./context/auth\';\nimport { Dashboard } from \'./pages/Dashboard\';\nimport { Login } from \'./pages/Login\';\n\nexport default function App() {\n  return (\n    <AuthProvider>\n      <BrowserRouter>\n        <Routes>\n          <Route path="/login" element={<Login />} />\n          <Route path="/" element={<Dashboard />} />\n        </Routes>\n      </BrowserRouter>\n    </AuthProvider>\n  );\n}</code></pre>',
-    auth:'<h2>auth.ts</h2><pre><code>import jwt from \'jsonwebtoken\';\nimport bcrypt from \'bcryptjs\';\n\nexport class AuthService {\n  async login(email: string, password: string) {\n    const user = await this.findUser(email);\n    if (!user) throw new Error(\'User not found\');\n    \n    const valid = await bcrypt.compare(password, user.hash);\n    if (!valid) throw new Error(\'Invalid password\');\n    \n    return jwt.sign(\n      { id: user.id, role: user.role },\n      process.env.JWT_SECRET!,\n      { expiresIn: \'7d\' }\n    );\n  }\n}</code></pre>',
-    config:'<h2>config.ts</h2><pre><code>export const config = {\n  port: parseInt(process.env.PORT || \'3000\'),\n  jwtSecret: process.env.JWT_SECRET || \'dev-secret\',\n  db: {\n    url: process.env.DB_URL || \'mongodb://localhost:27017/myapp\',\n  },\n  cors: {\n    origin: process.env.CLIENT_URL || \'http://localhost:5173\',\n    credentials: true,\n  },\n} as const;</code></pre>',
-    src:'<h2>src/</h2><p>Source directory containing the main application code.</p>',
-    tests:'<h2>tests/</h2><p>Test files for unit and integration testing.</p>'
-  };
+        var FILE_CONTENTS = {
+          readme:
+            '<h1>My Webapp</h1><p>A modern web application built with TypeScript and React.</p><h2>Features</h2><ul><li>JWT-based authentication</li><li>Real-time updates via WebSocket</li><li>Responsive design with Tailwind CSS</li><li>Full test coverage</li></ul><h2>Quick Start</h2><pre><code>npm install\nnpm run dev</code></pre><p>Open <a href="#">http://localhost:3000</a> to view the app.</p><h2>Project Structure</h2><table><tr><th>Directory</th><th>Description</th></tr><tr><td><code>src/</code></td><td>Application source code</td></tr><tr><td><code>src/middleware/</code></td><td>Express middleware (auth, etc.)</td></tr><tr><td><code>src/routes/</code></td><td>API route handlers</td></tr><tr><td><code>tests/</code></td><td>Test files</td></tr></table><h2>Environment Variables</h2><pre><code>JWT_SECRET=your-secret-key\nDB_URL=mongodb://localhost:27017/myapp\nPORT=3000</code></pre><blockquote><p>Built with Huiyu Pi — zero context, lightning fast AI.</p></blockquote>',
+          package:
+            '<h2>package.json</h2><pre><code>{\n  "name": "my-webapp",\n  "version": "1.0.0",\n  "scripts": {\n    "dev": "vite",\n    "build": "tsc && vite build",\n    "test": "vitest",\n    "lint": "eslint src/"\n  },\n  "dependencies": {\n    "react": "^18.2.0",\n    "jsonwebtoken": "^9.0.0",\n    "bcryptjs": "^2.4.3"\n  }\n}</code></pre>',
+          app: "<h2>App.tsx</h2><pre><code>import { BrowserRouter, Routes, Route } from 'react-router-dom';\nimport { AuthProvider } from './context/auth';\nimport { Dashboard } from './pages/Dashboard';\nimport { Login } from './pages/Login';\n\nexport default function App() {\n  return (\n    <AuthProvider>\n      <BrowserRouter>\n        <Routes>\n          <Route path=\"/login\" element={<Login />} />\n          <Route path=\"/\" element={<Dashboard />} />\n        </Routes>\n      </BrowserRouter>\n    </AuthProvider>\n  );\n}</code></pre>",
+          auth: "<h2>auth.ts</h2><pre><code>import jwt from 'jsonwebtoken';\nimport bcrypt from 'bcryptjs';\n\nexport class AuthService {\n  async login(email: string, password: string) {\n    const user = await this.findUser(email);\n    if (!user) throw new Error('User not found');\n    \n    const valid = await bcrypt.compare(password, user.hash);\n    if (!valid) throw new Error('Invalid password');\n    \n    return jwt.sign(\n      { id: user.id, role: user.role },\n      process.env.JWT_SECRET!,\n      { expiresIn: '7d' }\n    );\n  }\n}</code></pre>",
+          config:
+            "<h2>config.ts</h2><pre><code>export const config = {\n  port: parseInt(process.env.PORT || '3000'),\n  jwtSecret: process.env.JWT_SECRET || 'dev-secret',\n  db: {\n    url: process.env.DB_URL || 'mongodb://localhost:27017/myapp',\n  },\n  cors: {\n    origin: process.env.CLIENT_URL || 'http://localhost:5173',\n    credentials: true,\n  },\n} as const;</code></pre>",
+          src: "<h2>src/</h2><p>Source directory containing the main application code.</p>",
+          tests: "<h2>tests/</h2><p>Test files for unit and integration testing.</p>",
+        };
 
-  var chatInput=document.getElementById('chatInput');
-  var sendBtn=document.getElementById('sendBtn');
-  var chatMessages=document.getElementById('chatMessages');
-  var emptyState=document.getElementById('emptyState');
-  var editorPanel=document.getElementById('editorPanel');
-  var editorContent=document.getElementById('editorContent');
-  var editorTab=document.getElementById('editorTab');
-  var editorTabName=document.getElementById('editorTabName');
-  var chatScroll=document.getElementById('chatScroll');
+        var chatInput = document.getElementById("chatInput");
+        var sendBtn = document.getElementById("sendBtn");
+        var chatMessages = document.getElementById("chatMessages");
+        var emptyState = document.getElementById("emptyState");
+        var editorPanel = document.getElementById("editorPanel");
+        var editorContent = document.getElementById("editorContent");
+        var editorTab = document.getElementById("editorTab");
+        var editorTabName = document.getElementById("editorTabName");
+        var chatScroll = document.getElementById("chatScroll");
 
-  function sleep(ms){return new Promise(function(r){setTimeout(r,ms)})}
+        function sleep(ms) {
+          return new Promise(function (r) {
+            setTimeout(r, ms);
+          });
+        }
 
-  function addMsg(type,label,text){
-    var div=document.createElement('div');
-    div.className='msg msg-'+type;
-    div.innerHTML='<div class="msg-label">'+label+'</div><div class="msg-text">'+text+'</div>';
-    chatMessages.appendChild(div);
-    requestAnimationFrame(function(){div.classList.add('show')});
-    chatScroll.scrollTop=chatScroll.scrollHeight;
-    return div;
-  }
+        function addMsg(type, label, text) {
+          var div = document.createElement("div");
+          div.className = "msg msg-" + type;
+          div.innerHTML =
+            '<div class="msg-label">' + label + '</div><div class="msg-text">' + text + "</div>";
+          chatMessages.appendChild(div);
+          requestAnimationFrame(function () {
+            div.classList.add("show");
+          });
+          chatScroll.scrollTop = chatScroll.scrollHeight;
+          return div;
+        }
 
-  function addThinking(){
-    var div=document.createElement('div');
-    div.className='thinking';
-    div.id='thinkingIndicator';
-    div.innerHTML='<div class="thinking-dots"><span></span><span></span><span></span></div><span>Thinking</span>';
-    chatMessages.appendChild(div);
-    chatScroll.scrollTop=chatScroll.scrollHeight;
-    return div;
-  }
+        function addThinking() {
+          var div = document.createElement("div");
+          div.className = "thinking";
+          div.id = "thinkingIndicator";
+          div.innerHTML =
+            '<div class="thinking-dots"><span></span><span></span><span></span></div><span>Thinking</span>';
+          chatMessages.appendChild(div);
+          chatScroll.scrollTop = chatScroll.scrollHeight;
+          return div;
+        }
 
-  function addToolCard(name,input){
-    var div=document.createElement('div');
-    div.className='tool-card';
-    div.style.opacity='0';div.style.transform='translateY(4px)';div.style.transition='all .2s ease';
-    div.innerHTML='<div class="tool-card-header"><span class="tc-icon">●</span><span>'+name+'</span></div><div class="tool-card-body">'+input+'</div>';
-    chatMessages.appendChild(div);
-    requestAnimationFrame(function(){div.style.opacity='1';div.style.transform='translateY(0)'});
-    chatScroll.scrollTop=chatScroll.scrollHeight;
-    return div;
-  }
+        function addToolCard(name, input) {
+          var div = document.createElement("div");
+          div.className = "tool-card";
+          div.style.opacity = "0";
+          div.style.transform = "translateY(4px)";
+          div.style.transition = "all .2s ease";
+          div.innerHTML =
+            '<div class="tool-card-header"><span class="tc-icon">●</span><span>' +
+            name +
+            '</span></div><div class="tool-card-body">' +
+            input +
+            "</div>";
+          chatMessages.appendChild(div);
+          requestAnimationFrame(function () {
+            div.style.opacity = "1";
+            div.style.transform = "translateY(0)";
+          });
+          chatScroll.scrollTop = chatScroll.scrollHeight;
+          return div;
+        }
 
-  function selectFile(fileId){
-    document.querySelectorAll('.file-row').forEach(function(r){r.classList.remove('selected')});
-    var el=document.getElementById('file-'+fileId);
-    if(el)el.classList.add('selected');
-    if(FILE_CONTENTS[fileId]){
-      editorContent.innerHTML=FILE_CONTENTS[fileId];
-      editorTabName.textContent=fileId==='readme'?'README.md':fileId==='package'?'package.json':fileId+'.ts';
-      editorPanel.classList.add('show');
-    }
-  }
+        function selectFile(fileId) {
+          document.querySelectorAll(".file-row").forEach(function (r) {
+            r.classList.remove("selected");
+          });
+          var el = document.getElementById("file-" + fileId);
+          if (el) el.classList.add("selected");
+          if (FILE_CONTENTS[fileId]) {
+            editorContent.innerHTML = FILE_CONTENTS[fileId];
+            editorTabName.textContent =
+              fileId === "readme"
+                ? "README.md"
+                : fileId === "package"
+                  ? "package.json"
+                  : fileId + ".ts";
+            editorPanel.classList.add("show");
+          }
+        }
 
-  async function runDemo(){
-    await sleep(800);
-    emptyState.style.opacity='0';
-    await sleep(400);
-    emptyState.style.display='none';
+        async function runDemo() {
+          await sleep(800);
+          emptyState.style.opacity = "0";
+          await sleep(400);
+          emptyState.style.display = "none";
 
-    for(var i=0;i<PROMPT.length;i++){
-      chatInput.value=PROMPT.substring(0,i+1);
-      chatInput.style.height=chatInput.scrollHeight+'px';
-      await sleep(35+Math.random()*25);
-    }
-    sendBtn.classList.add('show');
-    await sleep(300);
+          for (var i = 0; i < PROMPT.length; i++) {
+            chatInput.value = PROMPT.substring(0, i + 1);
+            chatInput.style.height = chatInput.scrollHeight + "px";
+            await sleep(35 + Math.random() * 25);
+          }
+          sendBtn.classList.add("show");
+          await sleep(300);
 
-    var userMsg=addMsg('user','You','<p>'+PROMPT+'</p>');
-    chatInput.value='';
-    chatInput.style.height='auto';
-    sendBtn.classList.remove('show');
-    await sleep(200);
+          var userMsg = addMsg("user", "You", "<p>" + PROMPT + "</p>");
+          chatInput.value = "";
+          chatInput.style.height = "auto";
+          sendBtn.classList.remove("show");
+          await sleep(200);
 
-    addThinking();
-    await sleep(400);
+          addThinking();
+          await sleep(400);
 
-    var thinkEl=document.getElementById('thinkingIndicator');
-    if(thinkEl)thinkEl.remove();
+          var thinkEl = document.getElementById("thinkingIndicator");
+          if (thinkEl) thinkEl.remove();
 
-    addToolCard('read_file','<span style="color:var(--emerald)">→</span> src/App.tsx  <span style="color:var(--text3)">(1.2 KB)</span>');
-    await sleep(150);
-    addToolCard('read_file','<span style="color:var(--emerald)">→</span> package.json  <span style="color:var(--text3)">(0.8 KB)</span>');
-    await sleep(150);
-    addToolCard('write_file','<span style="color:var(--amber)">→</span> src/middleware/auth.ts  <span style="color:var(--text3)">(created)</span>');
-    await sleep(100);
-    addToolCard('write_file','<span style="color:var(--amber)">→</span> src/routes/auth.ts  <span style="color:var(--text3)">(created)</span>');
-    await sleep(300);
+          addToolCard(
+            "read_file",
+            '<span style="color:var(--emerald)">→</span> src/App.tsx  <span style="color:var(--text3)">(1.2 KB)</span>',
+          );
+          await sleep(150);
+          addToolCard(
+            "read_file",
+            '<span style="color:var(--emerald)">→</span> package.json  <span style="color:var(--text3)">(0.8 KB)</span>',
+          );
+          await sleep(150);
+          addToolCard(
+            "write_file",
+            '<span style="color:var(--amber)">→</span> src/middleware/auth.ts  <span style="color:var(--text3)">(created)</span>',
+          );
+          await sleep(100);
+          addToolCard(
+            "write_file",
+            '<span style="color:var(--amber)">→</span> src/routes/auth.ts  <span style="color:var(--text3)">(created)</span>',
+          );
+          await sleep(300);
 
-    addMsg('ai','Assistant','<p style="font-size:12px;color:var(--text3);margin-bottom:8px">completed</p>'+AI_RESPONSE);
-    await sleep(600);
+          addMsg(
+            "ai",
+            "Assistant",
+            '<p style="font-size:12px;color:var(--text3);margin-bottom:8px">completed</p>' +
+              AI_RESPONSE,
+          );
+          await sleep(600);
 
-    selectFile('readme');
-    await sleep(200);
-    document.querySelector('.editor-tab').classList.add('active');
-  }
+          selectFile("readme");
+          await sleep(200);
+          document.querySelector(".editor-tab").classList.add("active");
+        }
 
-  runDemo();
-})();
-</script>
-</body>
+        runDemo();
+      })();
+    </script>
+  </body>
 </html>

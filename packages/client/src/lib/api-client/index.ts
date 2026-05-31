@@ -65,7 +65,6 @@ import {
   type Validator,
   type SnapshotMeta,
   type SnapshotDetail,
-  type SnapshotStorageInfo,
   type SnapshotDelta,
   type SnapshotDeltaEntry,
   type SessionDelta,
@@ -1360,7 +1359,7 @@ function vSnapshotDetail(value: unknown, status: number): SnapshotDetail {
     fail(status, "expected SnapshotDetail");
   }
   const files: Record<string, import("./types").SnapshotFileEntry> = {};
-  for (const [path, entry] of Object.entries(value.files as Record<string, unknown>)) {
+  for (const [path, entry] of Object.entries(value.files)) {
     if (
       !isObject(entry) ||
       typeof entry.hash !== "string" ||
@@ -1414,7 +1413,7 @@ function vSnapshotDelta(value: unknown, status: number): SnapshotDelta {
       currentSize: e.currentSize,
     };
   });
-  const summary = value.summary as Record<string, unknown>;
+  const summary = value.summary;
   return {
     snapshotId: value.snapshotId,
     snapshotLabel: value.snapshotLabel,
@@ -1453,7 +1452,7 @@ function vSessionDelta(value: unknown, status: number): SessionDelta {
       currentSize: e.currentSize,
     };
   });
-  const summary = value.summary as Record<string, unknown>;
+  const summary = value.summary;
   return {
     targetId: value.targetId,
     entries,
@@ -2953,7 +2952,12 @@ export const api = {
   },
 
   // ---------------- snapshots ----------------
-  createSnapshot: (projectId: string, label?: string, trigger?: "manual" | "pre-agent" | "post-agent", sessionId?: string) =>
+  createSnapshot: (
+    projectId: string,
+    label?: string,
+    trigger?: "manual" | "pre-agent" | "post-agent",
+    sessionId?: string,
+  ) =>
     request(
       `/api/v1/projects/${encodeURIComponent(projectId)}/snapshots`,
       (v, s) => {
@@ -2965,18 +2969,18 @@ export const api = {
           warnings: (v.warnings as unknown[]).filter((w): w is string => typeof w === "string"),
         };
       },
-      { method: "POST", body: { label: label ?? "手动快照", trigger: trigger ?? "manual", sessionId } },
-    ),
-  listSnapshots: (projectId: string) =>
-    request(
-      `/api/v1/projects/${encodeURIComponent(projectId)}/snapshots`,
-      (v, s) => {
-        if (!isObject(v) || !Array.isArray(v.snapshots)) {
-          fail(s, "expected { snapshots }");
-        }
-        return { snapshots: (v.snapshots as unknown[]).map((snap) => vSnapshotMeta(snap, s)) };
+      {
+        method: "POST",
+        body: { label: label ?? "手动快照", trigger: trigger ?? "manual", sessionId },
       },
     ),
+  listSnapshots: (projectId: string) =>
+    request(`/api/v1/projects/${encodeURIComponent(projectId)}/snapshots`, (v, s) => {
+      if (!isObject(v) || !Array.isArray(v.snapshots)) {
+        fail(s, "expected { snapshots }");
+      }
+      return { snapshots: (v.snapshots as unknown[]).map((snap) => vSnapshotMeta(snap, s)) };
+    }),
   getSnapshot: (projectId: string, snapshotId: string) =>
     request(
       `/api/v1/projects/${encodeURIComponent(projectId)}/snapshots/${encodeURIComponent(snapshotId)}`,
@@ -3017,19 +3021,16 @@ export const api = {
       { method: "DELETE" },
     ),
   getSnapshotStorage: (projectId: string) =>
-    request(
-      `/api/v1/projects/${encodeURIComponent(projectId)}/snapshots/storage`,
-      (v, s) => {
-        if (
-          !isObject(v) ||
-          typeof v.totalSnapshots !== "number" ||
-          typeof v.totalSizeBytes !== "number"
-        ) {
-          fail(s, "expected { totalSnapshots, totalSizeBytes }");
-        }
-        return { totalSnapshots: v.totalSnapshots, totalSizeBytes: v.totalSizeBytes };
-      },
-    ),
+    request(`/api/v1/projects/${encodeURIComponent(projectId)}/snapshots/storage`, (v, s) => {
+      if (
+        !isObject(v) ||
+        typeof v.totalSnapshots !== "number" ||
+        typeof v.totalSizeBytes !== "number"
+      ) {
+        fail(s, "expected { totalSnapshots, totalSizeBytes }");
+      }
+      return { totalSnapshots: v.totalSnapshots, totalSizeBytes: v.totalSizeBytes };
+    }),
   getSnapshotDelta: (projectId: string, snapshotId: string) =>
     request(
       `/api/v1/projects/${encodeURIComponent(projectId)}/snapshots/${encodeURIComponent(snapshotId)}/delta`,
@@ -3047,7 +3048,7 @@ export const api = {
         if (!isObject(v) || !isObject(v.delta)) {
           fail(s, "expected { delta }");
         }
-        const d = v.delta as Record<string, unknown>;
+        const d = v.delta;
         if (typeof d.targetId !== "string") {
           fail(s, "expected targetId");
         }

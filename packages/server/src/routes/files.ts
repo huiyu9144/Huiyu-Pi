@@ -440,7 +440,9 @@ export const fileRoutes: FastifyPluginAsync = async (fastify) => {
       try {
         const rawPath = req.query.path;
         const normalizedPath = rawPath.replace(/^[/\\]+/, "");
-        const fileAbsPath = isAbsolute(normalizedPath) ? normalizedPath : join(project.path, normalizedPath);
+        const fileAbsPath = isAbsolute(normalizedPath)
+          ? normalizedPath
+          : join(project.path, normalizedPath);
         const result = await readFile(fileAbsPath); // root is optional now, we don't need it for read
         return result;
       } catch (err) {
@@ -481,7 +483,9 @@ export const fileRoutes: FastifyPluginAsync = async (fastify) => {
       const project = await resolveProject(req.body.projectId, reply);
       if (project === undefined) return reply;
       try {
-        const writeAbsPath = isAbsolute(req.body.path) ? req.body.path : join(project.path, req.body.path);
+        const writeAbsPath = isAbsolute(req.body.path)
+          ? req.body.path
+          : join(project.path, req.body.path);
         await writeFile(writeAbsPath, project.path, req.body.content);
         return { path: req.body.path };
       } catch (err) {
@@ -560,7 +564,9 @@ export const fileRoutes: FastifyPluginAsync = async (fastify) => {
       const project = await resolveProject(req.body.projectId, reply);
       if (project === undefined) return reply;
       try {
-        const renameAbsPath = isAbsolute(req.body.path) ? req.body.path : join(project.path, req.body.path);
+        const renameAbsPath = isAbsolute(req.body.path)
+          ? req.body.path
+          : join(project.path, req.body.path);
         const renamed = await renameEntry(renameAbsPath, project.path, req.body.name);
         return { path: renamed };
       } catch (err) {
@@ -603,7 +609,9 @@ export const fileRoutes: FastifyPluginAsync = async (fastify) => {
       if (project === undefined) return reply;
       try {
         const moveSrc = isAbsolute(req.body.src) ? req.body.src : join(project.path, req.body.src);
-        const moveDest = isAbsolute(req.body.dest) ? req.body.dest : join(project.path, req.body.dest);
+        const moveDest = isAbsolute(req.body.dest)
+          ? req.body.dest
+          : join(project.path, req.body.dest);
         const moved = await moveEntry(moveSrc, moveDest, project.path);
         return { path: moved };
       } catch (err) {
@@ -647,7 +655,9 @@ export const fileRoutes: FastifyPluginAsync = async (fastify) => {
       if (project === undefined) return reply;
       try {
         const recursive = req.query.recursive === "true";
-        const deleteAbsPath = isAbsolute(req.query.path) ? req.query.path : join(project.path, req.query.path);
+        const deleteAbsPath = isAbsolute(req.query.path)
+          ? req.query.path
+          : join(project.path, req.query.path);
         await deleteEntry(deleteAbsPath, project.path, { recursive });
         return reply.code(204).send();
       } catch (err) {
@@ -987,7 +997,9 @@ export const fileRoutes: FastifyPluginAsync = async (fastify) => {
       const project = await resolveProject(req.body.projectId, reply);
       if (project === undefined) return reply;
       try {
-        const revealAbsPath = isAbsolute(req.body.path) ? req.body.path : join(project.path, req.body.path);
+        const revealAbsPath = isAbsolute(req.body.path)
+          ? req.body.path
+          : join(project.path, req.body.path);
         const resolved = await verifyPathSafe(revealAbsPath, project.path);
         if (process.platform === "win32") {
           execSync(`explorer.exe /select,"${resolved.replace(/\//g, "\\")}"`, { timeout: 5000 });

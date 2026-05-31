@@ -476,7 +476,7 @@ function looksLikeDiff(diff: string): boolean {
   const lines = diff.split("\n");
   let diffLines = 0;
   for (const line of lines) {
-    if (/^[+\- ] \d/.test(line) || /^[+\-]/.test(line)) {
+    if (/^[-+ ] \d/.test(line) || /^[-+]/.test(line)) {
       diffLines += 1;
       if (diffLines >= 2) return true;
     }

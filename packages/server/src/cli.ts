@@ -100,7 +100,7 @@ const FLAGS: Record<string, CliFlag> = {
 export interface ParsedCli {
   helpRequested: boolean;
   versionRequested: boolean;
-  pairs: Array<{ envVar: string; value: string | undefined }>;
+  pairs: { envVar: string; value: string | undefined }[];
 }
 
 export function parseCliArgs(raw: string[]): ParsedCli {
@@ -125,7 +125,7 @@ export function parseCliArgs(raw: string[]): ParsedCli {
   const helpRequested = parsed.values.help === true || raw.includes("--help");
   const versionRequested = parsed.values.version === true || raw.includes("--version");
 
-  const pairs: Array<{ envVar: string; value: string | undefined }> = [];
+  const pairs: { envVar: string; value: string | undefined }[] = [];
   for (const [long, flag] of Object.entries(FLAGS)) {
     const cliValue = parsed.values[long];
     if (cliValue === undefined) {
@@ -135,7 +135,9 @@ export function parseCliArgs(raw: string[]): ParsedCli {
     // `parseArgs` returns "string | string[] | undefined" for string type.
     // We never use `multiple: true`, so string[] doesn't happen here
     // (and if it somehow did, the cast preserves it as the env value).
-    const stringValue = Array.isArray(cliValue) ? cliValue.join(",") : (cliValue as string | undefined);
+    const stringValue = Array.isArray(cliValue)
+      ? cliValue.join(",")
+      : (cliValue as string | undefined);
     if (stringValue === undefined && flag.type === "boolean") {
       // Boolean flag passed without value: --serve-client → true.
       // parseArgs already set it to the default (true).

@@ -267,7 +267,9 @@ export function SessionList({ projectId }: Props) {
           ProjectSidebar (the + button on hover). Avoids stacking
           a second action button per project. */}
       {sessions.length === 0 && (
-        <p className="ml-[42px] py-1 text-xs font-semibold italic text-[#545454] light:text-neutral-500">No sessions yet.</p>
+        <p className="ml-[42px] py-1 text-xs font-semibold italic text-[#545454] light:text-neutral-500">
+          No sessions yet.
+        </p>
       )}
       {selectedIds.size > 0 && (
         <div className="flex items-center justify-between gap-2 rounded bg-neutral-900/60 px-2 py-1 text-[11px] text-neutral-300">
@@ -479,15 +481,27 @@ function SessionRow(props: SessionRowProps) {
           title={`${s.sessionId} — double-click to rename, Cmd/Ctrl+click to select for bulk delete`}
         >
           {isStreaming ? (
-            <Loader2 size={10} className={`shrink-0 animate-spin ${isSelected || isActive ? "text-emerald-400" : "text-emerald-500"}`} />
+            <Loader2
+              size={10}
+              className={`shrink-0 animate-spin ${isSelected || isActive ? "text-emerald-400" : "text-emerald-500"}`}
+            />
           ) : hasError ? (
             <span title="Session has errors">
-              <AlertCircle size={10} className={`shrink-0 ${isSelected || isActive ? "text-amber-400" : "text-amber-500/70"}`} />
+              <AlertCircle
+                size={10}
+                className={`shrink-0 ${isSelected || isActive ? "text-amber-400" : "text-amber-500/70"}`}
+              />
             </span>
           ) : s.isLive ? (
-            <MessageCircle size={10} className={`shrink-0 ${isSelected || isActive ? "text-neutral-100" : "text-[#545454]"}`} />
+            <MessageCircle
+              size={10}
+              className={`shrink-0 ${isSelected || isActive ? "text-neutral-100" : "text-[#545454]"}`}
+            />
           ) : (
-            <MessageCircle size={10} className={`shrink-0 ${isSelected || isActive ? "text-neutral-100" : "text-[#545454]"}`} />
+            <MessageCircle
+              size={10}
+              className={`shrink-0 ${isSelected || isActive ? "text-neutral-100" : "text-[#545454]"}`}
+            />
           )}
           {isChild && (
             <span className="mr-1 text-purple-400 light:text-purple-700" title="sub-agent">

@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc && node -e \"require('fs').copyFileSync('src/conversion-worker.mjs','dist/conversion-worker.mjs')\"",
+    "build": "tsc && node -e \"require('fs').copyFileSync('src/conversion-worker.mjs','dist/conversion-worker.mjs')\" && node -e \"require('fs').mkdirSync('dist/skills/pi-docs',{recursive:true});require('fs').copyFileSync('src/skills/pi-docs/SKILL.md','dist/skills/pi-docs/SKILL.md')\"",
     "check": "tsc --noEmit"
   },
   "dependencies": {

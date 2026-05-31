@@ -27,10 +27,7 @@ function devApiTarget(): string {
 }
 
 export default defineConfig({
-  plugins: [
-    react(),
-    tailwindcss(),
-  ],
+  plugins: [react(), tailwindcss()],
   server: {
     port: 9145,
     strictPort: true,

@@ -1,798 +1,1472 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Huiyu Pi</title>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Huiyu Pi</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
 
-*{margin:0;padding:0;box-sizing:border-box}
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-:root{
-  --bg:#0A0A0A;--surface:#131313;--surface-alt:#1a1a1a;
-  --border:#1f1f1f;--border-subtle:#1a1a1a;
-  --text-pri:#f5f5f5;--text-sec:#a3a3a3;--text-dim:#525252;
-  --red:#ef4444;--red-soft:rgba(239,68,68,0.08);--red-border:rgba(239,68,68,0.25);
-  --aft:#8999AD;--aft-soft:rgba(137,153,173,0.08);--aft-border:rgba(137,153,173,0.25);
-  --amber:#fbbf24;--green:#34d399;--green-soft:rgba(52,211,153,0.1);--green-border:rgba(52,211,153,0.3);
-}
+      :root {
+        --bg: #0a0a0a;
+        --surface: #131313;
+        --surface-alt: #1a1a1a;
+        --border: #1f1f1f;
+        --border-subtle: #1a1a1a;
+        --text-pri: #f5f5f5;
+        --text-sec: #a3a3a3;
+        --text-dim: #525252;
+        --red: #ef4444;
+        --red-soft: rgba(239, 68, 68, 0.08);
+        --red-border: rgba(239, 68, 68, 0.25);
+        --aft: #8999ad;
+        --aft-soft: rgba(137, 153, 173, 0.08);
+        --aft-border: rgba(137, 153, 173, 0.25);
+        --amber: #fbbf24;
+        --green: #34d399;
+        --green-soft: rgba(52, 211, 153, 0.1);
+        --green-border: rgba(52, 211, 153, 0.3);
+      }
 
-body{
-  background:var(--bg);color:var(--text-pri);
-  font-family:'Plus Jakarta Sans',system-ui,sans-serif;
-  display:flex;align-items:center;justify-content:center;
-  min-height:100vh;overflow:hidden;-webkit-font-smoothing:antialiased;
-}
+      body {
+        background: var(--bg);
+        color: var(--text-pri);
+        font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        overflow: hidden;
+        -webkit-font-smoothing: antialiased;
+      }
 
-.container{width:960px;max-width:100vw;padding:0 20px}
+      .container {
+        width: 960px;
+        max-width: 100vw;
+        padding: 0 20px;
+      }
 
-.brand-bar{
-  display:flex;align-items:center;justify-content:center;gap:10px;
-  margin-bottom:4px;opacity:0;animation:fadeIn .35s ease-out forwards;
-}
-.brand-bar img{width:30px;height:30px;border-radius:7px}
-.brand-bar .bn{font-size:17px;font-weight:800;letter-spacing:-.3px;color:var(--text-pri)}
-.brand-bar .bn em{font-style:normal;color:var(--amber)}
+      .brand-bar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 4px;
+        opacity: 0;
+        animation: fadeIn 0.35s ease-out forwards;
+      }
+      .brand-bar img {
+        width: 30px;
+        height: 30px;
+        border-radius: 7px;
+      }
+      .brand-bar .bn {
+        font-size: 17px;
+        font-weight: 800;
+        letter-spacing: -0.3px;
+        color: var(--text-pri);
+      }
+      .brand-bar .bn em {
+        font-style: normal;
+        color: var(--amber);
+      }
 
-.header{text-align:center;margin-bottom:8px;opacity:0;animation:fadeIn .4s ease-out .1s forwards}
-.header .main-title{font-size:28px;font-weight:900;letter-spacing:-.5px;line-height:1.2}
-.header .main-title .zero{color:var(--aft)}
-.header .main-title .fast{color:var(--amber)}
-.header .main-title .sub{font-size:13px;font-weight:600;color:var(--text-sec);margin-left:6px}
-.header-url{text-align:center;font-size:13px;font-weight:600;color:var(--text-dim);letter-spacing:.5px;margin-top:8px}
-.ba-url{font-size:12px;font-weight:700;color:var(--text-dim);margin-left:10px;letter-spacing:.2px}
+      .header {
+        text-align: center;
+        margin-bottom: 8px;
+        opacity: 0;
+        animation: fadeIn 0.4s ease-out 0.1s forwards;
+      }
+      .header .main-title {
+        font-size: 28px;
+        font-weight: 900;
+        letter-spacing: -0.5px;
+        line-height: 1.2;
+      }
+      .header .main-title .zero {
+        color: var(--aft);
+      }
+      .header .main-title .fast {
+        color: var(--amber);
+      }
+      .header .main-title .sub {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-sec);
+        margin-left: 6px;
+      }
+      .header-url {
+        text-align: center;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-dim);
+        letter-spacing: 0.5px;
+        margin-top: 8px;
+      }
+      .ba-url {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text-dim);
+        margin-left: 10px;
+        letter-spacing: 0.2px;
+      }
 
-.split{display:grid;grid-template-columns:1fr auto 1fr;gap:0;margin-top:4px;align-items:stretch}
+      .split {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        gap: 0;
+        margin-top: 4px;
+        align-items: stretch;
+      }
 
-.col{display:flex;flex-direction:column;gap:0}
+      .col {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
 
-.vs-divider{
-  display:flex;align-items:center;justify-content:center;
-  padding:0 8px;
-}
-.vs-text{
-  font-size:14px;font-weight:800;color:var(--text-dim);
-  letter-spacing:1px;text-transform:uppercase;
-  opacity:.5;
-}
+      .vs-divider {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 8px;
+      }
+      .vs-text {
+        font-size: 14px;
+        font-weight: 800;
+        color: var(--text-dim);
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        opacity: 0.5;
+      }
 
-.ba-label{
-  text-align:center;padding:6px 0 8px;
-  font-size:42px;font-weight:900;letter-spacing:-1px;line-height:1;
-  opacity:0;animation:fadeIn .4s ease-out .2s forwards;
-}
-.ba-label.before-label{color:var(--red)}
-.ba-label.after-label{color:var(--aft)}
+      .ba-label {
+        text-align: center;
+        padding: 6px 0 8px;
+        font-size: 42px;
+        font-weight: 900;
+        letter-spacing: -1px;
+        line-height: 1;
+        opacity: 0;
+        animation: fadeIn 0.4s ease-out 0.2s forwards;
+      }
+      .ba-label.before-label {
+        color: var(--red);
+      }
+      .ba-label.after-label {
+        color: var(--aft);
+      }
 
-.panel{border-radius:12px;border:1px solid var(--border);background:var(--surface);overflow:hidden;position:relative;flex:1;display:flex;flex-direction:column}
-.panel.before-panel{border-color:var(--red-border)}
-.panel.after-panel{border-color:var(--aft-border)}
-.panel-body{padding:0 14px 14px;display:flex;flex-direction:column;gap:0;flex:1}
+      .panel {
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        overflow: hidden;
+        position: relative;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+      .panel.before-panel {
+        border-color: var(--red-border);
+      }
+      .panel.after-panel {
+        border-color: var(--aft-border);
+      }
+      .panel-body {
+        padding: 0 14px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        flex: 1;
+      }
 
-.panel-head{
-  display:flex;align-items:center;justify-content:center;gap:10px;
-  padding:12px 14px 10px;
-}
-.ai-avatar{
-  width:40px;height:40px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-size:22px;flex-shrink:0;
-  position:relative;
-}
-.ai-avatar.before-av{background:var(--red-soft);border:1.5px solid var(--red-border)}
-.ai-avatar.after-av{background:var(--aft-soft);border:1.5px solid var(--aft-border)}
-.ai-avatar .pulse-ring{
-  position:absolute;inset:-3px;border-radius:50%;
-  border:1.5px solid transparent;
-}
-.ai-avatar.before-av .pulse-ring{border-color:var(--red-border);animation:avPulse 2s ease-in-out infinite}
-.ai-avatar.after-av .pulse-ring{border-color:var(--aft-border);animation:avPulse 2s ease-in-out infinite}
-@keyframes avPulse{0%,100%{opacity:.3;transform:scale(1)}50%{opacity:.8;transform:scale(1.15)}}
+      .panel-head {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 12px 14px 10px;
+      }
+      .ai-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        flex-shrink: 0;
+        position: relative;
+      }
+      .ai-avatar.before-av {
+        background: var(--red-soft);
+        border: 1.5px solid var(--red-border);
+      }
+      .ai-avatar.after-av {
+        background: var(--aft-soft);
+        border: 1.5px solid var(--aft-border);
+      }
+      .ai-avatar .pulse-ring {
+        position: absolute;
+        inset: -3px;
+        border-radius: 50%;
+        border: 1.5px solid transparent;
+      }
+      .ai-avatar.before-av .pulse-ring {
+        border-color: var(--red-border);
+        animation: avPulse 2s ease-in-out infinite;
+      }
+      .ai-avatar.after-av .pulse-ring {
+        border-color: var(--aft-border);
+        animation: avPulse 2s ease-in-out infinite;
+      }
+      @keyframes avPulse {
+        0%,
+        100% {
+          opacity: 0.3;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.8;
+          transform: scale(1.15);
+        }
+      }
 
-.panel-brand{font-size:14px;font-weight:800;letter-spacing:.2px}
-.panel-brand.before-brand{color:var(--red)}
-.panel-brand.after-brand{color:var(--aft)}
+      .panel-brand {
+        font-size: 14px;
+        font-weight: 800;
+        letter-spacing: 0.2px;
+      }
+      .panel-brand.before-brand {
+        color: var(--red);
+      }
+      .panel-brand.after-brand {
+        color: var(--aft);
+      }
 
-.speed-badge{
-  font-size:9px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;
-  padding:3px 8px;border-radius:4px;flex-shrink:0;
-}
-.speed-badge.slow{background:var(--red-soft);color:var(--red);border:1px solid var(--red-border)}
-.speed-badge.fast{background:var(--green-soft);color:var(--green);border:1px solid var(--green-border)}
+      .speed-badge {
+        font-size: 9px;
+        font-weight: 800;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+        padding: 3px 8px;
+        border-radius: 4px;
+        flex-shrink: 0;
+      }
+      .speed-badge.slow {
+        background: var(--red-soft);
+        color: var(--red);
+        border: 1px solid var(--red-border);
+      }
+      .speed-badge.fast {
+        background: var(--green-soft);
+        color: var(--green);
+        border: 1px solid var(--green-border);
+      }
 
-.panel-footer{text-align:center;padding:8px 0 2px}
-.panel-url{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--aft);letter-spacing:.3px;cursor:pointer}
-.panel-url img{width:16px;height:16px;border-radius:4px}
-.panel-url .url-arrow{font-size:11px;opacity:.6;transition:transform .2s ease}
-.panel-url:hover .url-arrow{transform:translateX(2px)}
+      .panel-footer {
+        text-align: center;
+        padding: 8px 0 2px;
+      }
+      .panel-url {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--aft);
+        letter-spacing: 0.3px;
+        cursor: pointer;
+      }
+      .panel-url img {
+        width: 16px;
+        height: 16px;
+        border-radius: 4px;
+      }
+      .panel-url .url-arrow {
+        font-size: 11px;
+        opacity: 0.6;
+        transition: transform 0.2s ease;
+      }
+      .panel-url:hover .url-arrow {
+        transform: translateX(2px);
+      }
 
-.panel-body-dup{display:none}
+      .panel-body-dup {
+        display: none;
+      }
 
-.ctx-row{
-  display:flex;align-items:center;gap:10px;
-  padding:10px 12px;border-radius:8px;margin-bottom:8px;
-}
-.ctx-row.before-ctx{background:var(--red-soft);border:1px solid var(--red-border)}
-.ctx-row.after-ctx{background:var(--aft-soft);border:1px solid var(--aft-border)}
+      .ctx-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        margin-bottom: 8px;
+      }
+      .ctx-row.before-ctx {
+        background: var(--red-soft);
+        border: 1px solid var(--red-border);
+      }
+      .ctx-row.after-ctx {
+        background: var(--aft-soft);
+        border: 1px solid var(--aft-border);
+      }
 
-.ctx-icon{font-size:18px;flex-shrink:0}
-.ctx-label{font-size:13px;font-weight:700;color:var(--text-pri);flex-shrink:0}
+      .ctx-icon {
+        font-size: 18px;
+        flex-shrink: 0;
+      }
+      .ctx-label {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text-pri);
+        flex-shrink: 0;
+      }
 
-.ctx-bar-wrap{flex:1;display:flex;align-items:center;gap:8px;min-width:0}
-.ctx-track{flex:1;height:10px;border-radius:5px;overflow:hidden;position:relative}
-.ctx-track.before-track{background:rgba(239,68,68,0.12)}
-.ctx-track.after-track{background:rgba(137,153,173,0.1)}
-.ctx-fill{height:100%;border-radius:5px;transition:width .3s ease;position:relative}
-.ctx-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent 50%,rgba(255,255,255,0.06));border-radius:5px}
-.ctx-fill.before-fill{background:var(--red)}
-.ctx-fill.after-fill{background:var(--aft)}
-.ctx-big{
-  font-family:'JetBrains Mono',monospace;font-weight:900;font-size:26px;
-  flex-shrink:0;min-width:44px;text-align:right;line-height:1;
-}
-.ctx-big.before-big{color:var(--red)}
-.ctx-big.after-big{color:var(--aft)}
+      .ctx-bar-wrap {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+      }
+      .ctx-track {
+        flex: 1;
+        height: 10px;
+        border-radius: 5px;
+        overflow: hidden;
+        position: relative;
+      }
+      .ctx-track.before-track {
+        background: rgba(239, 68, 68, 0.12);
+      }
+      .ctx-track.after-track {
+        background: rgba(137, 153, 173, 0.1);
+      }
+      .ctx-fill {
+        height: 100%;
+        border-radius: 5px;
+        transition: width 0.3s ease;
+        position: relative;
+      }
+      .ctx-fill::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, transparent 50%, rgba(255, 255, 255, 0.06));
+        border-radius: 5px;
+      }
+      .ctx-fill.before-fill {
+        background: var(--red);
+      }
+      .ctx-fill.after-fill {
+        background: var(--aft);
+      }
+      .ctx-big {
+        font-family: "JetBrains Mono", monospace;
+        font-weight: 900;
+        font-size: 26px;
+        flex-shrink: 0;
+        min-width: 44px;
+        text-align: right;
+        line-height: 1;
+      }
+      .ctx-big.before-big {
+        color: var(--red);
+      }
+      .ctx-big.after-big {
+        color: var(--aft);
+      }
 
-.detail-list{display:flex;flex-direction:column;gap:2px;padding:2px 0 6px;min-height:20px}
+      .detail-list {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        padding: 2px 0 6px;
+        min-height: 20px;
+      }
 
-.detail-item{
-  display:flex;align-items:center;gap:7px;
-  padding:4px 8px;border-radius:5px;
-  font-family:'JetBrains Mono',monospace;
-  opacity:0;transform:translateY(-3px);
-}
-.detail-item .di-emoji{font-size:11px;flex-shrink:0;width:16px;text-align:center}
-.detail-item .di-tag{
-  font-family:'Plus Jakarta Sans',sans-serif;
-  font-size:8px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;
-  padding:2px 6px;border-radius:3px;flex-shrink:0;
-}
-.detail-item .di-desc{font-size:9.5px;color:var(--text-sec);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .detail-item {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 4px 8px;
+        border-radius: 5px;
+        font-family: "JetBrains Mono", monospace;
+        opacity: 0;
+        transform: translateY(-3px);
+      }
+      .detail-item .di-emoji {
+        font-size: 11px;
+        flex-shrink: 0;
+        width: 16px;
+        text-align: center;
+      }
+      .detail-item .di-tag {
+        font-family: "Plus Jakarta Sans", sans-serif;
+        font-size: 8px;
+        font-weight: 700;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        padding: 2px 6px;
+        border-radius: 3px;
+        flex-shrink: 0;
+      }
+      .detail-item .di-desc {
+        font-size: 9.5px;
+        color: var(--text-sec);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
 
-@keyframes pillIn{to{opacity:1;transform:translateY(0)}}
+      @keyframes pillIn {
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
 
-.typing-row{
-  padding:6px 10px;border-radius:6px;
-  background:rgba(255,255,255,0.02);
-  border:1px solid var(--border-subtle);
-  font-family:'JetBrains Mono',monospace;font-size:9.5px;
-  color:var(--text-sec);min-height:28px;
-  display:flex;align-items:center;gap:6px;
-  margin-bottom:8px;
-}
+      .typing-row {
+        padding: 6px 10px;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border-subtle);
+        font-family: "JetBrains Mono", monospace;
+        font-size: 9.5px;
+        color: var(--text-sec);
+        min-height: 28px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 8px;
+      }
 
-.spinner{
-  display:inline-block;width:12px;height:12px;border:1.5px solid var(--text-dim);
-  border-top-color:var(--amber);border-radius:50%;
-  animation:spin .8s linear infinite;flex-shrink:0;
-}
-.spinner.done-spin{border-color:var(--green);border-top-color:var(--green);animation:none}
-@keyframes spin{to{transform:rotate(360deg)}}
+      .spinner {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border: 1.5px solid var(--text-dim);
+        border-top-color: var(--amber);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        flex-shrink: 0;
+      }
+      .spinner.done-spin {
+        border-color: var(--green);
+        border-top-color: var(--green);
+        animation: none;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
 
-.typing-label{color:var(--text-dim);font-weight:600;flex-shrink:0}
-.typing-msg{color:var(--text-sec);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .typing-label {
+        color: var(--text-dim);
+        font-weight: 600;
+        flex-shrink: 0;
+      }
+      .typing-msg {
+        color: var(--text-sec);
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
 
-.cr{display:inline-block;width:4px;height:12px;background:var(--amber);margin-left:1px;animation:blink .6s step-end infinite;vertical-align:middle}
-@keyframes blink{50%{opacity:0}}
+      .cr {
+        display: inline-block;
+        width: 4px;
+        height: 12px;
+        background: var(--amber);
+        margin-left: 1px;
+        animation: blink 0.6s step-end infinite;
+        vertical-align: middle;
+      }
+      @keyframes blink {
+        50% {
+          opacity: 0;
+        }
+      }
 
-.response-block{
-  display:flex;align-items:center;gap:10px;
-  padding:10px 14px;border-radius:8px;
-  background:var(--surface-alt);border:1px solid var(--border-subtle);
-  position:relative;overflow:hidden;
-  min-height:56px;
-}
-.response-block.before-rb{border-color:var(--red-border)}
-.response-block.after-rb{border-color:var(--aft-border)}
+      .response-block {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        border-radius: 8px;
+        background: var(--surface-alt);
+        border: 1px solid var(--border-subtle);
+        position: relative;
+        overflow: hidden;
+        min-height: 56px;
+      }
+      .response-block.before-rb {
+        border-color: var(--red-border);
+      }
+      .response-block.after-rb {
+        border-color: var(--aft-border);
+      }
 
-.rb-timer-wrap{
-  display:flex;align-items:center;gap:8px;flex:1;
-}
-.rb-big-timer{
-  font-family:'JetBrains Mono',monospace;font-weight:900;
-  font-size:32px;line-height:1;
-  display:flex;align-items:baseline;gap:2px;
-}
-.rb-big-timer.before-bt{color:var(--red)}
-.rb-big-timer.after-bt{color:var(--aft)}
-.rb-big-timer .rb-unit{font-size:12px;font-weight:600;opacity:.5}
+      .rb-timer-wrap {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 1;
+      }
+      .rb-big-timer {
+        font-family: "JetBrains Mono", monospace;
+        font-weight: 900;
+        font-size: 32px;
+        line-height: 1;
+        display: flex;
+        align-items: baseline;
+        gap: 2px;
+      }
+      .rb-big-timer.before-bt {
+        color: var(--red);
+      }
+      .rb-big-timer.after-bt {
+        color: var(--aft);
+      }
+      .rb-big-timer .rb-unit {
+        font-size: 12px;
+        font-weight: 600;
+        opacity: 0.5;
+      }
 
-.rb-timer-icon{
-  width:28px;height:28px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-size:14px;flex-shrink:0;
-  border:2px solid var(--text-dim);
-  position:relative;
-}
-.rb-timer-icon.running{border-color:var(--amber);animation:timerPulse 1s ease-in-out infinite}
-.rb-timer-icon.done-timer{border-color:var(--green);background:var(--green-soft)}
-.rb-timer-icon.done-timer::after{content:'✓';font-size:14px;color:var(--green);font-weight:900}
-@keyframes timerPulse{0%,100%{box-shadow:0 0 0 0 rgba(251,191,36,0.2)}50%{box-shadow:0 0 8px 2px rgba(251,191,36,0.15)}}
+      .rb-timer-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        flex-shrink: 0;
+        border: 2px solid var(--text-dim);
+        position: relative;
+      }
+      .rb-timer-icon.running {
+        border-color: var(--amber);
+        animation: timerPulse 1s ease-in-out infinite;
+      }
+      .rb-timer-icon.done-timer {
+        border-color: var(--green);
+        background: var(--green-soft);
+      }
+      .rb-timer-icon.done-timer::after {
+        content: "✓";
+        font-size: 14px;
+        color: var(--green);
+        font-weight: 900;
+      }
+      @keyframes timerPulse {
+        0%,
+        100% {
+          box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.2);
+        }
+        50% {
+          box-shadow: 0 0 8px 2px rgba(251, 191, 36, 0.15);
+        }
+      }
 
-.rb-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
+      .rb-right {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
+      }
 
-.rb-done-check{
-  width:40px;height:40px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  background:var(--green-soft);border:2px solid var(--green-border);
-  opacity:0;transition:opacity .3s ease,transform .3s ease;
-  transform:scale(.5);
-}
-.rb-done-check.show{opacity:1;transform:scale(1)}
-.rb-done-check .big-check{font-size:20px;color:var(--green);font-weight:900}
+      .rb-done-check {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--green-soft);
+        border: 2px solid var(--green-border);
+        opacity: 0;
+        transition:
+          opacity 0.3s ease,
+          transform 0.3s ease;
+        transform: scale(0.5);
+      }
+      .rb-done-check.show {
+        opacity: 1;
+        transform: scale(1);
+      }
+      .rb-done-check .big-check {
+        font-size: 20px;
+        color: var(--green);
+        font-weight: 900;
+      }
 
-.rb-status{
-  font-size:9px;font-weight:700;letter-spacing:.5px;
-  padding:3px 10px;border-radius:4px;flex-shrink:0;
-}
-.rb-status.waiting{background:var(--red-soft);color:var(--red);border:1px solid var(--red-border)}
-.rb-status.done{background:var(--green-soft);color:var(--green);border:1px solid var(--green-border)}
+      .rb-status {
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        padding: 3px 10px;
+        border-radius: 4px;
+        flex-shrink: 0;
+      }
+      .rb-status.waiting {
+        background: var(--red-soft);
+        color: var(--red);
+        border: 1px solid var(--red-border);
+      }
+      .rb-status.done {
+        background: var(--green-soft);
+        color: var(--green);
+        border: 1px solid var(--green-border);
+      }
 
-.rb-done-glow{animation:doneGlow 1.5s ease-in-out 3}
-@keyframes doneGlow{
-  0%,100%{box-shadow:0 0 0 0 var(--green-border)}
-  50%{box-shadow:0 0 16px 4px rgba(52,211,153,0.15)}
-}
+      .rb-done-glow {
+        animation: doneGlow 1.5s ease-in-out 3;
+      }
+      @keyframes doneGlow {
+        0%,
+        100% {
+          box-shadow: 0 0 0 0 var(--green-border);
+        }
+        50% {
+          box-shadow: 0 0 16px 4px rgba(52, 211, 153, 0.15);
+        }
+      }
 
-.tagline{
-  text-align:center;margin-top:12px;
-  padding:8px 16px;border-radius:8px;
-  border:1px solid rgba(251,191,36,0.2);
-  background:rgba(251,191,36,0.06);
-  opacity:0;transition:opacity .3s ease;
-  min-height:34px;
-  display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:14px;
-}
-.tagline span{font-size:10px;font-weight:600;color:var(--text-dim);letter-spacing:.5px;white-space:nowrap}
-.tagline strong{color:var(--amber);font-weight:800}
+      .tagline {
+        text-align: center;
+        margin-top: 12px;
+        padding: 8px 16px;
+        border-radius: 8px;
+        border: 1px solid rgba(251, 191, 36, 0.2);
+        background: rgba(251, 191, 36, 0.06);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        min-height: 34px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 14px;
+      }
+      .tagline span {
+        font-size: 10px;
+        font-weight: 600;
+        color: var(--text-dim);
+        letter-spacing: 0.5px;
+        white-space: nowrap;
+      }
+      .tagline strong {
+        color: var(--amber);
+        font-weight: 800;
+      }
 
-@keyframes fadeIn{to{opacity:1}}
+      @keyframes fadeIn {
+        to {
+          opacity: 1;
+        }
+      }
 
-.dots{display:inline-flex;gap:3px;align-items:center}
-.dots span{display:inline-block;width:4px;height:4px;border-radius:50%;background:var(--text-dim);animation:pulse 1.2s ease-in-out infinite}
-.dots span:nth-child(2){animation-delay:.2s}
-.dots span:nth-child(3){animation-delay:.4s}
-@keyframes pulse{0%,80%,100%{opacity:.25;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+      .dots {
+        display: inline-flex;
+        gap: 3px;
+        align-items: center;
+      }
+      .dots span {
+        display: inline-block;
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: var(--text-dim);
+        animation: pulse 1.2s ease-in-out infinite;
+      }
+      .dots span:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      .dots span:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+      @keyframes pulse {
+        0%,
+        80%,
+        100% {
+          opacity: 0.25;
+          transform: scale(0.8);
+        }
+        40% {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
 
-@media(max-width:700px){
-  .split{grid-template-columns:1fr;gap:10px}
-  .vs-divider{display:none}
-  .header .main-title{font-size:22px}
-  .ba-label{font-size:32px}
-}
+      @media (max-width: 700px) {
+        .split {
+          grid-template-columns: 1fr;
+          gap: 10px;
+        }
+        .vs-divider {
+          display: none;
+        }
+        .header .main-title {
+          font-size: 22px;
+        }
+        .ba-label {
+          font-size: 32px;
+        }
+      }
 
-.lang-toggle{
-  position:fixed;bottom:16px;right:16px;z-index:999;
-  display:flex;align-items:center;gap:0;
-  border-radius:8px;border:1px solid var(--border);
-  background:var(--surface);overflow:hidden;
-  box-shadow:0 4px 12px rgba(0,0,0,.4);
-  font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;font-weight:600;
-}
-.lang-btn{
-  padding:7px 12px;cursor:pointer;
-  color:var(--text-dim);background:transparent;border:none;
-  transition:all .2s ease;
-}
-.lang-btn.active{background:var(--surface-alt);color:var(--amber)}
-.lang-btn:hover:not(.active){color:var(--text-sec)}
-</style>
-</head>
-<body>
+      .lang-toggle {
+        position: fixed;
+        bottom: 16px;
+        right: 16px;
+        z-index: 999;
+        display: flex;
+        align-items: center;
+        gap: 0;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        font-family: "Plus Jakarta Sans", sans-serif;
+        font-size: 11px;
+        font-weight: 600;
+      }
+      .lang-btn {
+        padding: 7px 12px;
+        cursor: pointer;
+        color: var(--text-dim);
+        background: transparent;
+        border: none;
+        transition: all 0.2s ease;
+      }
+      .lang-btn.active {
+        background: var(--surface-alt);
+        color: var(--amber);
+      }
+      .lang-btn:hover:not(.active) {
+        color: var(--text-sec);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container" id="captureArea">
+      <div class="brand-bar">
+        <img src="/icons/logo-rounded.png" alt="Huiyu Pi" />
+        <span class="bn">Huiyu <em>Pi</em></span>
+      </div>
 
-<div class="container" id="captureArea">
-
-  <div class="brand-bar">
-    <img src="/icons/logo-rounded.png" alt="Huiyu Pi">
-    <span class="bn">Huiyu <em>Pi</em></span>
-  </div>
-
-  <div class="header">
-    <div class="main-title" id="mainTitle">
-      ⚡<span class="zero">0</span>上下文 · <span class="fast">极速</span><span class="sub">AI秒回复</span>
-    </div>
-    <div class="header-url">www.huiyu.ai</div>
-  </div>
-
-  <div class="split">
-
-    <div class="col">
-      <div class="ba-label before-label">Before 🐢</div>
-      <div class="panel before-panel">
-        <div class="panel-head">
-          <div class="ai-avatar before-av">
-            <span class="pulse-ring"></span>
-            🤖
-          </div>
-          <span class="panel-brand before-brand">Codex &amp; Claude Code</span>
-          <span class="speed-badge slow" id="slowBadge">slow</span>
+      <div class="header">
+        <div class="main-title" id="mainTitle">
+          ⚡<span class="zero">0</span>上下文 · <span class="fast">极速</span
+          ><span class="sub">AI秒回复</span>
         </div>
-        <div class="panel-body">
+        <div class="header-url">www.huiyu.ai</div>
+      </div>
 
-          <div class="ctx-row before-ctx">
-            <span class="ctx-icon">📋</span>
-            <span class="ctx-label" id="beforeCtxLabel">Context</span>
-            <div class="ctx-bar-wrap">
-              <div class="ctx-track before-track">
-                <div class="ctx-fill before-fill" id="beforeFill" style="width:0%"></div>
+      <div class="split">
+        <div class="col">
+          <div class="ba-label before-label">Before 🐢</div>
+          <div class="panel before-panel">
+            <div class="panel-head">
+              <div class="ai-avatar before-av">
+                <span class="pulse-ring"></span>
+                🤖
+              </div>
+              <span class="panel-brand before-brand">Codex &amp; Claude Code</span>
+              <span class="speed-badge slow" id="slowBadge">slow</span>
+            </div>
+            <div class="panel-body">
+              <div class="ctx-row before-ctx">
+                <span class="ctx-icon">📋</span>
+                <span class="ctx-label" id="beforeCtxLabel">Context</span>
+                <div class="ctx-bar-wrap">
+                  <div class="ctx-track before-track">
+                    <div class="ctx-fill before-fill" id="beforeFill" style="width: 0%"></div>
+                  </div>
+                </div>
+                <span class="ctx-big before-big" id="beforeBig">0</span>
+              </div>
+
+              <div class="detail-list" id="detailList"></div>
+
+              <div class="typing-row" id="typingRow">
+                <span class="spinner" id="beforeSpinner"></span>
+                <span class="typing-label">AI thinking...</span>
+              </div>
+
+              <div class="response-block before-rb" id="beforeRespBlock" style="margin-top: auto">
+                <div class="rb-timer-wrap">
+                  <div class="rb-timer-icon" id="beforeTimerIcon"></div>
+                  <div class="rb-big-timer before-bt">
+                    <span id="beforeTimerNum">0.0</span><span class="rb-unit">s</span
+                    ><span
+                      class="timer-icon-reveal"
+                      id="beforeTurtle"
+                      style="
+                        margin-left: 6px;
+                        font-size: 18px;
+                        opacity: 0;
+                        transition: opacity 0.4s ease;
+                      "
+                      >🐢</span
+                    >
+                  </div>
+                </div>
+                <div class="rb-right">
+                  <span class="rb-status waiting" id="beforeStatus">waiting</span>
+                </div>
               </div>
             </div>
-            <span class="ctx-big before-big" id="beforeBig">0</span>
           </div>
+        </div>
 
-          <div class="detail-list" id="detailList"></div>
+        <div class="vs-divider">
+          <span class="vs-text">VS</span>
+        </div>
 
-          <div class="typing-row" id="typingRow">
-            <span class="spinner" id="beforeSpinner"></span>
-            <span class="typing-label">AI thinking...</span>
-          </div>
+        <div class="col">
+          <div class="ba-label after-label">After ⚡️</div>
+          <div class="panel after-panel">
+            <div class="panel-head">
+              <div class="ai-avatar after-av">
+                <span class="pulse-ring"></span>
+                🤖
+              </div>
+              <span class="panel-brand after-brand">Huiyu Pi</span>
+              <span class="speed-badge fast" id="fastBadge">fast</span>
+            </div>
+            <div class="panel-body">
+              <div class="ctx-row after-ctx">
+                <span class="ctx-icon">📋</span>
+                <span class="ctx-label" id="afterCtxLabel">Context</span>
+                <div class="ctx-bar-wrap">
+                  <div class="ctx-track after-track">
+                    <div class="ctx-fill after-fill" id="afterFill" style="width: 0%"></div>
+                  </div>
+                </div>
+                <span class="ctx-big after-big" id="afterBig"
+                  ><span
+                    style="font-size: 20px; opacity: 0.55; font-weight: 700; vertical-align: middle"
+                    >≈</span
+                  >0</span
+                >
+              </div>
 
-          <div class="response-block before-rb" id="beforeRespBlock" style="margin-top:auto">
-            <div class="rb-timer-wrap">
-              <div class="rb-timer-icon" id="beforeTimerIcon"></div>
-              <div class="rb-big-timer before-bt">
-                <span id="beforeTimerNum">0.0</span><span class="rb-unit">s</span><span class="timer-icon-reveal" id="beforeTurtle" style="margin-left:6px;font-size:18px;opacity:0;transition:opacity .4s ease">🐢</span>
+              <div class="detail-list" id="afterDetailList"></div>
+
+              <div class="typing-row" id="afterTypingRow">
+                <span class="spinner done-spin" id="afterSpinner"></span>
+                <span class="typing-label" id="afterTypingLabel">AI thinking...</span>
+              </div>
+
+              <div class="response-block after-rb" id="afterRespBlock" style="margin-top: auto">
+                <div class="rb-timer-wrap">
+                  <div class="rb-timer-icon done-timer" id="afterTimerIcon"></div>
+                  <div class="rb-big-timer after-bt">
+                    <span id="afterTimerNum">0.0</span><span class="rb-unit">s</span
+                    ><span
+                      class="timer-icon-reveal"
+                      id="afterBolt"
+                      style="
+                        margin-left: 6px;
+                        font-size: 18px;
+                        opacity: 0;
+                        transition: opacity 0.4s ease;
+                      "
+                      >⚡</span
+                    >
+                  </div>
+                </div>
+                <div class="rb-right">
+                  <div class="rb-done-check" id="afterDoneCheck">
+                    <span class="big-check">✓</span>
+                  </div>
+                  <span class="rb-status done" id="afterStatus">done ✓</span>
+                </div>
               </div>
             </div>
-            <div class="rb-right">
-              <span class="rb-status waiting" id="beforeStatus">waiting</span>
-            </div>
           </div>
-
         </div>
       </div>
     </div>
 
-    <div class="vs-divider">
-      <span class="vs-text">VS</span>
+    <script>
+      (function () {
+        var CYCLE = 9000;
+
+        var beforeFill = document.getElementById("beforeFill");
+        var beforeBig = document.getElementById("beforeBig");
+        var afterFill = document.getElementById("afterFill");
+        var afterBig = document.getElementById("afterBig");
+        var typingRow = document.getElementById("typingRow");
+        var afterTypingRow = document.getElementById("afterTypingRow");
+        var beforeTimerNum = document.getElementById("beforeTimerNum");
+        var afterTimerNum = document.getElementById("afterTimerNum");
+        var beforeTimerIcon = document.getElementById("beforeTimerIcon");
+        var afterTimerIcon = document.getElementById("afterTimerIcon");
+        var beforeStatus = document.getElementById("beforeStatus");
+        var afterStatus = document.getElementById("afterStatus");
+        var beforeSpinner = document.getElementById("beforeSpinner");
+        var afterSpinner = document.getElementById("afterSpinner");
+        var afterTypingLabel = document.getElementById("afterTypingLabel");
+        var afterDoneCheck = document.getElementById("afterDoneCheck");
+        var beforeRespBlock = document.getElementById("beforeRespBlock");
+        var afterRespBlock = document.getElementById("afterRespBlock");
+        var beforeTurtle = document.getElementById("beforeTurtle");
+        var afterBolt = document.getElementById("afterBolt");
+
+        var ITEMS = [
+          {
+            emoji: "📄",
+            tag: "TOOL DEFS",
+            color: "#ef4444",
+            desc: "10+ built-in tools \u2013 can't remove them",
+          },
+          {
+            emoji: "📐",
+            tag: "STYLE",
+            color: "#fbbf24",
+            desc: "Code style rules \u00b7 2-space \u00b7 JSDoc \u00b7 naming",
+          },
+          {
+            emoji: "🚫",
+            tag: "RULES",
+            color: "#60a5fa",
+            desc: "Don't delete \u00b7 ask before install \u00b7 commit r\u2026",
+          },
+          {
+            emoji: "🔒",
+            tag: "SECURITY",
+            color: "#34d399",
+            desc: "Secrets \u00b7 env vars \u00b7 input validation rules",
+          },
+          {
+            emoji: "📋",
+            tag: "PLAN",
+            color: "#a78bfa",
+            desc: "Always plan first \u00b7 estimate \u00b7 propose arch",
+          },
+          {
+            emoji: "🖊",
+            tag: "TEST",
+            color: "#f472b6",
+            desc: "80% coverage \u00b7 test before complete",
+          },
+          {
+            emoji: "⚙️",
+            tag: "CONFIG",
+            color: "#a3a3a3",
+            desc: "ESLint \u00b7 Prettier \u00b7 TypeScript strict \u00b7 CI",
+          },
+        ];
+
+        var TOOLS = [
+          { emoji: "📖", tag: "READ", color: "#8999AD", desc: "Read any file" },
+          { emoji: "✏️", tag: "EDIT", color: "#8999AD", desc: "Edit file content" },
+          { emoji: "💾", tag: "WRITE", color: "#8999AD", desc: "Write file content" },
+          { emoji: "⌨️", tag: "BASH", color: "#8999AD", desc: "Run shell commands" },
+        ];
+
+        function renderItems() {
+          var h = "";
+          ITEMS.forEach(function (p, i) {
+            var delay = 80 + i * 70;
+            h +=
+              '<div class="detail-item" style="animation:pillIn .3s cubic-bezier(.4,0,.2,1) ' +
+              delay +
+              "ms forwards;background:" +
+              p.color +
+              "08;border-left:2px solid " +
+              p.color +
+              '44;">';
+            h += '<span class="di-emoji">' + p.emoji + "</span>";
+            h +=
+              '<span class="di-tag" style="background:' +
+              p.color +
+              "18;color:" +
+              p.color +
+              ';">' +
+              p.tag +
+              "</span>";
+            h += '<span class="di-desc">' + p.desc + "</span>";
+            h += "</div>";
+          });
+          document.getElementById("detailList").innerHTML = h;
+        }
+        renderItems();
+
+        function renderAfterItems() {
+          var h = "";
+          TOOLS.forEach(function (t, i) {
+            var delay = 100 + i * 80;
+            h +=
+              '<div class="detail-item" style="animation:pillIn .3s cubic-bezier(.4,0,.2,1) ' +
+              delay +
+              "ms forwards;background:" +
+              t.color +
+              "08;border-left:2px solid " +
+              t.color +
+              '44;">';
+            h += '<span class="di-emoji">' + t.emoji + "</span>";
+            h +=
+              '<span class="di-tag" style="background:' +
+              t.color +
+              "18;color:" +
+              t.color +
+              ';">' +
+              t.tag +
+              "</span>";
+            h += '<span class="di-desc">' + t.desc + "</span>";
+            h += "</div>";
+          });
+          h +=
+            '<div class="detail-item" style="animation:pillIn .3s cubic-bezier(.4,0,.2,1) 500ms forwards;background:rgba(137,153,173,0.04);border-left:2px solid rgba(137,153,173,0.3);">';
+          h += '<span class="di-emoji">🧹</span>';
+          h +=
+            '<span class="di-desc" style="color:var(--text-dim);font-size:9px;">No preset rules \u00b7 You define the harness</span>';
+          h += "</div>";
+          document.getElementById("afterDetailList").innerHTML = h;
+        }
+        renderAfterItems();
+
+        var TYPING_TEXTS = [
+          "Context too large, need to parse all rules\u2026",
+          "Reading 27k tokens of system prompts\u2026",
+          "Analyzing 27k system prompts\u2026",
+          "Still processing 27k tokens\u2026",
+        ];
+
+        window._animTick = function (t) {
+          var m = t % CYCLE;
+
+          if (m < 10) {
+            beforeTimerIcon.className = "rb-timer-icon";
+            afterTimerIcon.className = "rb-timer-icon done-timer";
+            beforeStatus.className = "rb-status waiting";
+            beforeStatus.textContent = "waiting";
+            afterStatus.className = "rb-status done";
+            afterStatus.textContent = "done \u2713";
+            afterDoneCheck.className = "rb-done-check";
+            beforeSpinner.className = "spinner";
+            afterSpinner.className = "spinner done-spin";
+            afterTypingLabel.textContent = "AI thinking...";
+            beforeRespBlock.className = "response-block before-rb";
+            afterRespBlock.className = "response-block after-rb";
+            beforeTurtle.style.opacity = "0";
+            afterBolt.style.opacity = "0";
+          }
+
+          if (m < 800) {
+            var p = m / 800;
+            beforeFill.style.width = 20 + p * 60 + "%";
+            beforeBig.textContent = p > 0.05 ? Math.round(((20 + p * 60) / 100) * 27) + "k" : "0";
+            afterFill.style.width = "0%";
+            afterBig.innerHTML =
+              '<span style="font-size:20px;opacity:.55;font-weight:700;vertical-align:middle">\u2248</span>0';
+          } else if (m < 2800) {
+            beforeFill.style.width = "85%";
+            beforeBig.textContent = "27k";
+            afterFill.style.width = "0%";
+            afterBig.innerHTML =
+              '<span style="font-size:20px;opacity:.55;font-weight:700;vertical-align:middle">\u2248</span>0';
+            if (m > 2000) {
+              beforeFill.style.boxShadow = "0 0 10px rgba(239,68,68,0.2)";
+            } else {
+              beforeFill.style.boxShadow = "none";
+            }
+          } else {
+            beforeFill.style.width = "80%";
+            beforeBig.textContent = "27k";
+            afterFill.style.width = "0%";
+            afterBig.innerHTML =
+              '<span style="font-size:20px;opacity:.55;font-weight:700;vertical-align:middle">\u2248</span>0';
+            beforeFill.style.boxShadow = "none";
+          }
+
+          if (m < 800) {
+            afterTimerNum.textContent = Math.min(m / 1000, 0.3).toFixed(1);
+            beforeTimerNum.textContent = Math.min(m / 1000, 3.4).toFixed(1);
+            beforeTimerIcon.className = "rb-timer-icon running";
+            afterTimerIcon.className = "rb-timer-icon running";
+            beforeStatus.className = "rb-status waiting";
+            beforeStatus.textContent = "waiting";
+            afterStatus.className = "rb-status waiting";
+            afterStatus.textContent = "waiting";
+            afterDoneCheck.className = "rb-done-check";
+            afterSpinner.className = "spinner";
+            afterTypingLabel.textContent = "AI thinking...";
+          } else if (m < 1200) {
+            afterTimerNum.textContent = "0.3";
+            beforeTimerNum.textContent = Math.min(m / 1000, 3.4).toFixed(1);
+            beforeTimerIcon.className = "rb-timer-icon running";
+            afterTimerIcon.className = "rb-timer-icon done-timer";
+            afterStatus.className = "rb-status done";
+            afterStatus.textContent = "done \u2713";
+            afterDoneCheck.className = "rb-done-check show";
+            afterSpinner.className = "spinner done-spin";
+            afterTypingLabel.textContent = "Done";
+            afterTypingLabel.style.color = "var(--green)";
+            afterBolt.style.opacity = "1";
+            afterRespBlock.className = "response-block after-rb rb-done-glow";
+          } else if (m < 3400) {
+            afterTimerNum.textContent = "0.3";
+            beforeTimerNum.textContent = Math.min(m / 1000, 3.4).toFixed(1);
+            beforeTimerIcon.className = "rb-timer-icon running";
+          } else if (m < 5800) {
+            afterTimerNum.textContent = "0.3";
+            beforeTimerNum.textContent = "3.4";
+            beforeTimerIcon.className = "rb-timer-icon running";
+          } else if (m < 6200) {
+            afterTimerNum.textContent = "0.3";
+            beforeTimerNum.textContent = "3.4";
+            beforeTimerIcon.className = "rb-timer-icon done-timer";
+            beforeStatus.className = "rb-status done";
+            beforeStatus.textContent = "done \u2713";
+            beforeSpinner.className = "spinner done-spin";
+            typingRow.querySelector(".typing-label").textContent = "Done";
+            typingRow.querySelector(".typing-label").style.color = "var(--green)";
+            beforeTurtle.style.opacity = "1";
+          } else {
+            afterTimerNum.textContent = "0.3";
+            beforeTimerNum.textContent = "3.4";
+          }
+
+          if (m < 1200) {
+            typingRow.innerHTML =
+              '<span class="spinner running" id="beforeSpinner"></span><span class="typing-label">AI thinking...</span>';
+            afterTypingRow.innerHTML =
+              '<span class="spinner done-spin" id="afterSpinner"></span><span class="typing-label" id="afterTypingLabel" style="color:var(--green)">Done</span>';
+          } else if (m < 2800) {
+            typingRow.innerHTML =
+              '<span class="spinner" id="beforeSpinner"></span><span class="typing-label">AI thinking...</span><span class="typing-msg">Reading 27k tokens of system prompts\u2026</span>';
+            afterTypingRow.innerHTML =
+              '<span class="spinner done-spin" id="afterSpinner"></span><span class="typing-label" id="afterTypingLabel" style="color:var(--green)">Done</span>';
+          } else if (m < 3800) {
+            typingRow.innerHTML =
+              '<span class="spinner" id="beforeSpinner"></span><span class="typing-label">AI thinking...</span><span class="typing-msg">Context too large\u2026</span>';
+            afterTypingRow.innerHTML =
+              '<span class="spinner done-spin" id="afterSpinner"></span><span class="typing-label" id="afterTypingLabel" style="color:var(--green)">Done</span>';
+          } else if (m < 5800) {
+            var p = (m - 3800) / 2000;
+            var ti = Math.min(Math.floor(p * TYPING_TEXTS.length), TYPING_TEXTS.length - 1);
+            typingRow.innerHTML =
+              '<span class="spinner" id="beforeSpinner"></span><span class="typing-label">AI thinking...</span><span class="typing-msg">' +
+              TYPING_TEXTS[ti] +
+              "</span>";
+            afterTypingRow.innerHTML =
+              '<span class="spinner done-spin" id="afterSpinner"></span><span class="typing-label" id="afterTypingLabel" style="color:var(--green)">Done</span>';
+          } else {
+            typingRow.innerHTML =
+              '<span class="spinner done-spin" id="beforeSpinner"></span><span class="typing-label" style="color:var(--green)">Done</span><span class="typing-msg">File updated. \u2728</span>';
+            afterTypingRow.innerHTML =
+              '<span class="spinner done-spin" id="afterSpinner"></span><span class="typing-label" id="afterTypingLabel" style="color:var(--green)">Done</span>';
+          }
+        };
+
+        window._animTick(0);
+        var start = null;
+        function loop(ts) {
+          if (start === null) start = ts;
+          window._animTick((ts - start) % CYCLE);
+          requestAnimationFrame(loop);
+        }
+        requestAnimationFrame(loop);
+      })();
+    </script>
+
+    <script>
+      (function () {
+        var lang = localStorage.getItem("pi-forge-compare-lang") || "cn";
+        var TR = {
+          cn: {
+            title:
+              '\u26a1<span class="zero">0</span>\u4e0a\u4e0b\u6587 \u00b7 <span class="fast">\u6781\u901f</span><span class="sub">AI\u79d2\u56de\u590d</span>',
+            ctx: "\u4e0a\u4e0b\u6587",
+            slow: "\u6162",
+            fast: "\u5feb",
+            waiting: "\u7b49\u5f85\u4e2d",
+            done: "\u5b8c\u6210 \u2713",
+            thinking: "AI thinking...",
+            doneMsg: "Done",
+            fileDone: "Done. File updated. \u2728",
+          },
+          en: {
+            title:
+              '\u26a1<span class="zero">0</span> Context \u00b7 <span class="fast">Fast</span><span class="sub">AI Instant Reply</span>',
+            ctx: "Context",
+            slow: "slow",
+            fast: "fast",
+            waiting: "waiting",
+            done: "done \u2713",
+            thinking: "AI thinking...",
+            doneMsg: "Done",
+            fileDone: "Done. File updated. \u2728",
+          },
+        };
+
+        var mainTitle = document.getElementById("mainTitle");
+        var beforeCtxLabel = document.getElementById("beforeCtxLabel");
+        var afterCtxLabel = document.getElementById("afterCtxLabel");
+        var slowBadge = document.getElementById("slowBadge");
+        var fastBadge = document.getElementById("fastBadge");
+
+        window.setLang = function (l) {
+          lang = l;
+          localStorage.setItem("pi-forge-compare-lang", l);
+          var t = TR[l];
+          mainTitle.innerHTML = t.title;
+          beforeCtxLabel.textContent = t.ctx;
+          afterCtxLabel.textContent = t.ctx;
+          slowBadge.textContent = t.slow;
+          fastBadge.textContent = t.fast;
+          document.getElementById("langCn").className = "lang-btn" + (l === "cn" ? " active" : "");
+          document.getElementById("langEn").className = "lang-btn" + (l === "en" ? " active" : "");
+          window._currentLang = t;
+        };
+
+        window._currentLang = TR[lang];
+        window.setLang(lang);
+
+        var origTick = window._animTick;
+        window._animTick = function (m) {
+          origTick(m);
+          var t = window._currentLang;
+          var cycle = 9000;
+          var ms = m % cycle;
+
+          var bs = document.getElementById("beforeStatus");
+          var as = document.getElementById("afterStatus");
+          var bsl = document.getElementById("beforeSpinner");
+          var tl = document.getElementById("typingRow");
+          if (tl) tl = tl.querySelector(".typing-label");
+          var atl = document.getElementById("afterTypingLabel");
+
+          if (bs && bs.classList.contains("waiting")) bs.textContent = t.waiting;
+          if (bs && bs.classList.contains("done")) bs.textContent = t.done;
+          if (as && as.classList.contains("waiting")) as.textContent = t.waiting;
+          if (as && as.classList.contains("done")) as.textContent = t.done;
+
+          if (tl) {
+            if (bsl && bsl.classList.contains("done-spin")) {
+              tl.textContent = t.doneMsg;
+            } else {
+              tl.textContent = t.thinking;
+            }
+          }
+          if (atl) {
+            if (
+              atl.style.color === "var(--green)" ||
+              atl.textContent === TR.cn.doneMsg ||
+              atl.textContent === TR.en.doneMsg
+            ) {
+              atl.textContent = t.doneMsg;
+            } else {
+              atl.textContent = t.thinking;
+            }
+          }
+        };
+      })();
+    </script>
+
+    <style>
+      .export-btn {
+        position: fixed;
+        bottom: 52px;
+        right: 16px;
+        z-index: 999;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 14px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--text-pri);
+        font-family: "Plus Jakarta Sans", sans-serif;
+        font-size: 11px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      }
+      .export-btn:hover {
+        background: #1f1f1f;
+        border-color: var(--amber);
+        color: var(--amber);
+      }
+      .export-btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      .export-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(8px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .export-overlay.active {
+        display: flex;
+      }
+      .export-overlay .title {
+        font-size: 16px;
+        font-weight: 800;
+        color: var(--text-pri);
+      }
+      .export-overlay .progress-track {
+        width: 280px;
+        height: 5px;
+        border-radius: 3px;
+        background: var(--border);
+        overflow: hidden;
+      }
+      .export-overlay .progress-fill {
+        height: 100%;
+        border-radius: 3px;
+        background: var(--amber);
+        transition: width 0.2s ease;
+        width: 0%;
+      }
+      .export-overlay .status {
+        font-size: 10px;
+        font-family: "JetBrains Mono", monospace;
+        color: var(--text-dim);
+      }
+      .export-overlay .cancel-btn {
+        padding: 6px 14px;
+        border-radius: 5px;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--text-sec);
+        cursor: pointer;
+        font-family: "Plus Jakarta Sans", sans-serif;
+        font-size: 10px;
+      }
+      .export-overlay .cancel-btn:hover {
+        border-color: var(--red);
+        color: var(--red);
+      }
+    </style>
+
+    <div class="lang-toggle">
+      <button class="lang-btn active" id="langCn" onclick="window.setLang('cn')">中文</button>
+      <button class="lang-btn" id="langEn" onclick="window.setLang('en')">EN</button>
     </div>
 
-    <div class="col">
-      <div class="ba-label after-label">After ⚡️</div>
-      <div class="panel after-panel">
-        <div class="panel-head">
-          <div class="ai-avatar after-av">
-            <span class="pulse-ring"></span>
-            🤖
-          </div>
-          <span class="panel-brand after-brand">Huiyu Pi</span>
-          <span class="speed-badge fast" id="fastBadge">fast</span>
-        </div>
-        <div class="panel-body">
-
-          <div class="ctx-row after-ctx">
-            <span class="ctx-icon">📋</span>
-            <span class="ctx-label" id="afterCtxLabel">Context</span>
-            <div class="ctx-bar-wrap">
-              <div class="ctx-track after-track">
-                <div class="ctx-fill after-fill" id="afterFill" style="width:0%"></div>
-              </div>
-            </div>
-            <span class="ctx-big after-big" id="afterBig"><span style="font-size:20px;opacity:.55;font-weight:700;vertical-align:middle">≈</span>0</span>
-          </div>
-
-          <div class="detail-list" id="afterDetailList"></div>
-
-          <div class="typing-row" id="afterTypingRow">
-            <span class="spinner done-spin" id="afterSpinner"></span>
-            <span class="typing-label" id="afterTypingLabel">AI thinking...</span>
-          </div>
-
-          <div class="response-block after-rb" id="afterRespBlock" style="margin-top:auto">
-            <div class="rb-timer-wrap">
-              <div class="rb-timer-icon done-timer" id="afterTimerIcon"></div>
-              <div class="rb-big-timer after-bt">
-                <span id="afterTimerNum">0.0</span><span class="rb-unit">s</span><span class="timer-icon-reveal" id="afterBolt" style="margin-left:6px;font-size:18px;opacity:0;transition:opacity .4s ease">⚡</span>
-              </div>
-            </div>
-            <div class="rb-right">
-              <div class="rb-done-check" id="afterDoneCheck"><span class="big-check">✓</span></div>
-              <span class="rb-status done" id="afterStatus">done ✓</span>
-            </div>
-          </div>
-
-        </div>
-      </div>
+    <button class="export-btn" id="exportBtn" onclick="window.startExport()">🎞️ Export GIF</button>
+    <div class="export-overlay" id="exportOverlay">
+      <div class="title">🎞️ Exporting GIF</div>
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="status" id="exportStatus">Preparing…</div>
+      <button class="cancel-btn" onclick="window.cancelExport()">Cancel</button>
     </div>
 
-  </div>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script>
+      (function () {
+        function sleep(ms) {
+          return new Promise(function (r) {
+            setTimeout(r, ms);
+          });
+        }
+        function updateProgress(pct, msg) {
+          document.getElementById("progressFill").style.width = pct * 100 + "%";
+          document.getElementById("exportStatus").textContent = msg || Math.round(pct * 100) + "%";
+        }
+        function encodeGIF(gif) {
+          return new Promise(function (resolve, reject) {
+            gif.on("finished", resolve);
+            gif.on("error", reject);
+            gif.render();
+          });
+        }
 
-
-
-</div>
-
-<script>
-(function(){
-  var CYCLE=9000;
-
-  var beforeFill=document.getElementById('beforeFill');
-  var beforeBig=document.getElementById('beforeBig');
-  var afterFill=document.getElementById('afterFill');
-  var afterBig=document.getElementById('afterBig');
-  var typingRow=document.getElementById('typingRow');
-  var afterTypingRow=document.getElementById('afterTypingRow');
-  var beforeTimerNum=document.getElementById('beforeTimerNum');
-  var afterTimerNum=document.getElementById('afterTimerNum');
-  var beforeTimerIcon=document.getElementById('beforeTimerIcon');
-  var afterTimerIcon=document.getElementById('afterTimerIcon');
-  var beforeStatus=document.getElementById('beforeStatus');
-  var afterStatus=document.getElementById('afterStatus');
-  var beforeSpinner=document.getElementById('beforeSpinner');
-  var afterSpinner=document.getElementById('afterSpinner');
-  var afterTypingLabel=document.getElementById('afterTypingLabel');
-  var afterDoneCheck=document.getElementById('afterDoneCheck');
-  var beforeRespBlock=document.getElementById('beforeRespBlock');
-  var afterRespBlock=document.getElementById('afterRespBlock');
-  var beforeTurtle=document.getElementById('beforeTurtle');
-  var afterBolt=document.getElementById('afterBolt');
-
-  var ITEMS=[
-    {emoji:'📄',tag:'TOOL DEFS',color:'#ef4444',desc:'10+ built-in tools \u2013 can\'t remove them'},
-    {emoji:'📐',tag:'STYLE',color:'#fbbf24',desc:'Code style rules \u00b7 2-space \u00b7 JSDoc \u00b7 naming'},
-    {emoji:'🚫',tag:'RULES',color:'#60a5fa',desc:'Don\'t delete \u00b7 ask before install \u00b7 commit r\u2026'},
-    {emoji:'🔒',tag:'SECURITY',color:'#34d399',desc:'Secrets \u00b7 env vars \u00b7 input validation rules'},
-    {emoji:'📋',tag:'PLAN',color:'#a78bfa',desc:'Always plan first \u00b7 estimate \u00b7 propose arch'},
-    {emoji:'🖊',tag:'TEST',color:'#f472b6',desc:'80% coverage \u00b7 test before complete'},
-    {emoji:'⚙️',tag:'CONFIG',color:'#a3a3a3',desc:'ESLint \u00b7 Prettier \u00b7 TypeScript strict \u00b7 CI'},
-  ];
-
-  var TOOLS=[
-    {emoji:'📖',tag:'READ',color:'#8999AD',desc:'Read any file'},
-    {emoji:'✏️',tag:'EDIT',color:'#8999AD',desc:'Edit file content'},
-    {emoji:'💾',tag:'WRITE',color:'#8999AD',desc:'Write file content'},
-    {emoji:'⌨️',tag:'BASH',color:'#8999AD',desc:'Run shell commands'},
-  ];
-
-  function renderItems(){
-    var h='';
-    ITEMS.forEach(function(p,i){
-      var delay=80+i*70;
-      h+='<div class="detail-item" style="animation:pillIn .3s cubic-bezier(.4,0,.2,1) '+delay+'ms forwards;background:'+p.color+'08;border-left:2px solid '+p.color+'44;">';
-      h+='<span class="di-emoji">'+p.emoji+'</span>';
-      h+='<span class="di-tag" style="background:'+p.color+'18;color:'+p.color+';">'+p.tag+'</span>';
-      h+='<span class="di-desc">'+p.desc+'</span>';
-      h+='</div>';
-    });
-    document.getElementById('detailList').innerHTML=h;
-  }
-  renderItems();
-
-  function renderAfterItems(){
-    var h='';
-    TOOLS.forEach(function(t,i){
-      var delay=100+i*80;
-      h+='<div class="detail-item" style="animation:pillIn .3s cubic-bezier(.4,0,.2,1) '+delay+'ms forwards;background:'+t.color+'08;border-left:2px solid '+t.color+'44;">';
-      h+='<span class="di-emoji">'+t.emoji+'</span>';
-      h+='<span class="di-tag" style="background:'+t.color+'18;color:'+t.color+';">'+t.tag+'</span>';
-      h+='<span class="di-desc">'+t.desc+'</span>';
-      h+='</div>';
-    });
-    h+='<div class="detail-item" style="animation:pillIn .3s cubic-bezier(.4,0,.2,1) 500ms forwards;background:rgba(137,153,173,0.04);border-left:2px solid rgba(137,153,173,0.3);">';
-    h+='<span class="di-emoji">🧹</span>';
-    h+='<span class="di-desc" style="color:var(--text-dim);font-size:9px;">No preset rules \u00b7 You define the harness</span>';
-    h+='</div>';
-    document.getElementById('afterDetailList').innerHTML=h;
-  }
-  renderAfterItems();
-
-  var TYPING_TEXTS=[
-    'Context too large, need to parse all rules\u2026',
-    'Reading 27k tokens of system prompts\u2026',
-    'Analyzing 27k system prompts\u2026',
-    'Still processing 27k tokens\u2026',
-  ];
-
-  window._animTick=function(t){
-    var m=t%CYCLE;
-
-    if(m<10){
-      beforeTimerIcon.className='rb-timer-icon';
-      afterTimerIcon.className='rb-timer-icon done-timer';
-      beforeStatus.className='rb-status waiting';
-      beforeStatus.textContent='waiting';
-      afterStatus.className='rb-status done';
-      afterStatus.textContent='done \u2713';
-      afterDoneCheck.className='rb-done-check';
-      beforeSpinner.className='spinner';
-      afterSpinner.className='spinner done-spin';
-      afterTypingLabel.textContent='AI thinking...';
-      beforeRespBlock.className='response-block before-rb';
-      afterRespBlock.className='response-block after-rb';
-      beforeTurtle.style.opacity='0';
-      afterBolt.style.opacity='0';
-    }
-
-    if(m<800){
-      var p=m/800;
-      beforeFill.style.width=(20+p*60)+'%';
-      beforeBig.textContent=p>.05?Math.round((20+p*60)/100*27)+'k':'0';
-      afterFill.style.width='0%';
-      afterBig.innerHTML='<span style="font-size:20px;opacity:.55;font-weight:700;vertical-align:middle">\u2248</span>0';
-    }else if(m<2800){
-      beforeFill.style.width='85%';
-      beforeBig.textContent='27k';
-      afterFill.style.width='0%';
-      afterBig.innerHTML='<span style="font-size:20px;opacity:.55;font-weight:700;vertical-align:middle">\u2248</span>0';
-      if(m>2000){
-        beforeFill.style.boxShadow='0 0 10px rgba(239,68,68,0.2)';
-      }else{
-        beforeFill.style.boxShadow='none';
-      }
-    }else{
-      beforeFill.style.width='80%';
-      beforeBig.textContent='27k';
-      afterFill.style.width='0%';
-      afterBig.innerHTML='<span style="font-size:20px;opacity:.55;font-weight:700;vertical-align:middle">\u2248</span>0';
-      beforeFill.style.boxShadow='none';
-    }
-
-    if(m<800){
-      afterTimerNum.textContent=Math.min(m/1000,0.3).toFixed(1);
-      beforeTimerNum.textContent=Math.min(m/1000,3.4).toFixed(1);
-      beforeTimerIcon.className='rb-timer-icon running';
-      afterTimerIcon.className='rb-timer-icon running';
-      beforeStatus.className='rb-status waiting';
-      beforeStatus.textContent='waiting';
-      afterStatus.className='rb-status waiting';
-      afterStatus.textContent='waiting';
-      afterDoneCheck.className='rb-done-check';
-      afterSpinner.className='spinner';
-      afterTypingLabel.textContent='AI thinking...';
-    }else if(m<1200){
-      afterTimerNum.textContent='0.3';
-      beforeTimerNum.textContent=Math.min(m/1000,3.4).toFixed(1);
-      beforeTimerIcon.className='rb-timer-icon running';
-      afterTimerIcon.className='rb-timer-icon done-timer';
-      afterStatus.className='rb-status done';
-      afterStatus.textContent='done \u2713';
-      afterDoneCheck.className='rb-done-check show';
-      afterSpinner.className='spinner done-spin';
-      afterTypingLabel.textContent='Done';
-      afterTypingLabel.style.color='var(--green)';
-      afterBolt.style.opacity='1';
-      afterRespBlock.className='response-block after-rb rb-done-glow';
-    }else if(m<3400){
-      afterTimerNum.textContent='0.3';
-      beforeTimerNum.textContent=Math.min(m/1000,3.4).toFixed(1);
-      beforeTimerIcon.className='rb-timer-icon running';
-    }else if(m<5800){
-      afterTimerNum.textContent='0.3';
-      beforeTimerNum.textContent='3.4';
-      beforeTimerIcon.className='rb-timer-icon running';
-    }else if(m<6200){
-      afterTimerNum.textContent='0.3';
-      beforeTimerNum.textContent='3.4';
-      beforeTimerIcon.className='rb-timer-icon done-timer';
-      beforeStatus.className='rb-status done';
-      beforeStatus.textContent='done \u2713';
-      beforeSpinner.className='spinner done-spin';
-      typingRow.querySelector('.typing-label').textContent='Done';
-      typingRow.querySelector('.typing-label').style.color='var(--green)';
-      beforeTurtle.style.opacity='1';
-    }else{
-      afterTimerNum.textContent='0.3';
-      beforeTimerNum.textContent='3.4';
-    }
-
-    if(m<1200){
-      typingRow.innerHTML='<span class="spinner running" id="beforeSpinner"></span><span class="typing-label">AI thinking...</span>';
-      afterTypingRow.innerHTML='<span class="spinner done-spin" id="afterSpinner"></span><span class="typing-label" id="afterTypingLabel" style="color:var(--green)">Done</span>';
-    }else if(m<2800){
-      typingRow.innerHTML='<span class="spinner" id="beforeSpinner"></span><span class="typing-label">AI thinking...</span><span class="typing-msg">Reading 27k tokens of system prompts\u2026</span>';
-      afterTypingRow.innerHTML='<span class="spinner done-spin" id="afterSpinner"></span><span class="typing-label" id="afterTypingLabel" style="color:var(--green)">Done</span>';
-    }else if(m<3800){
-      typingRow.innerHTML='<span class="spinner" id="beforeSpinner"></span><span class="typing-label">AI thinking...</span><span class="typing-msg">Context too large\u2026</span>';
-      afterTypingRow.innerHTML='<span class="spinner done-spin" id="afterSpinner"></span><span class="typing-label" id="afterTypingLabel" style="color:var(--green)">Done</span>';
-    }else if(m<5800){
-      var p=(m-3800)/2000;
-      var ti=Math.min(Math.floor(p*TYPING_TEXTS.length),TYPING_TEXTS.length-1);
-      typingRow.innerHTML='<span class="spinner" id="beforeSpinner"></span><span class="typing-label">AI thinking...</span><span class="typing-msg">'+TYPING_TEXTS[ti]+'</span>';
-      afterTypingRow.innerHTML='<span class="spinner done-spin" id="afterSpinner"></span><span class="typing-label" id="afterTypingLabel" style="color:var(--green)">Done</span>';
-    }else{
-      typingRow.innerHTML='<span class="spinner done-spin" id="beforeSpinner"></span><span class="typing-label" style="color:var(--green)">Done</span><span class="typing-msg">File updated. \u2728</span>';
-      afterTypingRow.innerHTML='<span class="spinner done-spin" id="afterSpinner"></span><span class="typing-label" id="afterTypingLabel" style="color:var(--green)">Done</span>';
-    }
-  };
-
-  window._animTick(0);
-  var start=null;
-  function loop(ts){
-    if(start===null)start=ts;
-    window._animTick((ts-start)%CYCLE);
-    requestAnimationFrame(loop);
-  }
-  requestAnimationFrame(loop);
-})();
-</script>
-
-<script>
-(function(){
-  var lang=localStorage.getItem('pi-forge-compare-lang')||'cn';
-  var TR={
-    cn:{
-      title:'\u26a1<span class="zero">0</span>\u4e0a\u4e0b\u6587 \u00b7 <span class="fast">\u6781\u901f</span><span class="sub">AI\u79d2\u56de\u590d</span>',
-      ctx:'\u4e0a\u4e0b\u6587',
-      slow:'\u6162',
-      fast:'\u5feb',
-      waiting:'\u7b49\u5f85\u4e2d',
-      done:'\u5b8c\u6210 \u2713',
-      thinking:'AI thinking...',
-      doneMsg:'Done',
-      fileDone:'Done. File updated. \u2728'
-    },
-    en:{
-      title:'\u26a1<span class="zero">0</span> Context \u00b7 <span class="fast">Fast</span><span class="sub">AI Instant Reply</span>',
-      ctx:'Context',
-      slow:'slow',
-      fast:'fast',
-      waiting:'waiting',
-      done:'done \u2713',
-      thinking:'AI thinking...',
-      doneMsg:'Done',
-      fileDone:'Done. File updated. \u2728'
-    }
-  };
-
-  var mainTitle=document.getElementById('mainTitle');
-  var beforeCtxLabel=document.getElementById('beforeCtxLabel');
-  var afterCtxLabel=document.getElementById('afterCtxLabel');
-  var slowBadge=document.getElementById('slowBadge');
-  var fastBadge=document.getElementById('fastBadge');
-
-  window.setLang=function(l){
-    lang=l;
-    localStorage.setItem('pi-forge-compare-lang',l);
-    var t=TR[l];
-    mainTitle.innerHTML=t.title;
-    beforeCtxLabel.textContent=t.ctx;
-    afterCtxLabel.textContent=t.ctx;
-    slowBadge.textContent=t.slow;
-    fastBadge.textContent=t.fast;
-    document.getElementById('langCn').className='lang-btn'+(l==='cn'?' active':'');
-    document.getElementById('langEn').className='lang-btn'+(l==='en'?' active':'');
-    window._currentLang=t;
-  };
-
-  window._currentLang=TR[lang];
-  window.setLang(lang);
-
-  var origTick=window._animTick;
-  window._animTick=function(m){
-    origTick(m);
-    var t=window._currentLang;
-    var cycle=9000;
-    var ms=m%cycle;
-
-    var bs=document.getElementById('beforeStatus');
-    var as=document.getElementById('afterStatus');
-    var bsl=document.getElementById('beforeSpinner');
-    var tl=document.getElementById('typingRow');
-    if(tl)tl=tl.querySelector('.typing-label');
-    var atl=document.getElementById('afterTypingLabel');
-
-    if(bs&&bs.classList.contains('waiting'))bs.textContent=t.waiting;
-    if(bs&&bs.classList.contains('done'))bs.textContent=t.done;
-    if(as&&as.classList.contains('waiting'))as.textContent=t.waiting;
-    if(as&&as.classList.contains('done'))as.textContent=t.done;
-
-    if(tl){
-      if(bsl&&bsl.classList.contains('done-spin')){
-        tl.textContent=t.doneMsg;
-      }else{
-        tl.textContent=t.thinking;
-      }
-    }
-    if(atl){
-      if(atl.style.color==='var(--green)'||atl.textContent===TR.cn.doneMsg||atl.textContent===TR.en.doneMsg){
-        atl.textContent=t.doneMsg;
-      }else{
-        atl.textContent=t.thinking;
-      }
-    }
-  };
-})();
-</script>
-
-<style>
-.export-btn{
-  position:fixed;bottom:52px;right:16px;z-index:999;
-  display:flex;align-items:center;gap:6px;
-  padding:8px 14px;border-radius:8px;
-  border:1px solid var(--border);background:var(--surface);
-  color:var(--text-pri);font-family:'Plus Jakarta Sans',sans-serif;
-  font-size:11px;font-weight:600;cursor:pointer;
-  transition:all .2s ease;box-shadow:0 4px 12px rgba(0,0,0,.4);
-}
-.export-btn:hover{background:#1f1f1f;border-color:var(--amber);color:var(--amber)}
-.export-btn:disabled{opacity:.4;cursor:not-allowed}
-
-.export-overlay{
-  position:fixed;inset:0;z-index:1000;
-  background:rgba(0,0,0,.7);backdrop-filter:blur(8px);
-  display:none;align-items:center;justify-content:center;
-  flex-direction:column;gap:12px;
-}
-.export-overlay.active{display:flex}
-.export-overlay .title{font-size:16px;font-weight:800;color:var(--text-pri)}
-.export-overlay .progress-track{width:280px;height:5px;border-radius:3px;background:var(--border);overflow:hidden}
-.export-overlay .progress-fill{height:100%;border-radius:3px;background:var(--amber);transition:width .2s ease;width:0%}
-.export-overlay .status{font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text-dim)}
-.export-overlay .cancel-btn{
-  padding:6px 14px;border-radius:5px;border:1px solid var(--border);
-  background:transparent;color:var(--text-sec);cursor:pointer;
-  font-family:'Plus Jakarta Sans',sans-serif;font-size:10px;
-}
-.export-overlay .cancel-btn:hover{border-color:var(--red);color:var(--red)}
-</style>
-
-<div class="lang-toggle">
-  <button class="lang-btn active" id="langCn" onclick="window.setLang('cn')">中文</button>
-  <button class="lang-btn" id="langEn" onclick="window.setLang('en')">EN</button>
-</div>
-
-<button class="export-btn" id="exportBtn" onclick="window.startExport()">🎞️ Export GIF</button>
-<div class="export-overlay" id="exportOverlay">
-  <div class="title">🎞️ Exporting GIF</div>
-  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
-  <div class="status" id="exportStatus">Preparing…</div>
-  <button class="cancel-btn" onclick="window.cancelExport()">Cancel</button>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-<script>
-(function(){
-  function sleep(ms){return new Promise(function(r){setTimeout(r,ms)})}
-  function updateProgress(pct,msg){
-    document.getElementById('progressFill').style.width=(pct*100)+'%';
-    document.getElementById('exportStatus').textContent=msg||Math.round(pct*100)+'%';
-  }
-  function encodeGIF(gif){
-    return new Promise(function(resolve,reject){
-      gif.on('finished',resolve);
-      gif.on('error',reject);
-      gif.render();
-    });
-  }
-
-  var canceled=false;
-  window.startExport=async function(){
-    var btn=document.getElementById('exportBtn');
-    var overlay=document.getElementById('exportOverlay');
-    btn.disabled=true;overlay.classList.add('active');
-    canceled=false;
-    try{
-      var FPS=10,CYCLE=9000;
-      var total=Math.ceil((CYCLE/1000)*FPS),interval=CYCLE/total;
-      var gif=new GIF({workers:2,quality:10,width:960,height:680,workerScript:'/gif.worker.js'});
-      var el=document.getElementById('captureArea');
-      for(var i=0;i<total;i++){
-        if(canceled){overlay.classList.remove('active');btn.disabled=false;return}
-        window._animTick(i*interval);
-        await sleep(40);
-        updateProgress(i/total,'Frame '+(i+1)+'/'+total+'\u2026');
-        var c=document.createElement('canvas');c.width=960;c.height=680;
-        var ctx=c.getContext('2d',{willReadFrequently:true});
-        var s=await html2canvas(el,{backgroundColor:'#0A0A0A',scale:1,useCORS:true,logging:false,width:960,height:680});
-        ctx.drawImage(s,0,0);
-        gif.addFrame(c,{delay:Math.round(1000/FPS),copy:true});
-      }
-      updateProgress(.9,'Encoding\u2026');
-      var blob=await encodeGIF(gif);
-      updateProgress(1,'Downloading\u2026');
-      var url=URL.createObjectURL(blob);
-      var a=document.createElement('a');a.href=url;a.download='huiyu-pi-before-after.gif';
-      document.body.appendChild(a);a.click();document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }catch(e){console.error(e)}
-    overlay.classList.remove('active');btn.disabled=false;
-  };
-  window.cancelExport=function(){
-    canceled=true;
-    document.getElementById('exportOverlay').classList.remove('active');
-    document.getElementById('exportBtn').disabled=false;
-  };
-})();
-</script>
-</body>
+        var canceled = false;
+        window.startExport = async function () {
+          var btn = document.getElementById("exportBtn");
+          var overlay = document.getElementById("exportOverlay");
+          btn.disabled = true;
+          overlay.classList.add("active");
+          canceled = false;
+          try {
+            var FPS = 10,
+              CYCLE = 9000;
+            var total = Math.ceil((CYCLE / 1000) * FPS),
+              interval = CYCLE / total;
+            var gif = new GIF({
+              workers: 2,
+              quality: 10,
+              width: 960,
+              height: 680,
+              workerScript: "/gif.worker.js",
+            });
+            var el = document.getElementById("captureArea");
+            for (var i = 0; i < total; i++) {
+              if (canceled) {
+                overlay.classList.remove("active");
+                btn.disabled = false;
+                return;
+              }
+              window._animTick(i * interval);
+              await sleep(40);
+              updateProgress(i / total, "Frame " + (i + 1) + "/" + total + "\u2026");
+              var c = document.createElement("canvas");
+              c.width = 960;
+              c.height = 680;
+              var ctx = c.getContext("2d", { willReadFrequently: true });
+              var s = await html2canvas(el, {
+                backgroundColor: "#0A0A0A",
+                scale: 1,
+                useCORS: true,
+                logging: false,
+                width: 960,
+                height: 680,
+              });
+              ctx.drawImage(s, 0, 0);
+              gif.addFrame(c, { delay: Math.round(1000 / FPS), copy: true });
+            }
+            updateProgress(0.9, "Encoding\u2026");
+            var blob = await encodeGIF(gif);
+            updateProgress(1, "Downloading\u2026");
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement("a");
+            a.href = url;
+            a.download = "huiyu-pi-before-after.gif";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          } catch (e) {
+            console.error(e);
+          }
+          overlay.classList.remove("active");
+          btn.disabled = false;
+        };
+        window.cancelExport = function () {
+          canceled = true;
+          document.getElementById("exportOverlay").classList.remove("active");
+          document.getElementById("exportBtn").disabled = false;
+        };
+      })();
+    </script>
+  </body>
 </html>

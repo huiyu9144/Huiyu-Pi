@@ -168,7 +168,12 @@ export function TurnDiffPanel() {
                 role="button"
                 tabIndex={0}
                 onClick={() => setExpanded((e) => ({ ...e, [entry.file]: !open }))}
-                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setExpanded((prev) => ({ ...prev, [entry.file]: !open })); } }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setExpanded((prev) => ({ ...prev, [entry.file]: !open }));
+                  }
+                }}
                 className="flex w-full cursor-pointer items-center justify-between gap-2 px-3 py-2 hover:bg-neutral-900"
                 title={entry.file}
               >

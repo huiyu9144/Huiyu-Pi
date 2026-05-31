@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1200" />
+    <title>Huiyu Pi - Social Cover 2</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@500&display=swap");
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 1200px;
+        height: 630px;
+        overflow: hidden;
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        background: #0a0a0a;
+        color: #fff;
+      }
+
+      .card {
+        width: 1200px;
+        height: 630px;
+        position: relative;
+        display: flex;
+        overflow: hidden;
+      }
+
+      .bg-gradient {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background:
+          radial-gradient(
+            ellipse 600px 600px at 10% 50%,
+            rgba(59, 130, 246, 0.1) 0%,
+            transparent 70%
+          ),
+          radial-gradient(
+            ellipse 400px 400px at 90% 80%,
+            rgba(139, 92, 246, 0.08) 0%,
+            transparent 70%
+          );
+        z-index: 0;
+      }
+
+      .left-panel {
+        flex: 1;
+        padding: 80px 60px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        position: relative;
+        z-index: 1;
+      }
+
+      .right-panel {
+        width: 500px;
+        padding: 60px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        z-index: 1;
+      }
+
+      .brand {
+        font-size: 56px;
+        font-weight: 800;
+        letter-spacing: -2px;
+        background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        line-height: 1.1;
+        margin-bottom: 24px;
+      }
+
+      .tagline {
+        font-size: 22px;
+        font-weight: 400;
+        color: #94a3b8;
+        margin-bottom: 40px;
+        line-height: 1.6;
+      }
+
+      .tagline .highlight {
+        color: #4ade80;
+        font-weight: 700;
+      }
+
+      .cta-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px 32px;
+        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        border-radius: 12px;
+        font-size: 18px;
+        font-weight: 600;
+        color: #fff;
+        text-decoration: none;
+        width: fit-content;
+      }
+
+      .code-block {
+        background: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 16px;
+        padding: 32px;
+        width: 100%;
+        max-width: 400px;
+      }
+
+      .code-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 20px;
+      }
+
+      .code-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+      }
+
+      .code-dot.red {
+        background: #ff5f57;
+      }
+      .code-dot.yellow {
+        background: #febc2e;
+      }
+      .code-dot.green {
+        background: #28c840;
+      }
+
+      .code-title {
+        font-size: 13px;
+        color: #8b949e;
+        margin-left: 8px;
+      }
+
+      .code-content {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 16px;
+        line-height: 1.8;
+        color: #e6edf3;
+      }
+
+      .code-comment {
+        color: #8b949e;
+      }
+
+      .code-command {
+        color: #7ee787;
+      }
+
+      .code-flag {
+        color: #79c0ff;
+      }
+
+      .stats-row {
+        display: flex;
+        gap: 32px;
+        margin-top: 32px;
+      }
+
+      .stat-item {
+        text-align: center;
+      }
+
+      .stat-number {
+        font-size: 36px;
+        font-weight: 800;
+        font-family: "JetBrains Mono", monospace;
+        background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .stat-label {
+        font-size: 13px;
+        color: #64748b;
+        margin-top: 4px;
+      }
+
+      .dot-accent {
+        position: absolute;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #3b82f6;
+        opacity: 0.5;
+      }
+      .dot-1 {
+        top: 40px;
+        left: 40px;
+      }
+      .dot-2 {
+        bottom: 60px;
+        left: 80px;
+        width: 4px;
+        height: 4px;
+        background: #8b5cf6;
+      }
+      .dot-3 {
+        top: 100px;
+        right: 100px;
+        width: 5px;
+        height: 5px;
+        background: #06b6d4;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="bg-gradient"></div>
+
+      <div class="dot-accent dot-1"></div>
+      <div class="dot-accent dot-2"></div>
+      <div class="dot-accent dot-3"></div>
+
+      <div class="left-panel">
+        <div class="brand">Huiyu Pi</div>
+
+        <div class="tagline">
+          零上下文的本地 AI 编程助手<br />
+          上下文从 <span class="highlight">~20K 压缩到接近 0</span>
+        </div>
+
+        <div class="cta-button">
+          <span>🚀</span>
+          <span>npx huiyu-pi</span>
+        </div>
+
+        <div class="stats-row">
+          <div class="stat-item">
+            <div class="stat-number">~500</div>
+            <div class="stat-label">Tokens</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">90%+</div>
+            <div class="stat-label">节省</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">10+</div>
+            <div class="stat-label">LLM 支持</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="right-panel">
+        <div class="code-block">
+          <div class="code-header">
+            <div class="code-dot red"></div>
+            <div class="code-dot yellow"></div>
+            <div class="code-dot green"></div>
+            <span class="code-title">Terminal</span>
+          </div>
+          <div class="code-content">
+            <div><span class="code-comment"># 一键启动</span></div>
+            <div><span class="code-command">$ npx huiyu-pi</span></div>
+            <div>&nbsp;</div>
+            <div><span class="code-comment"># 或全局安装</span></div>
+            <div><span class="code-command">$ npm install -g huiyu-pi</span></div>
+            <div><span class="code-command">$ huiyu-pi</span></div>
+            <div>&nbsp;</div>
+            <div><span class="code-comment"># 自定义配置</span></div>
+            <div>
+              <span class="code-command">$ huiyu-pi</span>
+              <span class="code-flag">--port 4000</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

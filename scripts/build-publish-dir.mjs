@@ -64,7 +64,9 @@ for (const file of ["README.md", "LICENSE"]) {
 
 // ── Read root + server package.json ─────────────────────────────────
 const rootPkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
-const serverPkg = JSON.parse(readFileSync(join(root, "packages", "server", "package.json"), "utf8"));
+const serverPkg = JSON.parse(
+  readFileSync(join(root, "packages", "server", "package.json"), "utf8"),
+);
 
 // ── Write synthetic package.json ────────────────────────────────────
 const publishPkg = {

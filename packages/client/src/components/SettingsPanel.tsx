@@ -3720,9 +3720,14 @@ function GeneralTab() {
   const [saveError, setSaveError] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    api.getSettings().then((s) => {
-      setAllowEditOutside(s.allowEditOutsideProject === true);
-    }).catch(() => {});
+    api
+      .getSettings()
+      .then((s) => {
+        setAllowEditOutside(s.allowEditOutsideProject === true);
+      })
+      .catch(() => {
+        /* settings fetch failed */
+      });
   }, []);
 
   const toggle = async (): Promise<void> => {
@@ -3775,16 +3780,16 @@ function GeneralTab() {
                 including system files and other projects.
               </li>
               <li>
-                A malicious or hallucinated instruction could cause data loss or system
-                instability. You assume full responsibility for any damage.
+                A malicious or hallucinated instruction could cause data loss or system instability.
+                You assume full responsibility for any damage.
               </li>
               <li>
-                Always review tool calls before the AI executes them. Keep regular backups
-                of important data.
+                Always review tool calls before the AI executes them. Keep regular backups of
+                important data.
               </li>
               <li>
-                This setting is persisted in <code className="font-mono">settings.json</code>{" "}
-                and takes effect for all projects and sessions.
+                This setting is persisted in <code className="font-mono">settings.json</code> and
+                takes effect for all projects and sessions.
               </li>
             </ul>
             <p className="text-[11px] text-red-400/60">
@@ -3792,9 +3797,7 @@ function GeneralTab() {
             </p>
           </div>
         )}
-        {saveError !== undefined && (
-          <p className="text-[11px] text-red-400">{saveError}</p>
-        )}
+        {saveError !== undefined && <p className="text-[11px] text-red-400">{saveError}</p>}
       </section>
 
       <hr className="border-neutral-800" />
@@ -3802,9 +3805,7 @@ function GeneralTab() {
       <header className="space-y-1">
         <h2 className="text-base font-semibold text-neutral-100">Huiyu Pi</h2>
         <p className="text-xs text-neutral-500">
-          Frontend UI optimized by{" "}
-          <span className="text-neutral-400">Huiyu</span>
-          , based on{" "}
+          Frontend UI optimized by <span className="text-neutral-400">Huiyu</span>, based on{" "}
           <a
             href="https://github.com/huiyu9144/Huiyu-Pi"
             target="_blank"
@@ -3833,9 +3834,7 @@ function GeneralTab() {
           </a>
           .
         </p>
-        <p className="text-xs text-neutral-500">
-          Copyright &copy; 2026 huiyu9144. MIT License.
-        </p>
+        <p className="text-xs text-neutral-500">Copyright &copy; 2026 huiyu9144. MIT License.</p>
         <p className="text-xs text-neutral-500">
           Powered by{" "}
           <a

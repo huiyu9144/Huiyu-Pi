@@ -4,11 +4,15 @@
 function countTokens(text) {
   const words = text.match(/[a-zA-Z0-9_]+/g) || [];
   const chineseChars = text.match(/[\u4e00-\u9fff\uff00-\uffef]/g) || [];
-  const other = text.replace(/[a-zA-Z0-9_\s]/g, '').replace(/[\u4e00-\u9fff\uff00-\uffef]/g, '').length;
+  const other = text
+    .replace(/[a-zA-Z0-9_\s]/g, "")
+    .replace(/[\u4e00-\u9fff\uff00-\uffef]/g, "").length;
   return Math.round(words.length * 1.3 + chineseChars.length * 0.6 + other * 0.25);
 }
 
-function hr() { console.log(''); }
+function hr() {
+  console.log("");
+}
 
 // ==============================
 // PART 1: Pi SDK Base System Prompt (built by buildSystemPrompt)
@@ -137,97 +141,107 @@ const nudge = `[continuation] Continue the task in progress - pick up from where
 // ==============================
 // CALCULATE
 // ==============================
-console.log('=== 上下文 Token 统计报告 ===');
-console.log('日期: 2026-05-31');
-console.log('项目: Huiyu Pi (pi-forge)');
+console.log("=== 上下文 Token 统计报告 ===");
+console.log("日期: 2026-05-31");
+console.log("项目: Huiyu Pi (pi-forge)");
 hr();
 
-console.log('1. Pi SDK 基础 System Prompt');
+console.log("1. Pi SDK 基础 System Prompt");
 const t1 = countTokens(baseSystemPrompt);
-console.log(`   字符: ${baseSystemPrompt.length}, Token: ${t1}, 约 ${(t1/1000).toFixed(2)}K`);
+console.log(`   字符: ${baseSystemPrompt.length}, Token: ${t1}, 约 ${(t1 / 1000).toFixed(2)}K`);
 hr();
 
-console.log('2. Agent Context 文件 (CLAUDE.md / AGENTS.md)');
+console.log("2. Agent Context 文件 (CLAUDE.md / AGENTS.md)");
 const t2 = countTokens(agentsMd);
-console.log(`   字符: ${agentsMd.length}, Token: ${t2}, 约 ${(t2/1000).toFixed(2)}K`);
-console.log('   (实际内容取决于项目目录下的 AGENTS.md 内容大小)');
+console.log(`   字符: ${agentsMd.length}, Token: ${t2}, 约 ${(t2 / 1000).toFixed(2)}K`);
+console.log("   (实际内容取决于项目目录下的 AGENTS.md 内容大小)");
 hr();
 
-console.log('3. 工具输入 Schema');
+console.log("3. 工具输入 Schema");
 const t3 = countTokens(toolSchemas);
-console.log(`   字符: ${toolSchemas.length}, Token: ${t3}, 约 ${(t3/1000).toFixed(2)}K`);
+console.log(`   字符: ${toolSchemas.length}, Token: ${t3}, 约 ${(t3 / 1000).toFixed(2)}K`);
 hr();
 
-console.log('4. 工具描述文本');
+console.log("4. 工具描述文本");
 const t4 = countTokens(toolDescs);
-console.log(`   字符: ${toolDescs.length}, Token: ${t4}, 约 ${(t4/1000).toFixed(2)}K`);
+console.log(`   字符: ${toolDescs.length}, Token: ${t4}, 约 ${(t4 / 1000).toFixed(2)}K`);
 hr();
 
-console.log('5. FORGE_SECRET_HYGIENE_RULE (可选，默认关闭)');
+console.log("5. FORGE_SECRET_HYGIENE_RULE (可选，默认关闭)");
 const t5 = countTokens(secretRule);
-console.log(`   字符: ${secretRule.length}, Token: ${t5}, 约 ${(t5/1000).toFixed(2)}K`);
-console.log('   默认关闭，仅当 AGENT_SECRET_HYGIENE_RULE=true 时启用');
+console.log(`   字符: ${secretRule.length}, Token: ${t5}, 约 ${(t5 / 1000).toFixed(2)}K`);
+console.log("   默认关闭，仅当 AGENT_SECRET_HYGIENE_RULE=true 时启用");
 hr();
 
-console.log('6. NUDGE_MESSAGE (仅溢出压缩后触发)');
+console.log("6. NUDGE_MESSAGE (仅溢出压缩后触发)");
 const t6 = countTokens(nudge);
-console.log(`   字符: ${nudge.length}, Token: ${t6}, 约 ${(t6/1000).toFixed(2)}K`);
-console.log('   仅在 LLM 溢出自动压紧后触发，非每次会话都会加载');
+console.log(`   字符: ${nudge.length}, Token: ${t6}, 约 ${(t6 / 1000).toFixed(2)}K`);
+console.log("   仅在 LLM 溢出自动压紧后触发，非每次会话都会加载");
 hr();
 
-console.log('========================================');
-console.log('        分场景上下文大小汇总');
-console.log('========================================');
+console.log("========================================");
+console.log("        分场景上下文大小汇总");
+console.log("========================================");
 hr();
 
 const defaultTotal = t1 + t2 + t3 + t4;
 const withSecret = defaultTotal + t5;
 
-console.log('场景 A: 首次新会话（默认）');
+console.log("场景 A: 首次新会话（默认）");
 console.log(`   1. System Prompt:     ${t1}`);
 console.log(`   2. AGENTS.md:         ${t2}`);
 console.log(`   3. 工具 Schema:       ${t3}`);
 console.log(`   4. 工具描述:          ${t4}`);
 console.log(`   ──────────────────────────────────`);
 console.log(`   合计:                 ${defaultTotal} tokens`);
-console.log(`   约:                   ${(defaultTotal/1000).toFixed(1)}K tokens`);
+console.log(`   约:                   ${(defaultTotal / 1000).toFixed(1)}K tokens`);
 hr();
 
-console.log('场景 B: 首次新会话 + secret hygiene rule');
-console.log(`   ${defaultTotal} + ${t5} = ${withSecret} tokens (${(withSecret/1000).toFixed(1)}K)`);
+console.log("场景 B: 首次新会话 + secret hygiene rule");
+console.log(
+  `   ${defaultTotal} + ${t5} = ${withSecret} tokens (${(withSecret / 1000).toFixed(1)}K)`,
+);
 hr();
 
-console.log('场景 C: 溢出压缩恢复后');
-console.log(`   ${defaultTotal} + ${t6} (nudge) = ${defaultTotal + t6} tokens (${((defaultTotal + t6)/1000).toFixed(1)}K)`);
+console.log("场景 C: 溢出压缩恢复后");
+console.log(
+  `   ${defaultTotal} + ${t6} (nudge) = ${defaultTotal + t6} tokens (${((defaultTotal + t6) / 1000).toFixed(1)}K)`,
+);
 hr();
 
-console.log('场景 D: 新会话 + secret + post-compaction');
-console.log(`   ${withSecret} + ${t6} = ${withSecret + t6} tokens (${((withSecret + t6)/1000).toFixed(1)}K)`);
+console.log("场景 D: 新会话 + secret + post-compaction");
+console.log(
+  `   ${withSecret} + ${t6} = ${withSecret + t6} tokens (${((withSecret + t6) / 1000).toFixed(1)}K)`,
+);
 hr();
 
-console.log('========================================');
-console.log('        与竞品默认上下文对比');
-console.log('========================================');
+console.log("========================================");
+console.log("        与竞品默认上下文对比");
+console.log("========================================");
 hr();
 
 const comparisons = [
-  { name: 'Codex / Claude Code', tokens: 20000 },
-  { name: 'Cline',               tokens: 8000 },
-  { name: 'Aider',               tokens: 5000 },
-  { name: 'Continue',            tokens: 4000 },
-  { name: 'Huiyu Pi (默认)',     tokens: defaultTotal },
+  { name: "Codex / Claude Code", tokens: 20000 },
+  { name: "Cline", tokens: 8000 },
+  { name: "Aider", tokens: 5000 },
+  { name: "Continue", tokens: 4000 },
+  { name: "Huiyu Pi (默认)", tokens: defaultTotal },
 ];
 
 for (const c of comparisons) {
-  const bar = '█'.repeat(Math.round(c.tokens / 500));
+  const bar = "█".repeat(Math.round(c.tokens / 500));
   console.log(`  ${c.name.padEnd(22)} ${String(c.tokens).padStart(5)} tokens  ${bar}`);
 }
 hr();
 
 console.log(`Huiyu Pi vs Codex/Claude Code:`);
-console.log(`  节省: ${((1 - defaultTotal / 20000) * 100).toFixed(1)}% (${20000 - defaultTotal} tokens)`);
+console.log(
+  `  节省: ${((1 - defaultTotal / 20000) * 100).toFixed(1)}% (${20000 - defaultTotal} tokens)`,
+);
 console.log(`  = Codex/Claude code 是 Huiyu Pi 的 ${(20000 / defaultTotal).toFixed(1)}x`);
 hr();
 console.log(`Huiyu Pi vs Cline:`);
-console.log(`  节省: ${((1 - defaultTotal / 8000) * 100).toFixed(1)}% (${8000 - defaultTotal} tokens)`);
+console.log(
+  `  节省: ${((1 - defaultTotal / 8000) * 100).toFixed(1)}% (${8000 - defaultTotal} tokens)`,
+);
 console.log(`  = Cline 是 Huiyu Pi 的 ${(8000 / defaultTotal).toFixed(1)}x`);

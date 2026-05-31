@@ -1,5 +1,21 @@
 import { useEffect, useRef, useState } from "react";
-import { ChevronLeft, CircleCheck, Code, Download, FileDown, Globe, Menu, MessageCircle, Monitor, MousePointerClick, SquareTerminal, Plus, Settings, Coffee, Sparkles } from "lucide-react";
+import {
+  ChevronLeft,
+  CircleCheck,
+  Code,
+  Download,
+  FileDown,
+  Globe,
+  Menu,
+  MessageCircle,
+  Monitor,
+  MousePointerClick,
+  SquareTerminal,
+  Plus,
+  Settings,
+  Coffee,
+  Sparkles,
+} from "lucide-react";
 import { useIsMobile } from "./lib/use-is-mobile";
 import { useAuthStore } from "./store/auth-store";
 import { useActiveProject, useProjectStore } from "./store/project-store";
@@ -39,11 +55,9 @@ const DEFAULT_FILES_WIDTH = 560;
 const DEFAULT_EDITOR_WIDTH = 960;
 const DEFAULT_TERMINAL_HEIGHT = 280;
 const DEFAULT_TODO_PANEL_HEIGHT = 200;
-const MIN_FILES_WIDTH = 200;
 const MIN_EDITOR_WIDTH = 320;
 const MIN_CHAT_WIDTH = 320;
 const MIN_TERMINAL_HEIGHT = 140;
-const MIN_TODO_PANEL_HEIGHT = 100;
 
 function readPersistedWidth(key: string, fallback: number): number {
   const raw = localStorage.getItem(key);
@@ -62,7 +76,9 @@ export function App() {
       localStorage.removeItem(EDITOR_WIDTH_KEY);
       localStorage.setItem(LAYOUT_VERSION_KEY, String(LAYOUT_VERSION));
     }
-  } catch {}
+  } catch {
+    /* layout version migration */
+  }
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const mustChangePassword = useAuthStore((s) => s.mustChangePassword);
   const bootstrap = useAuthStore((s) => s.bootstrap);
@@ -455,7 +471,12 @@ export function App() {
               rel="noopener noreferrer"
               className="flex items-center gap-1.5"
             >
-              <img src="/icons/logo-rounded.png" alt="" className="h-6 w-6 rounded-md" aria-hidden="true" />
+              <img
+                src="/icons/logo-rounded.png"
+                alt=""
+                className="h-6 w-6 rounded-md"
+                aria-hidden="true"
+              />
               <span className="text-sm font-semibold tracking-tight">Huiyu Pi</span>
             </a>
             <button
@@ -521,7 +542,7 @@ export function App() {
             title="GitHub"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+              <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
             </svg>
           </a>
           {/* MCP status badge stays visible in minimal — operators
@@ -552,7 +573,9 @@ export function App() {
                     </div>
                     <div>
                       <p className="text-sm font-medium text-neutral-100">Install Huiyu Pi</p>
-                      <p className="text-[11px] text-neutral-500">Add to your desktop for quick access</p>
+                      <p className="text-[11px] text-neutral-500">
+                        Add to your desktop for quick access
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 border-b border-neutral-800 px-4 py-2.5">
@@ -570,30 +593,53 @@ export function App() {
                     </div>
                   </div>
                   <div className="px-4 py-3">
-                    <p className="mb-2.5 text-[11px] font-medium uppercase tracking-wider text-neutral-500">How to install</p>
+                    <p className="mb-2.5 text-[11px] font-medium uppercase tracking-wider text-neutral-500">
+                      How to install
+                    </p>
                     <div className="space-y-2.5">
                       <div className="flex items-start gap-2.5">
-                        <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-500/20 text-[10px] font-bold text-blue-400">1</div>
+                        <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-500/20 text-[10px] font-bold text-blue-400">
+                          1
+                        </div>
                         <div className="flex-1 text-xs text-neutral-300">
-                          Look for the <Download size={11} className="mx-0.5 inline text-neutral-400" /> icon in the address bar — click it to install directly
+                          Look for the{" "}
+                          <Download size={11} className="mx-0.5 inline text-neutral-400" /> icon in
+                          the address bar — click it to install directly
                         </div>
                       </div>
                       <div className="flex items-start gap-2.5">
-                        <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-500/20 text-[10px] font-bold text-blue-400">2</div>
+                        <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-500/20 text-[10px] font-bold text-blue-400">
+                          2
+                        </div>
                         <div className="flex-1 text-xs text-neutral-300">
-                          Or click the <span className="font-medium text-neutral-200">⋮</span> menu in the top-right corner of the browser
+                          Or click the <span className="font-medium text-neutral-200">⋮</span> menu
+                          in the top-right corner of the browser
                         </div>
                       </div>
                       <div className="flex items-start gap-2.5">
-                        <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-500/20 text-[10px] font-bold text-blue-400">3</div>
+                        <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-500/20 text-[10px] font-bold text-blue-400">
+                          3
+                        </div>
                         <div className="flex-1 text-xs text-neutral-300">
-                          Find and open <FileDown size={11} className="mx-0.5 inline text-neutral-400" /> <span className="font-medium text-neutral-200">Cast, save, and share</span> in the menu
+                          Find and open{" "}
+                          <FileDown size={11} className="mx-0.5 inline text-neutral-400" />{" "}
+                          <span className="font-medium text-neutral-200">
+                            Cast, save, and share
+                          </span>{" "}
+                          in the menu
                         </div>
                       </div>
                       <div className="flex items-start gap-2.5">
-                        <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-500/20 text-[10px] font-bold text-blue-400">4</div>
+                        <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-500/20 text-[10px] font-bold text-blue-400">
+                          4
+                        </div>
                         <div className="flex-1 text-xs text-neutral-300">
-                          Click <span className="font-medium text-neutral-200">Install page</span> (Chrome) or <span className="font-medium text-neutral-200">Install this site as an app</span> (Edge)
+                          Click <span className="font-medium text-neutral-200">Install page</span>{" "}
+                          (Chrome) or{" "}
+                          <span className="font-medium text-neutral-200">
+                            Install this site as an app
+                          </span>{" "}
+                          (Edge)
                         </div>
                       </div>
                     </div>
@@ -730,7 +776,11 @@ export function App() {
                     // reachable from this state too.
                     <div className="flex flex-1 items-center justify-center px-6 text-center">
                       <div className="flex flex-col items-center gap-4">
-                        <img src="/icons/logo-rounded.png" alt="" className="h-16 w-16 rounded-2xl" />
+                        <img
+                          src="/icons/logo-rounded.png"
+                          alt=""
+                          className="h-16 w-16 rounded-2xl"
+                        />
                         <span className="text-xl font-semibold text-neutral-100">Huiyu Pi</span>
                         <div className="space-y-3 text-sm text-neutral-400 light:text-neutral-500">
                           <p>No projects yet.</p>
@@ -764,7 +814,11 @@ export function App() {
                   <div className="flex flex-1 items-center justify-center px-6 text-center">
                     <div className="space-y-3 text-sm text-neutral-400">
                       <div className="flex flex-col items-center gap-2">
-                        <img src="/icons/logo-rounded.png" alt="" className="h-16 w-16 rounded-2xl" />
+                        <img
+                          src="/icons/logo-rounded.png"
+                          alt=""
+                          className="h-16 w-16 rounded-2xl"
+                        />
                         <span className="text-xl font-semibold text-neutral-100">Huiyu Pi</span>
                       </div>
                       <p>Pick a session from the sidebar — or start a new one here.</p>
@@ -819,7 +873,10 @@ export function App() {
                       minSize={MIN_EDITOR_WIDTH}
                       maxSize={Math.max(
                         MIN_EDITOR_WIDTH,
-                        windowWidth - (useUiStore.getState().filesOpen ? filesWidth : 0) - MIN_CHAT_WIDTH - 240, // 240 ≈ ProjectSidebar
+                        windowWidth -
+                          (useUiStore.getState().filesOpen ? filesWidth : 0) -
+                          MIN_CHAT_WIDTH -
+                          240, // 240 ≈ ProjectSidebar
                       )}
                     />
                     <div
@@ -871,17 +928,9 @@ export function App() {
       </div>
 
       <div className="fixed bottom-4 left-4 z-50">
-        <div
-          className="flex flex-col"
-          onMouseEnter={onCoffeeEnter}
-          onMouseLeave={onCoffeeLeave}
-        >
+        <div className="flex flex-col" onMouseEnter={onCoffeeEnter} onMouseLeave={onCoffeeLeave}>
           {coffeeHover && (
-            <div
-              className="mb-1"
-              onMouseEnter={onCoffeeEnter}
-              onMouseLeave={onCoffeeLeave}
-            >
+            <div className="mb-1" onMouseEnter={onCoffeeEnter} onMouseLeave={onCoffeeLeave}>
               <div className="rounded-lg border border-neutral-700 bg-neutral-900 p-2.5">
                 <div className="mb-2.5 flex items-center justify-center gap-2.5">
                   <span
@@ -977,7 +1026,10 @@ function FilesToggleButton() {
       className="flex items-center justify-center rounded-md p-1.5 text-neutral-400"
       title={open ? "Collapse right panel" : "Expand right panel"}
     >
-      <ChevronLeft size={16} className={`transition-transform duration-150 ${open ? "" : "rotate-180"}`} />
+      <ChevronLeft
+        size={16}
+        className={`transition-transform duration-150 ${open ? "" : "rotate-180"}`}
+      />
     </button>
   );
 }

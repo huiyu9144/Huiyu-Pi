@@ -77,7 +77,9 @@ export function PreviewPanel() {
 
   const handleOpenFolder = useCallback(() => {
     if (active === undefined || filePath === undefined) return;
-    void api.filesOpenInExplorer(active.id, filePath).catch(() => {});
+    void api.filesOpenInExplorer(active.id, filePath).catch(() => {
+      /* ignored */
+    });
   }, [active, filePath]);
 
   const handleEdit = useCallback(() => {

@@ -15,7 +15,14 @@ import { create } from "zustand";
  */
 
 export type SettingsTab = "providers" | "agent" | "mcp" | "skills" | "prompts" | "appearance";
-export type RightPaneTab = "files" | "search" | "changes" | "git" | "context" | "processes" | "preview";
+export type RightPaneTab =
+  | "files"
+  | "search"
+  | "changes"
+  | "git"
+  | "context"
+  | "processes"
+  | "preview";
 
 interface SettingsRequest {
   /** Optional tab to switch to on open. Undefined = leave the
@@ -190,7 +197,11 @@ export const useUiStore = create<UiState>((set, get) => ({
     set((state) => {
       const alreadyOpen = state.previewFilePath === path;
       const becomingOpen = !alreadyOpen;
-      try { localStorage.setItem("huiyu-pi/files-open", becomingOpen ? "true" : "false"); } catch {}
+      try {
+        localStorage.setItem("huiyu-pi/files-open", becomingOpen ? "true" : "false");
+      } catch {
+        /* storage quota exceeded */
+      }
       return {
         previewFilePath: alreadyOpen ? undefined : path,
         previewPanelOpen: becomingOpen,
@@ -201,25 +212,55 @@ export const useUiStore = create<UiState>((set, get) => ({
   closePreviewFile: () =>
     set((state) => {
       if (state.previewFilePath === undefined) return state;
-      try { localStorage.setItem("huiyu-pi/files-open", "false"); } catch {}
+      try {
+        localStorage.setItem("huiyu-pi/files-open", "false");
+      } catch {
+        /* storage quota exceeded */
+      }
       return { previewFilePath: undefined, previewPanelOpen: false, filesOpen: false };
     }),
 
   filesOpen: (() => {
-    try { return localStorage.getItem("huiyu-pi/files-open") === "true"; } catch { return false; }
+    try {
+      return localStorage.getItem("huiyu-pi/files-open") === "true";
+    } catch {
+      return false;
+    }
   })(),
   setFilesOpen: (open) => {
-    try { localStorage.setItem("huiyu-pi/files-open", open ? "true" : "false"); } catch {}
+    try {
+      localStorage.setItem("huiyu-pi/files-open", open ? "true" : "false");
+    } catch {
+      /* storage quota exceeded */
+    }
     set({ filesOpen: open });
   },
   rightTab: (() => {
-    const raw = (() => { try { return localStorage.getItem("huiyu-pi/right-tab"); } catch { return null; } })();
-    const valid: readonly string[] = ["files", "search", "changes", "git", "context", "processes", "preview"];
+    const raw = (() => {
+      try {
+        return localStorage.getItem("huiyu-pi/right-tab");
+      } catch {
+        return null;
+      }
+    })();
+    const valid: readonly string[] = [
+      "files",
+      "search",
+      "changes",
+      "git",
+      "context",
+      "processes",
+      "preview",
+    ];
     if (raw !== null && valid.includes(raw)) return raw as RightPaneTab;
     return "files";
   })(),
   setRightTab: (tab) => {
-    try { localStorage.setItem("huiyu-pi/right-tab", tab); } catch {}
+    try {
+      localStorage.setItem("huiyu-pi/right-tab", tab);
+    } catch {
+      /* storage quota exceeded */
+    }
     set({ rightTab: tab });
   },
 }));

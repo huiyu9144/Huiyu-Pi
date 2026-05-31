@@ -797,9 +797,10 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       const current = s.bannerBySession[sessionId];
       return {
         bannerBySession: { ...s.bannerBySession, [sessionId]: undefined },
-        dismissedErrorBySession: current !== undefined
-          ? { ...s.dismissedErrorBySession, [sessionId]: current }
-          : s.dismissedErrorBySession,
+        dismissedErrorBySession:
+          current !== undefined
+            ? { ...s.dismissedErrorBySession, [sessionId]: current }
+            : s.dismissedErrorBySession,
       };
     });
   },
@@ -897,13 +898,11 @@ function applyEvent(
           const nextBanner =
             errorBanner !== undefined && errorBanner === dismissed
               ? undefined
-              : errorBanner ?? existingBanner;
+              : (errorBanner ?? existingBanner);
           // Clear the dismissed flag when this agent_end carries no
           // error — the problem (if any) has been resolved.
           const nextDismissed =
-            errorBanner === undefined
-              ? undefined
-              : s.dismissedErrorBySession[sessionId];
+            errorBanner === undefined ? undefined : s.dismissedErrorBySession[sessionId];
           return {
             messagesBySession: { ...s.messagesBySession, [sessionId]: messages },
             streamingBySession: { ...s.streamingBySession, [sessionId]: false },
@@ -926,7 +925,8 @@ function applyEvent(
         // doesn't need to block the UI from re-enabling.
         if (projectId !== undefined) {
           const lastMsg = messages[messages.length - 1];
-          const label = typeof lastMsg?.content === "string" ? lastMsg.content.slice(0, 60) : "post-agent";
+          const label =
+            typeof lastMsg?.content === "string" ? lastMsg.content.slice(0, 60) : "post-agent";
           void useSnapshotStore.getState().snapAfterAgent(projectId, label, sessionId);
         }
       })

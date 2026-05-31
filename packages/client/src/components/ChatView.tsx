@@ -19,7 +19,6 @@ import { FileResultCard } from "./FileResultCard";
 import {
   EMPTY_COMPACTIONS,
   EMPTY_MESSAGES,
-  EMPTY_SESSIONS,
   EMPTY_STRING,
   useSessionStore,
   type ActiveTool,
@@ -60,8 +59,6 @@ const ChatDiffViewContext = createContext<{
 });
 
 const CHAT_VIEW_TYPE_KEY = "forge.chat.viewType";
-let lastSnapTime = 0;
-const SNAP_DEBOUNCE_MS = 2000;
 function readChatViewType(): ChatViewType {
   try {
     return localStorage.getItem(CHAT_VIEW_TYPE_KEY) === "split" ? "split" : "unified";
@@ -189,9 +186,6 @@ export function ChatView({ sessionId }: Props) {
     lastUserMessageCountRef.current = userCount;
   }, [messages]);
 
-  const snapState = useSnapshotStore((s) => s);
-  const deltaCacheRef = useRef<Map<string, { delta: import("../lib/api-client").SnapshotDelta; ts: number }>>(new Map());
-
   // Global-search scroll-to-message: when the search bar dispatches a
   // pending target for this session, locate the matching wrapper by
   // its `data-message-index` attribute and bring it into view. Wait
@@ -238,7 +232,12 @@ export function ChatView({ sessionId }: Props) {
             </div>
           </div>
         )}
-        <div ref={scrollRef} onScroll={onScroll} className="chat-scroll-container flex-1 overflow-y-auto px-6 py-4" style={{ scrollbarGutter: "stable" }}>
+        <div
+          ref={scrollRef}
+          onScroll={onScroll}
+          className="chat-scroll-container flex-1 overflow-y-auto px-6 py-4"
+          style={{ scrollbarGutter: "stable" }}
+        >
           {messages.length === 0 && streamingText.length === 0 && !isStreaming && (
             <div className="mt-64 flex flex-col items-center gap-3">
               <img src="/icons/logo-rounded.png" alt="" className="h-16 w-16 rounded-xl" />
@@ -436,7 +435,12 @@ export function ChatView({ sessionId }: Props) {
                 flushPendingBatch();
                 out.push(
                   <div key={i} data-message-index={i}>
-                    <Message message={m} toolResultsById={toolResultsById} msgIndex={i} sessionId={sessionId} />
+                    <Message
+                      message={m}
+                      toolResultsById={toolResultsById}
+                      msgIndex={i}
+                      sessionId={sessionId}
+                    />
                   </div>,
                 );
               }
@@ -595,7 +599,9 @@ function ChatEditDiff({
 }) {
   const { viewType, setViewType } = useContext(ChatDiffViewContext);
   return (
-    <details className={`group rounded ${flat ? "bg-[#121212]" : "border border-neutral-800 bg-neutral-950"} text-xs`}>
+    <details
+      className={`group rounded ${flat ? "bg-[#121212]" : "border border-neutral-800 bg-neutral-950"} text-xs`}
+    >
       <summary className="flex cursor-pointer items-center justify-between gap-2 pl-4 pr-3 py-2 text-neutral-300">
         <span className="flex min-w-0 items-center gap-1">
           <ChevronRight size={10} className="shrink-0 transition-transform group-open:rotate-90" />
@@ -634,7 +640,8 @@ function ChatEditDiff({
             } else if (line.startsWith("@@")) {
               lineClass = "bg-neutral-900 text-cyan-400 light:text-cyan-700";
             } else if (line.startsWith("+")) {
-              lineClass = "bg-emerald-950/60 text-emerald-200 light:bg-emerald-50 light:text-emerald-800";
+              lineClass =
+                "bg-emerald-950/60 text-emerald-200 light:bg-emerald-50 light:text-emerald-800";
             } else if (line.startsWith("-")) {
               lineClass = "bg-red-950/60 text-red-200 light:bg-red-50 light:text-red-800";
             }
@@ -733,9 +740,7 @@ function FileRefBadge({ ref: r }: { ref: FileRef }) {
         onClick={() => isInline && setExpanded((v) => !v)}
         disabled={!isInline}
         className={`flex min-h-11 w-full items-center gap-1.5 pl-1 pr-1 py-1 text-left text-[11px] md:min-h-0 ${
-          isInline
-            ? "text-neutral-400"
-            : "cursor-default text-emerald-200 light:text-emerald-800"
+          isInline ? "text-neutral-400" : "cursor-default text-emerald-200 light:text-emerald-800"
         }`}
         title={
           isInline
@@ -856,11 +861,7 @@ function Message({
           <>
             {text.length > 0 && (
               <div className="text-neutral-100">
-                {showRaw ? (
-                  <RawText text={text} />
-                ) : (
-                  <ChatMarkdown text={text} chatStyleBreaks />
-                )}
+                {showRaw ? <RawText text={text} /> : <ChatMarkdown text={text} chatStyleBreaks />}
               </div>
             )}
             {fileRefs.length > 0 && (
@@ -885,25 +886,25 @@ function Message({
             {files.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-2">
                 {files.map((f) => (
-              <span
-                key={f.key}
-                className="inline-flex items-center gap-1 rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-[11px] text-neutral-300"
-                title={f.name}
-              >
-                <span className="font-mono">{f.name}</span>
-                {f.size !== undefined && (
-                  <span className="text-[10px] text-neutral-500">
-                    {f.size < 1024
-                      ? `${f.size} B`
-                      : f.size < 1024 * 1024
-                        ? `${(f.size / 1024).toFixed(1)} KB`
-                        : `${(f.size / (1024 * 1024)).toFixed(1)} MB`}
+                  <span
+                    key={f.key}
+                    className="inline-flex items-center gap-1 rounded border border-neutral-700 bg-neutral-900 px-2 py-1 text-[11px] text-neutral-300"
+                    title={f.name}
+                  >
+                    <span className="font-mono">{f.name}</span>
+                    {f.size !== undefined && (
+                      <span className="text-[10px] text-neutral-500">
+                        {f.size < 1024
+                          ? `${f.size} B`
+                          : f.size < 1024 * 1024
+                            ? `${(f.size / 1024).toFixed(1)} KB`
+                            : `${(f.size / (1024 * 1024)).toFixed(1)} MB`}
+                      </span>
+                    )}
                   </span>
-                )}
-              </span>
-            ))}
-          </div>
-        )}
+                ))}
+              </div>
+            )}
           </>
         )}
       </div>
@@ -977,7 +978,9 @@ function Message({
 function TurnDiffFooter({ sessionId }: { sessionId: string }) {
   const agentEndCount = useSessionStore((s) => s.agentEndCountBySession[sessionId] ?? 0);
   const isStreaming = useSessionStore((s) => s.streamingBySession[sessionId] ?? false);
-  const [entries, setEntries] = useState<{ file: string; additions: number; deletions: number }[]>([]);
+  const [entries, setEntries] = useState<{ file: string; additions: number; deletions: number }[]>(
+    [],
+  );
 
   useEffect(() => {
     if (isStreaming) return;
@@ -990,7 +993,9 @@ function TurnDiffFooter({ sessionId }: { sessionId: string }) {
       .catch(() => {
         if (!cancelled) setEntries([]);
       });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [sessionId, agentEndCount, isStreaming]);
 
   if (entries.length === 0) return null;
@@ -1070,7 +1075,14 @@ function AssistantMessageBubble({
             {collapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
           </button>
           <span className="text-[10px] uppercase tracking-wider text-neutral-500 flex items-center gap-1">
-            {isDone ? <><span>completed</span><Check size={11} className="text-emerald-400" /></> : "assistant"}
+            {isDone ? (
+              <>
+                <span>completed</span>
+                <Check size={11} className="text-emerald-400" />
+              </>
+            ) : (
+              "assistant"
+            )}
           </span>
           <MessageTimestamp ts={(message as { timestamp?: unknown }).timestamp} />
         </div>
@@ -1098,9 +1110,7 @@ function AssistantMessageBubble({
               {inlineError}
             </div>
           )}
-          {isDone && sessionId !== undefined && (
-            <TurnDiffFooter sessionId={sessionId} />
-          )}
+          {isDone && sessionId !== undefined && <TurnDiffFooter sessionId={sessionId} />}
         </div>
       )}
     </div>
@@ -1371,7 +1381,10 @@ function ToolCallBatchCard({ entries }: { entries: ToolBatchEntry[] }) {
     <details className="group rounded-lg bg-[#121212] border border-[#1a1a1a] text-xs">
       <summary className="flex cursor-pointer flex-col gap-2 pl-4 pr-3 py-2 text-neutral-300 sm:flex-row sm:items-center sm:justify-between">
         <span className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
-          <ChevronRight size={12} className="shrink-0 text-neutral-500 transition-transform group-open:rotate-90" />
+          <ChevronRight
+            size={12}
+            className="shrink-0 text-neutral-500 transition-transform group-open:rotate-90"
+          />
           <span className="font-mono">tools</span>
           <span className="text-neutral-500">
             ×{toolCount} {toolCount === 1 ? "call" : "calls"}
@@ -1431,9 +1444,14 @@ function AssistantBlock({
 
   if (type === "thinking" && typeof block.thinking === "string") {
     return (
-      <details className={`group rounded ${flat ? "" : "border border-neutral-800"} pl-0 py-1 pr-2 text-xs text-neutral-400 [&:open]:pb-2 [&_summary]:list-none [&_pre]:m-0`}>
+      <details
+        className={`group rounded ${flat ? "" : "border border-neutral-800"} pl-0 py-1 pr-2 text-xs text-neutral-400 [&:open]:pb-2 [&_summary]:list-none [&_pre]:m-0`}
+      >
         <summary className="cursor-pointer flex items-center gap-1 pl-4">
-          <ChevronRight size={12} className="shrink-0 text-neutral-500 transition-transform group-open:rotate-90" />
+          <ChevronRight
+            size={12}
+            className="shrink-0 text-neutral-500 transition-transform group-open:rotate-90"
+          />
           Thinking…
         </summary>
         <pre className="mt-1 whitespace-pre-wrap break-words font-sans text-[12px] pl-4">
@@ -1452,7 +1470,10 @@ function AssistantBlock({
   return (
     <details className="group text-xs text-neutral-500 [&_summary]:list-none [&_pre]:m-0 [&_pre]:pl-0">
       <summary className="cursor-pointer flex items-center gap-1 pl-4">
-        <ChevronRight size={12} className="shrink-0 text-neutral-500 transition-transform group-open:rotate-90" />
+        <ChevronRight
+          size={12}
+          className="shrink-0 text-neutral-500 transition-transform group-open:rotate-90"
+        />
         block ({String(type ?? "?")})
       </summary>
       <pre className="mt-1 overflow-auto whitespace-pre-wrap text-[10px] pl-4">
@@ -1587,9 +1608,14 @@ function ToolCallEntry({
       </div>
 
       {argsText.length > 0 && (
-        <details className={`group ${flat ? "" : "border-t border-neutral-800/60"} [&_summary]:list-none`}>
+        <details
+          className={`group ${flat ? "" : "border-t border-neutral-800/60"} [&_summary]:list-none`}
+        >
           <summary className="flex cursor-pointer items-center gap-1 pl-4 pr-3 py-1.5 text-[11px] text-neutral-400">
-            <ChevronRight size={10} className="shrink-0 transition-transform group-open:rotate-90" />
+            <ChevronRight
+              size={10}
+              className="shrink-0 transition-transform group-open:rotate-90"
+            />
             Input
           </summary>
           <pre className="overflow-auto pl-4 pr-3 pb-2 font-mono text-[11px] text-neutral-400">
@@ -1599,9 +1625,14 @@ function ToolCallEntry({
       )}
 
       {result !== undefined && (
-        <details className={`group ${flat ? "" : "border-t border-neutral-800/60"} [&_summary]:list-none`}>
+        <details
+          className={`group ${flat ? "" : "border-t border-neutral-800/60"} [&_summary]:list-none`}
+        >
           <summary className="flex cursor-pointer items-center gap-1 pl-4 pr-3 py-1.5 text-[11px] text-neutral-400">
-            <ChevronRight size={10} className="shrink-0 transition-transform group-open:rotate-90" />
+            <ChevronRight
+              size={10}
+              className="shrink-0 transition-transform group-open:rotate-90"
+            />
             Output
             {editStats !== undefined && (
               <span className="ml-2 font-mono text-[10px]">
@@ -1661,15 +1692,17 @@ function ToolResult({ message }: { message: AgentMessageLike }) {
       return <FileResultCard filePath={fn} content={text} toolName={toolName} />;
     }
     return (
-    <details className="group rounded border border-neutral-800 bg-neutral-950 text-xs">
-      <summary className="flex cursor-pointer items-center gap-1 pl-4 pr-3 py-2 text-neutral-300">
-        <ChevronRight size={10} className="shrink-0 transition-transform group-open:rotate-90" />
-        <span className="text-neutral-500">read{fn !== undefined ? " " : ""}</span>
-        {fn !== undefined && <span className="font-mono">{fn}</span>}
-      </summary>
-      <pre className="overflow-auto pl-4 pr-3 pb-2 font-mono text-[11px] text-neutral-400">{text}</pre>
-    </details>
-  );
+      <details className="group rounded border border-neutral-800 bg-neutral-950 text-xs">
+        <summary className="flex cursor-pointer items-center gap-1 pl-4 pr-3 py-2 text-neutral-300">
+          <ChevronRight size={10} className="shrink-0 transition-transform group-open:rotate-90" />
+          <span className="text-neutral-500">read{fn !== undefined ? " " : ""}</span>
+          {fn !== undefined && <span className="font-mono">{fn}</span>}
+        </summary>
+        <pre className="overflow-auto pl-4 pr-3 pb-2 font-mono text-[11px] text-neutral-400">
+          {text}
+        </pre>
+      </details>
+    );
   }
 
   if (toolName === "bash") {
@@ -1695,16 +1728,18 @@ function ToolResult({ message }: { message: AgentMessageLike }) {
       return <FileResultCard filePath={fn} content={text} toolName={toolName} />;
     }
     return (
-    <details className="group rounded border border-neutral-800 bg-neutral-950 text-xs">
-      <summary className="flex cursor-pointer items-center gap-1 pl-4 pr-3 py-2 text-neutral-300">
-        <ChevronRight size={10} className="shrink-0 transition-transform group-open:rotate-90" />
-        <span className="text-neutral-500">write{fn !== undefined ? " " : ""}</span>
-        {fn !== undefined && <span className="font-mono">{fn}</span>}
-        <span className="ml-2 text-neutral-500">({text.split("\n").length} lines)</span>
-      </summary>
-      <pre className="overflow-auto pl-4 pr-3 pb-2 font-mono text-[11px] text-neutral-400">{text}</pre>
-    </details>
-  );
+      <details className="group rounded border border-neutral-800 bg-neutral-950 text-xs">
+        <summary className="flex cursor-pointer items-center gap-1 pl-4 pr-3 py-2 text-neutral-300">
+          <ChevronRight size={10} className="shrink-0 transition-transform group-open:rotate-90" />
+          <span className="text-neutral-500">write{fn !== undefined ? " " : ""}</span>
+          {fn !== undefined && <span className="font-mono">{fn}</span>}
+          <span className="ml-2 text-neutral-500">({text.split("\n").length} lines)</span>
+        </summary>
+        <pre className="overflow-auto pl-4 pr-3 pb-2 font-mono text-[11px] text-neutral-400">
+          {text}
+        </pre>
+      </details>
+    );
   }
 
   // pi-subagents: replace the generic tool card with a richer surface
@@ -1725,7 +1760,9 @@ function ToolResult({ message }: { message: AgentMessageLike }) {
         <span className="text-neutral-500">{toolName}</span>
         {isError && <span className="ml-2 text-red-400 light:text-red-700">error</span>}
       </summary>
-      <pre className="overflow-auto pl-4 pr-3 pb-2 font-mono text-[11px] text-neutral-400">{text}</pre>
+      <pre className="overflow-auto pl-4 pr-3 pb-2 font-mono text-[11px] text-neutral-400">
+        {text}
+      </pre>
     </details>
   );
 }
@@ -1933,7 +1970,10 @@ function SubagentResultCard({
       {argsText.length > 0 && (
         <details className="group border-t border-sky-900/30">
           <summary className="flex cursor-pointer items-center gap-1 pl-4 pr-2.5 py-1 text-[11px] text-neutral-400">
-            <ChevronRight size={10} className="shrink-0 transition-transform group-open:rotate-90" />
+            <ChevronRight
+              size={10}
+              className="shrink-0 transition-transform group-open:rotate-90"
+            />
             Input
           </summary>
           <pre className="overflow-auto pl-4 pr-2.5 pb-2 font-mono text-[11px] text-neutral-400">
@@ -1950,7 +1990,10 @@ function SubagentResultCard({
           className="group border-t border-sky-900/30"
         >
           <summary className="flex cursor-pointer items-center gap-1 pl-4 pr-2.5 py-1 text-[11px] text-neutral-400">
-            <ChevronRight size={10} className="shrink-0 transition-transform group-open:rotate-90" />
+            <ChevronRight
+              size={10}
+              className="shrink-0 transition-transform group-open:rotate-90"
+            />
             Output
           </summary>
           <pre className="overflow-auto pl-4 pr-2.5 pb-2 font-mono text-[11px] text-neutral-300 whitespace-pre-wrap">
@@ -2182,13 +2225,7 @@ function isObjectShape(v: unknown): v is Record<string, unknown> {
  * content. Native `title` carries the absolute date+time for a
  * second-level disclosure on top of the visible short time.
  */
-function RestoreSnapshotButton({
-  msgIndex,
-  sessionId,
-}: {
-  msgIndex: number;
-  sessionId: string;
-}) {
+function RestoreSnapshotButton({ msgIndex, sessionId }: { msgIndex: number; sessionId: string }) {
   const project = useActiveProject();
   const loadSnapshots = useSnapshotStore((s) => s.loadSnapshots);
   const getSessionDelta = useSnapshotStore((s) => s.getSessionDelta);
@@ -2212,29 +2249,37 @@ function RestoreSnapshotButton({
   const loadDelta = async () => {
     try {
       // Always ensure sessions + snapshots are loaded
-      await Promise.all([
-        loadSessionsForProject(project.id),
-        loadSnapshots(project.id),
-      ]);
+      await Promise.all([loadSessionsForProject(project.id), loadSnapshots(project.id)]);
 
       // Re-read from store after refresh
-      const allRefreshed = useSnapshotStore.getState().snapshots
-        .filter((s) => s.trigger === "pre-agent" && s.projectId === project.id)
+      const allRefreshed = useSnapshotStore
+        .getState()
+        .snapshots.filter((s) => s.trigger === "pre-agent" && s.projectId === project.id)
         .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
       const sessionSnapshots = allRefreshed.filter((s) => s.sessionId === sessionId);
 
       const clickedMsg = messages[msgIndex];
-      const clickedTimestamp = typeof clickedMsg?.timestamp === "number" ? clickedMsg.timestamp : undefined;
-      if (clickedTimestamp === undefined) { setLoading(false); return; }
+      const clickedTimestamp =
+        typeof clickedMsg?.timestamp === "number" ? clickedMsg.timestamp : undefined;
+      if (clickedTimestamp === undefined) {
+        setLoading(false);
+        return;
+      }
 
       // Find the snapshot created just before this message was sent,
       // matching the same sessionId and the closest timestamp < message time.
       let matchedId: string | undefined;
       for (let i = sessionSnapshots.length - 1; i >= 0; i--) {
         const snapMs = new Date(sessionSnapshots[i]!.createdAt).getTime();
-        if (snapMs < clickedTimestamp) { matchedId = sessionSnapshots[i]!.id; break; }
+        if (snapMs < clickedTimestamp) {
+          matchedId = sessionSnapshots[i]!.id;
+          break;
+        }
       }
-      if (matchedId === undefined) { setLoading(false); return; }
+      if (matchedId === undefined) {
+        setLoading(false);
+        return;
+      }
 
       targetRef.current = matchedId;
       const d = await getSessionDelta(project.id, matchedId);
@@ -2247,7 +2292,10 @@ function RestoreSnapshotButton({
   };
 
   const scheduleOpen = () => {
-    if (closeTimer.current !== undefined) { clearTimeout(closeTimer.current); closeTimer.current = undefined; }
+    if (closeTimer.current !== undefined) {
+      clearTimeout(closeTimer.current);
+      closeTimer.current = undefined;
+    }
     if (open) return;
     openTimer.current = setTimeout(() => {
       if (btnRef.current !== null) {
@@ -2263,12 +2311,18 @@ function RestoreSnapshotButton({
   };
 
   const scheduleClose = () => {
-    if (openTimer.current !== undefined) { clearTimeout(openTimer.current); openTimer.current = undefined; }
+    if (openTimer.current !== undefined) {
+      clearTimeout(openTimer.current);
+      openTimer.current = undefined;
+    }
     closeTimer.current = setTimeout(() => setOpen(false), 120);
   };
 
   const cancelClose = () => {
-    if (closeTimer.current !== undefined) { clearTimeout(closeTimer.current); closeTimer.current = undefined; }
+    if (closeTimer.current !== undefined) {
+      clearTimeout(closeTimer.current);
+      closeTimer.current = undefined;
+    }
   };
 
   const handleClick = async () => {
@@ -2294,7 +2348,9 @@ function RestoreSnapshotButton({
     };
     const m = map[s] ?? { cls: "bg-neutral-800 text-neutral-400 border-neutral-700", label: s };
     return (
-      <span className={`inline-block shrink-0 rounded border px-1.5 py-px text-[9px] font-medium leading-tight ${m.cls}`}>
+      <span
+        className={`inline-block shrink-0 rounded border px-1.5 py-px text-[9px] font-medium leading-tight ${m.cls}`}
+      >
         {m.label}
       </span>
     );
@@ -2322,7 +2378,9 @@ function RestoreSnapshotButton({
               <>
                 <div className="max-h-64 overflow-y-auto custom-scrollbar">
                   {delta.entries.length === 0 ? (
-                    <div className="px-3 py-4 text-center text-xs text-neutral-500">No session changes to restore</div>
+                    <div className="px-3 py-4 text-center text-xs text-neutral-500">
+                      No session changes to restore
+                    </div>
                   ) : (
                     delta.entries.slice(0, 50).map((e) => (
                       <div
@@ -2330,7 +2388,10 @@ function RestoreSnapshotButton({
                         className="flex items-center gap-2 px-3 py-1.5 hover:bg-neutral-800/60"
                       >
                         {badge(e.status)}
-                        <span className="min-w-0 flex-1 truncate font-mono text-[11px] text-neutral-300" title={e.path}>
+                        <span
+                          className="min-w-0 flex-1 truncate font-mono text-[11px] text-neutral-300"
+                          title={e.path}
+                        >
                           {e.path}
                         </span>
                       </div>
@@ -2343,13 +2404,21 @@ function RestoreSnapshotButton({
                   )}
                 </div>
                 <div className="flex items-center gap-3 px-3 py-2 text-[10px] text-neutral-400">
-                  <span>Add <span className="text-emerald-400">{delta.summary.added}</span></span>
-                  <span>Mod <span className="text-amber-400">{delta.summary.modified}</span></span>
-                  <span>Del <span className="text-red-400">{delta.summary.deleted}</span></span>
+                  <span>
+                    Add <span className="text-emerald-400">{delta.summary.added}</span>
+                  </span>
+                  <span>
+                    Mod <span className="text-amber-400">{delta.summary.modified}</span>
+                  </span>
+                  <span>
+                    Del <span className="text-red-400">{delta.summary.deleted}</span>
+                  </span>
                 </div>
               </>
             ) : (
-              <div className="px-3 py-4 text-center text-xs text-neutral-500">No changes detected</div>
+              <div className="px-3 py-4 text-center text-xs text-neutral-500">
+                No changes detected
+              </div>
             )}
           </div>
         </div>,
@@ -2365,7 +2434,9 @@ function RestoreSnapshotButton({
         disabled={restoring}
         className="inline-flex min-h-11 min-w-11 items-center justify-center rounded px-1.5 py-0.5 text-neutral-400 md:min-h-0 md:min-w-0"
         title="Restore session changes after this message"
-        onClick={handleClick}
+        onClick={() => {
+          void handleClick();
+        }}
       >
         {restoring ? (
           <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border border-neutral-500 border-t-transparent" />
@@ -2379,7 +2450,9 @@ function RestoreSnapshotButton({
       <ConfirmDialog
         open={showConfirm}
         onClose={() => setShowConfirm(false)}
-        onConfirm={handleRestore}
+        onConfirm={() => {
+          void handleRestore();
+        }}
         title="Confirm Session Restore"
         message={
           delta !== null

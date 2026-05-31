@@ -33,7 +33,7 @@ import { useUiStore } from "../store/ui-store";
 import { useComposerStore } from "../store/composer-store";
 import { deriveCounts, selectTodoState, useTodoStore } from "../store/todo-store";
 import { countRunning, selectProcesses, useProcessesStore } from "../store/processes-store";
-import { ProcessesPopover, TodosPopover } from "./InputPopovers";
+import { TodosPopover } from "./InputPopovers";
 
 /**
  * Pull the user's prior prompts out of the session message history,
@@ -257,24 +257,26 @@ export function ChatInput({ sessionId }: Props) {
 
   const DRAFT_KEY_PREFIX = "huiyu-pi/draft/";
 
-const [text, setText] = useState(() => {
-  try {
-    return localStorage.getItem(DRAFT_KEY_PREFIX + sessionId) ?? "";
-  } catch {
-    return "";
-  }
-});
-const [submitting, setSubmitting] = useState(false);
-
-useEffect(() => {
-  try {
-    if (text === "") {
-      localStorage.removeItem(DRAFT_KEY_PREFIX + sessionId);
-    } else {
-      localStorage.setItem(DRAFT_KEY_PREFIX + sessionId, text);
+  const [text, setText] = useState(() => {
+    try {
+      return localStorage.getItem(DRAFT_KEY_PREFIX + sessionId) ?? "";
+    } catch {
+      return "";
     }
-  } catch {}
-}, [text, sessionId]);
+  });
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    try {
+      if (text === "") {
+        localStorage.removeItem(DRAFT_KEY_PREFIX + sessionId);
+      } else {
+        localStorage.setItem(DRAFT_KEY_PREFIX + sessionId, text);
+      }
+    } catch {
+      /* storage quota exceeded */
+    }
+  }, [text, sessionId]);
 
   // Todo toggle — appears in the top-right of the chat-input
   // header when the active session has at least one non-deleted
@@ -287,9 +289,6 @@ useEffect(() => {
   // (where the badge toggles the bottom-strip right-pane panel).
   // On mobile the popover replaces that interaction — the badge
   // opens the popover instead.
-  const todoPanelOpen = useUiStore((s) => s.todoPanelOpen);
-  const setTodoPanelOpen = useUiStore((s) => s.setTodoPanelOpen);
-
   // Processes badge — visible only when the session has ≥1 live
   // process. Click dispatches via ui-store; App.tsx auto-opens
   // the right pane (if collapsed) and switches the tab to
@@ -748,7 +747,9 @@ useEffect(() => {
   const lastFinalTimeRef = useRef(0);
   const lastSpeechTimeRef = useRef(0);
   const lastInterimRef = useRef("");
-  const speechSupported = typeof window !== "undefined" && ("SpeechRecognition" in window || "webkitSpeechRecognition" in window);
+  const speechSupported =
+    typeof window !== "undefined" &&
+    ("SpeechRecognition" in window || "webkitSpeechRecognition" in window);
 
   // Auto-detect speech recognition language from browser language.
   function detectSpeechLang(): string {
@@ -762,7 +763,7 @@ useEffect(() => {
   function endsWithPunctuation(t: string, lang: string): boolean {
     const s = t.trimEnd();
     if (lang.startsWith("zh")) return /[。，？！：；、）\]"']+$/.test(s);
-    return /[.,?!:;)\"']+$/.test(s);
+    return /[.,?!:;)"']+$/.test(s);
   }
 
   function autoPunctuate(t: string, lang: string): string {
@@ -809,8 +810,8 @@ useEffect(() => {
 
   const startListening = (): void => {
     const SpeechRecognition =
-      (window as unknown as Record<string, unknown>).SpeechRecognition as unknown
-      ?? (window as unknown as Record<string, unknown>).webkitSpeechRecognition as unknown;
+      (window as unknown as Record<string, unknown>).SpeechRecognition ??
+      (window as unknown as Record<string, unknown>).webkitSpeechRecognition;
     if (SpeechRecognition === undefined) return;
     const recognition = new (SpeechRecognition as new () => Record<string, unknown>)() as {
       lang: string;
@@ -842,10 +843,16 @@ useEffect(() => {
       if (fullDisplay.length > 0) setText(fullDisplay);
     }
 
-    recognition.onresult = (e: { results: SpeechRecognitionResultList; resultIndex: number }): void => {
+    recognition.onresult = (e: {
+      results: SpeechRecognitionResultList;
+      resultIndex: number;
+    }): void => {
       if (!keepListeningRef.current) return;
       let finalText = "";
-      const results = e.results as unknown as ArrayLike<{ isFinal: boolean; 0: { transcript: string } | undefined }>;
+      const results = e.results as unknown as ArrayLike<{
+        isFinal: boolean;
+        0: { transcript: string } | undefined;
+      }>;
       const now = Date.now();
 
       for (let i = e.resultIndex; i < results.length; i++) {
@@ -857,7 +864,13 @@ useEffect(() => {
             chunk = cleanTranscript(chunk, lang);
             const processed = autoPunctuate(chunk, lang);
             const base = speechBaseRef.current;
-            if (base.includes(chunk + "\uff0c") || base.startsWith(chunk + "\u3002") || base.endsWith(chunk + "\u3002") || base.endsWith(processed)) continue;
+            if (
+              base.includes(chunk + "\uff0c") ||
+              base.startsWith(chunk + "\u3002") ||
+              base.endsWith(chunk + "\u3002") ||
+              base.endsWith(processed)
+            )
+              continue;
             const gap = lastFinalTimeRef.current > 0 ? now - lastFinalTimeRef.current : 0;
             if (gap > 1200 && base.trim().length > 0 && !endsWithPunctuation(base, lang)) {
               if (chunk.length > 20 || looksLikeSentenceEnd(chunk)) {
@@ -899,7 +912,11 @@ useEffect(() => {
     };
     recognition.onend = (): void => {
       if (keepListeningRef.current) {
-        try { recognition.start(); } catch { /* already started */ }
+        try {
+          recognition.start();
+        } catch {
+          /* already started */
+        }
       } else {
         setIsListening(false);
       }
@@ -1208,7 +1225,9 @@ useEffect(() => {
     const timer = setTimeout(() => {
       void api
         .getProviders()
-        .then((p) => { if (!cancelled) setProviders(p); })
+        .then((p) => {
+          if (!cancelled) setProviders(p);
+        })
         .catch((err: unknown) => {
           if (cancelled) return;
           const code = err instanceof ApiError ? err.code : (err as Error).message;
@@ -1224,8 +1243,13 @@ useEffect(() => {
           modelId: typeof s.defaultModel === "string" ? s.defaultModel : "",
         });
       })
-      .catch(() => {});
-    return () => { cancelled = true; clearTimeout(timer); };
+      .catch(() => {
+        /* settings fetch failed */
+      });
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, []);
 
   // On session change: re-read the per-session selection from storage and
@@ -1490,7 +1514,9 @@ useEffect(() => {
         }
         // Snapshot before bash exec so file changes can be restored later
         if (project !== undefined) {
-          await useSnapshotStore.getState().snapBeforeAgent(project.id, "! " + command.slice(0, 56), sessionId);
+          await useSnapshotStore
+            .getState()
+            .snapBeforeAgent(project.id, "! " + command.slice(0, 56), sessionId);
         }
         await api.exec(sessionId, command, { excludeFromContext });
         // The acting tab refetches via session-store's user_bash_result
@@ -1514,7 +1540,9 @@ useEffect(() => {
         }
         // Snapshot before steer so file changes to this point can be restored
         if (project !== undefined) {
-          await useSnapshotStore.getState().snapBeforeAgent(project.id, value.slice(0, 60) || "pre-steer", sessionId);
+          await useSnapshotStore
+            .getState()
+            .snapBeforeAgent(project.id, value.slice(0, 60) || "pre-steer", sessionId);
         }
         await sendSteer(sessionId, value);
       } else {
@@ -1950,9 +1978,7 @@ useEffect(() => {
                         : "text-neutral-400"
                     } ${cmd.available ? "" : "opacity-40"}`}
                     title={
-                      cmd.available
-                        ? cmd.description
-                        : `${cmd.description} — unavailable right now`
+                      cmd.available ? cmd.description : `${cmd.description} — unavailable right now`
                     }
                   >
                     <div className="flex flex-col md:block">
@@ -1981,9 +2007,7 @@ useEffect(() => {
                     }}
                     onMouseEnter={() => setAcSelectedIdx(i)}
                     className={`block w-full truncate px-3 py-2.5 text-left font-mono text-[14px] md:py-1 md:text-[12px] ${
-                      i === acSelectedIdx
-                        ? "text-neutral-100"
-                        : "text-neutral-400"
+                      i === acSelectedIdx ? "text-neutral-100" : "text-neutral-400"
                     }`}
                     title={path}
                   >
@@ -2020,9 +2044,7 @@ useEffect(() => {
                   ? { height: `${textareaHeight}px` }
                   : undefined
             }
-            className={`block w-full resize-none rounded-md border-[0.5px] border-neutral-800 bg-neutral-900 px-3 py-2 pr-12 pb-10 text-sm text-neutral-100 outline-none ${
-              "min-h-11 md:min-h-0 "
-            }${
+            className={`block w-full resize-none rounded-md border-[0.5px] border-neutral-800 bg-neutral-900 px-3 py-2 pr-12 pb-10 text-sm text-neutral-100 outline-none ${"min-h-11 md:min-h-0 "}${
               bangMode === "local"
                 ? "border-amber-500 focus:border-amber-400"
                 : bangMode === "context"
@@ -2212,9 +2234,7 @@ useEffect(() => {
                     else openProcessesTab();
                   }}
                   className={`flex items-center gap-1 rounded px-1.5 py-1 text-[11px] ${
-                    isMobile && processesPopoverOpen
-                      ? "text-neutral-100"
-                      : "text-neutral-400"
+                    isMobile && processesPopoverOpen ? "text-neutral-100" : "text-neutral-400"
                   }`}
                   title={
                     isMobile
@@ -2454,7 +2474,10 @@ function ModelPicker({
     const onClick = (e: MouseEvent): void => {
       if (e.button !== 0) return;
       if (wrapperRef.current === null) return;
-      if (mousedownTargetRef.current !== null && !wrapperRef.current.contains(mousedownTargetRef.current as Node)) {
+      if (
+        mousedownTargetRef.current !== null &&
+        !wrapperRef.current.contains(mousedownTargetRef.current as Node)
+      ) {
         setOpen(false);
       }
       mousedownTargetRef.current = null;
@@ -2523,74 +2546,76 @@ function ModelPicker({
         <span className="truncate">{triggerLabel}</span>
         <span className="ml-1 text-neutral-500">▾</span>
       </button>
-      {open && createPortal(
-        <div
-          className="fixed z-[9999] w-[360px] rounded border border-neutral-700 bg-neutral-950"
-          style={{
-            bottom: window.innerHeight - (wrapperRef.current?.getBoundingClientRect().top ?? 0) + 4,
-            left: wrapperRef.current?.getBoundingClientRect().left ?? 0,
-          }}
-        >
-          <input
-            ref={inputRef}
-            value={query}
-            onChange={(e) => {
-              setQuery(e.target.value);
-              setActiveIdx(0);
+      {open &&
+        createPortal(
+          <div
+            className="fixed z-[9999] w-[360px] rounded border border-neutral-700 bg-neutral-950"
+            style={{
+              bottom:
+                window.innerHeight - (wrapperRef.current?.getBoundingClientRect().top ?? 0) + 4,
+              left: wrapperRef.current?.getBoundingClientRect().left ?? 0,
             }}
-            onKeyDown={onKeyDown}
-            placeholder="Search provider or model…"
-            className="w-full border-b border-neutral-800 bg-transparent px-3 py-2 text-xs text-neutral-100 outline-none"
-          />
-          <div ref={listRef} className="max-h-72 overflow-y-auto py-1">
-            <button
-              data-idx={-1}
-              onMouseEnter={() => setActiveIdx(-1)}
-              onClick={() => commit(-1)}
-              className={`flex w-full items-center justify-between px-3 py-1.5 text-left text-xs ${
-                activeIdx === -1 ? "text-neutral-100" : "text-neutral-400"
-              }`}
-            >
-              <span className="flex min-w-0 items-baseline gap-2">
-                <span>Use agent default</span>
-                {defaultLabel.length > 0 && (
-                  <span className="truncate font-mono text-[10px] text-neutral-500">
-                    {defaultLabel}
-                  </span>
-                )}
-              </span>
-              {value === "" && <span className="text-emerald-400">●</span>}
-            </button>
-            {filtered.length === 0 ? (
-              <p className="px-3 py-2 text-xs italic text-neutral-500">
-                No models match. Add an API key in Settings → Providers.
-              </p>
-            ) : (
-              filtered.map((opt, i) => (
-                <button
-                  key={opt.value}
-                  data-idx={i}
-                  onMouseEnter={() => setActiveIdx(i)}
-                  onClick={() => commit(i)}
-                  className={`flex w-full items-center justify-between px-3 py-1.5 text-left text-xs ${
-                    i === activeIdx ? "text-neutral-100" : "text-neutral-400"
-                  }`}
-                >
-                  <span className="flex min-w-0 items-baseline gap-2">
-                    <span className="text-neutral-500">{opt.provider}</span>
-                    <span className="truncate font-mono">{opt.name}</span>
-                  </span>
-                  {opt.value === value && <span className="text-emerald-400">●</span>}
-                </button>
-              ))
-            )}
-          </div>
-          <div className="border-t border-neutral-800 px-3 py-1.5 text-[10px] text-neutral-600">
-            {filtered.length} of {options.length} models — ↑↓ to move, Enter to pick, Esc to close
-          </div>
-        </div>,
-        document.body,
-      )}
+          >
+            <input
+              ref={inputRef}
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setActiveIdx(0);
+              }}
+              onKeyDown={onKeyDown}
+              placeholder="Search provider or model…"
+              className="w-full border-b border-neutral-800 bg-transparent px-3 py-2 text-xs text-neutral-100 outline-none"
+            />
+            <div ref={listRef} className="max-h-72 overflow-y-auto py-1">
+              <button
+                data-idx={-1}
+                onMouseEnter={() => setActiveIdx(-1)}
+                onClick={() => commit(-1)}
+                className={`flex w-full items-center justify-between px-3 py-1.5 text-left text-xs ${
+                  activeIdx === -1 ? "text-neutral-100" : "text-neutral-400"
+                }`}
+              >
+                <span className="flex min-w-0 items-baseline gap-2">
+                  <span>Use agent default</span>
+                  {defaultLabel.length > 0 && (
+                    <span className="truncate font-mono text-[10px] text-neutral-500">
+                      {defaultLabel}
+                    </span>
+                  )}
+                </span>
+                {value === "" && <span className="text-emerald-400">●</span>}
+              </button>
+              {filtered.length === 0 ? (
+                <p className="px-3 py-2 text-xs italic text-neutral-500">
+                  No models match. Add an API key in Settings → Providers.
+                </p>
+              ) : (
+                filtered.map((opt, i) => (
+                  <button
+                    key={opt.value}
+                    data-idx={i}
+                    onMouseEnter={() => setActiveIdx(i)}
+                    onClick={() => commit(i)}
+                    className={`flex w-full items-center justify-between px-3 py-1.5 text-left text-xs ${
+                      i === activeIdx ? "text-neutral-100" : "text-neutral-400"
+                    }`}
+                  >
+                    <span className="flex min-w-0 items-baseline gap-2">
+                      <span className="text-neutral-500">{opt.provider}</span>
+                      <span className="truncate font-mono">{opt.name}</span>
+                    </span>
+                    {opt.value === value && <span className="text-emerald-400">●</span>}
+                  </button>
+                ))
+              )}
+            </div>
+            <div className="border-t border-neutral-800 px-3 py-1.5 text-[10px] text-neutral-600">
+              {filtered.length} of {options.length} models — ↑↓ to move, Enter to pick, Esc to close
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }

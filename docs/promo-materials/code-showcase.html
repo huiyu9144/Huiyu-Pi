@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=800" />
+    <title>Huiyu Pi - Code Showcase</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap");
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 800px;
+        height: 800px;
+        overflow: hidden;
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        background: #0a0a0a;
+        color: #fff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .card {
+        width: 720px;
+        height: 720px;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        padding: 48px;
+        overflow: hidden;
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.03) 0%,
+          rgba(255, 255, 255, 0.01) 100%
+        );
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 32px;
+      }
+
+      .bg-gradient {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: radial-gradient(
+          ellipse 400px 300px at 50% 30%,
+          rgba(59, 130, 246, 0.08) 0%,
+          transparent 70%
+        );
+        z-index: 0;
+        border-radius: 32px;
+      }
+
+      .content {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+
+      .header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 32px;
+      }
+
+      .logo {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        object-fit: cover;
+        box-shadow: 0 0 30px rgba(59, 130, 246, 0.3);
+      }
+
+      .brand {
+        font-size: 32px;
+        font-weight: 800;
+        letter-spacing: -1px;
+        background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .title {
+        font-size: 28px;
+        font-weight: 700;
+        color: #e2e8f0;
+        margin-bottom: 24px;
+        text-align: center;
+      }
+
+      .code-window {
+        flex: 1;
+        background: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 16px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .code-header {
+        display: flex;
+        align-items: center;
+        padding: 16px 20px;
+        background: #1c2128;
+        border-bottom: 1px solid #30363d;
+      }
+
+      .window-controls {
+        display: flex;
+        gap: 8px;
+      }
+
+      .window-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+      }
+
+      .window-dot.red {
+        background: #ff5f57;
+      }
+      .window-dot.yellow {
+        background: #febc2e;
+      }
+      .window-dot.green {
+        background: #28c840;
+      }
+
+      .code-title {
+        flex: 1;
+        text-align: center;
+        font-size: 13px;
+        color: #8b949e;
+        font-family: "JetBrains Mono", monospace;
+      }
+
+      .code-body {
+        flex: 1;
+        padding: 24px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 14px;
+        line-height: 1.8;
+        overflow: hidden;
+      }
+
+      .code-line {
+        display: flex;
+        margin-bottom: 4px;
+      }
+
+      .line-number {
+        width: 40px;
+        color: #484f58;
+        text-align: right;
+        padding-right: 16px;
+        user-select: none;
+      }
+
+      .line-content {
+        flex: 1;
+        color: #e6edf3;
+      }
+
+      .code-comment {
+        color: #8b949e;
+      }
+
+      .code-keyword {
+        color: #ff7b72;
+      }
+
+      .code-string {
+        color: #a5d6ff;
+      }
+
+      .code-function {
+        color: #d2a8ff;
+      }
+
+      .code-variable {
+        color: #ffa657;
+      }
+
+      .code-operator {
+        color: #79c0ff;
+      }
+
+      .code-prompt {
+        color: #7ee787;
+      }
+
+      .code-output {
+        color: #8b949e;
+      }
+
+      .footer {
+        margin-top: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .footer-text {
+        font-size: 14px;
+        color: #64748b;
+      }
+
+      .footer-link {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 13px;
+        color: #60a5fa;
+      }
+
+      .dot-accent {
+        position: absolute;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #3b82f6;
+        opacity: 0.4;
+      }
+      .dot-1 {
+        top: 24px;
+        right: 32px;
+      }
+      .dot-2 {
+        bottom: 32px;
+        left: 24px;
+        width: 4px;
+        height: 4px;
+        background: #8b5cf6;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="bg-gradient"></div>
+
+      <div class="dot-accent dot-1"></div>
+      <div class="dot-accent dot-2"></div>
+
+      <div class="content">
+        <div class="header">
+          <img class="logo" src="../images/logo-rounded.png" alt="Huiyu Pi" />
+          <div class="brand">Huiyu Pi</div>
+        </div>
+
+        <div class="title">一行命令，即刻启动</div>
+
+        <div class="code-window">
+          <div class="code-header">
+            <div class="window-controls">
+              <div class="window-dot red"></div>
+              <div class="window-dot yellow"></div>
+              <div class="window-dot green"></div>
+            </div>
+            <div class="code-title">Terminal</div>
+          </div>
+          <div class="code-body">
+            <div class="code-line">
+              <span class="line-number">1</span>
+              <span class="line-content"
+                ><span class="code-comment"># 无需安装，一行命令启动</span></span
+              >
+            </div>
+            <div class="code-line">
+              <span class="line-number">2</span>
+              <span class="line-content"
+                ><span class="code-prompt">$</span>
+                <span class="code-keyword">npx</span> huiyu-pi</span
+              >
+            </div>
+            <div class="code-line">
+              <span class="line-number">3</span>
+              <span class="line-content"
+                ><span class="code-output">🚀 Huiyu Pi v1.1.0 starting...</span></span
+              >
+            </div>
+            <div class="code-line">
+              <span class="line-number">4</span>
+              <span class="line-content"
+                ><span class="code-output">📡 Server running at http://localhost:9144</span></span
+              >
+            </div>
+            <div class="code-line">
+              <span class="line-number">5</span>
+              <span class="line-content"></span>
+            </div>
+            <div class="code-line">
+              <span class="line-number">6</span>
+              <span class="line-content"
+                ><span class="code-comment"># 或全局安装（后续启动更快）</span></span
+              >
+            </div>
+            <div class="code-line">
+              <span class="line-number">7</span>
+              <span class="line-content"
+                ><span class="code-prompt">$</span> <span class="code-keyword">npm</span> install -g
+                huiyu-pi</span
+              >
+            </div>
+            <div class="code-line">
+              <span class="line-number">8</span>
+              <span class="line-content"><span class="code-prompt">$</span> huiyu-pi</span>
+            </div>
+            <div class="code-line">
+              <span class="line-number">9</span>
+              <span class="line-content"></span>
+            </div>
+            <div class="code-line">
+              <span class="line-number">10</span>
+              <span class="line-content"
+                ><span class="code-comment"># 自定义端口和工作目录</span></span
+              >
+            </div>
+            <div class="code-line">
+              <span class="line-number">11</span>
+              <span class="line-content"
+                ><span class="code-prompt">$</span> huiyu-pi <span class="code-operator">--</span
+                ><span class="code-variable">port</span> <span class="code-string">4000</span>
+                <span class="code-operator">--</span
+                ><span class="code-variable">workspace-path</span>
+                <span class="code-string">~/Code</span></span
+              >
+            </div>
+            <div class="code-line">
+              <span class="line-number">12</span>
+              <span class="line-content"></span>
+            </div>
+            <div class="code-line">
+              <span class="line-number">13</span>
+              <span class="line-content"><span class="code-comment"># Docker 部署</span></span>
+            </div>
+            <div class="code-line">
+              <span class="line-number">14</span>
+              <span class="line-content"
+                ><span class="code-prompt">$</span> docker-compose up -d</span
+              >
+            </div>
+          </div>
+        </div>
+
+        <div class="footer">
+          <div class="footer-text">macOS · Linux · Windows · Docker</div>
+          <div class="footer-link">github.com/huiyu9144/Huiyu-Pi</div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

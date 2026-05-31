@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=800" />
+    <title>Huiyu Pi - Privacy Feature Card</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@500&display=swap");
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 800px;
+        height: 800px;
+        overflow: hidden;
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        background: #0a0a0a;
+        color: #fff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .card {
+        width: 720px;
+        height: 720px;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        padding: 60px;
+        overflow: hidden;
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.03) 0%,
+          rgba(255, 255, 255, 0.01) 100%
+        );
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 32px;
+      }
+
+      .bg-gradient {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background:
+          radial-gradient(
+            ellipse 400px 300px at 80% 20%,
+            rgba(34, 197, 94, 0.08) 0%,
+            transparent 70%
+          ),
+          radial-gradient(
+            ellipse 300px 300px at 20% 80%,
+            rgba(6, 182, 212, 0.06) 0%,
+            transparent 70%
+          );
+        z-index: 0;
+        border-radius: 32px;
+      }
+
+      .content {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+
+      .header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 40px;
+      }
+
+      .logo {
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+        object-fit: cover;
+        box-shadow: 0 0 30px rgba(34, 197, 94, 0.3);
+      }
+
+      .brand {
+        font-size: 36px;
+        font-weight: 800;
+        letter-spacing: -1px;
+        background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .feature-title {
+        font-size: 48px;
+        font-weight: 800;
+        line-height: 1.2;
+        margin-bottom: 24px;
+        background: linear-gradient(135deg, #4ade80 0%, #22d3ee 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .feature-desc {
+        font-size: 20px;
+        color: #94a3b8;
+        line-height: 1.6;
+        margin-bottom: 40px;
+        flex: 1;
+      }
+
+      .feature-desc .highlight {
+        color: #4ade80;
+        font-weight: 600;
+      }
+
+      .security-features {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+        margin-bottom: 40px;
+      }
+
+      .security-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+        padding: 20px;
+        background: rgba(34, 197, 94, 0.06);
+        border: 1px solid rgba(34, 197, 94, 0.15);
+        border-radius: 16px;
+      }
+
+      .security-icon {
+        font-size: 28px;
+        flex-shrink: 0;
+      }
+
+      .security-content {
+        flex: 1;
+      }
+
+      .security-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #e2e8f0;
+        margin-bottom: 4px;
+      }
+
+      .security-desc {
+        font-size: 13px;
+        color: #64748b;
+        line-height: 1.4;
+      }
+
+      .cta-section {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-top: 24px;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .cta-text {
+        font-size: 16px;
+        color: #64748b;
+      }
+
+      .cta-link {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 16px;
+        color: #4ade80;
+        font-weight: 500;
+      }
+
+      .dot-accent {
+        position: absolute;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #4ade80;
+        opacity: 0.4;
+      }
+      .dot-1 {
+        top: 30px;
+        right: 40px;
+      }
+      .dot-2 {
+        bottom: 40px;
+        left: 30px;
+        width: 4px;
+        height: 4px;
+        background: #22d3ee;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="bg-gradient"></div>
+
+      <div class="dot-accent dot-1"></div>
+      <div class="dot-accent dot-2"></div>
+
+      <div class="content">
+        <div class="header">
+          <img class="logo" src="../images/logo-rounded.png" alt="Huiyu Pi" />
+          <div class="brand">Huiyu Pi</div>
+        </div>
+
+        <div class="feature-title">
+          100% 本地部署<br />
+          数据零泄露
+        </div>
+
+        <div class="feature-desc">
+          你的代码、API 密钥和对话历史<span class="highlight">全部保存在本地</span><br />
+          无云端、无第三方、无数据泄露风险
+        </div>
+
+        <div class="security-features">
+          <div class="security-item">
+            <div class="security-icon">🔐</div>
+            <div class="security-content">
+              <div class="security-title">本地存储</div>
+              <div class="security-desc">所有数据保存在你的机器上</div>
+            </div>
+          </div>
+          <div class="security-item">
+            <div class="security-icon">🚫</div>
+            <div class="security-content">
+              <div class="security-title">无云端依赖</div>
+              <div class="security-desc">不依赖任何第三方服务</div>
+            </div>
+          </div>
+          <div class="security-item">
+            <div class="security-icon">🔑</div>
+            <div class="security-content">
+              <div class="security-title">密钥安全</div>
+              <div class="security-desc">API Key 不会离开你的设备</div>
+            </div>
+          </div>
+          <div class="security-item">
+            <div class="security-icon">🛡️</div>
+            <div class="security-content">
+              <div class="security-title">开源审计</div>
+              <div class="security-desc">MIT 协议，代码完全透明</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cta-section">
+          <div class="cta-text">你的代码，你的掌控</div>
+          <div class="cta-link">github.com/huiyu9144/Huiyu-Pi</div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

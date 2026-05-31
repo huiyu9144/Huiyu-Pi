@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1200" />
+    <title>Huiyu Pi - Feature Highlights</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@500&display=swap");
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 1200px;
+        height: 630px;
+        overflow: hidden;
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        background: #0a0a0a;
+        color: #fff;
+      }
+
+      .card {
+        width: 1200px;
+        height: 630px;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        padding: 60px 80px;
+        overflow: hidden;
+      }
+
+      .bg-gradient {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background:
+          radial-gradient(
+            ellipse 400px 300px at 20% 20%,
+            rgba(59, 130, 246, 0.06) 0%,
+            transparent 70%
+          ),
+          radial-gradient(
+            ellipse 400px 300px at 80% 80%,
+            rgba(139, 92, 246, 0.06) 0%,
+            transparent 70%
+          );
+        z-index: 0;
+      }
+
+      .content {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+
+      .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 48px;
+      }
+
+      .title-section {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 8px;
+      }
+
+      .logo {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        object-fit: cover;
+      }
+
+      .brand-name {
+        font-size: 24px;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .title {
+        font-size: 36px;
+        font-weight: 800;
+        background: linear-gradient(135deg, #fff 0%, #e2e8f0 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 20px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #94a3b8;
+      }
+
+      .features-grid {
+        flex: 1;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: repeat(2, 1fr);
+        gap: 20px;
+      }
+
+      .feature-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 20px;
+        padding: 28px;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s;
+      }
+
+      .feature-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--accent-color) 0%, transparent 100%);
+        opacity: 0.6;
+      }
+
+      .feature-card:nth-child(1) {
+        --accent-color: #3b82f6;
+      }
+      .feature-card:nth-child(2) {
+        --accent-color: #8b5cf6;
+      }
+      .feature-card:nth-child(3) {
+        --accent-color: #06b6d4;
+      }
+      .feature-card:nth-child(4) {
+        --accent-color: #22c55e;
+      }
+      .feature-card:nth-child(5) {
+        --accent-color: #f59e0b;
+      }
+      .feature-card:nth-child(6) {
+        --accent-color: #ec4899;
+      }
+
+      .feature-icon {
+        font-size: 36px;
+        margin-bottom: 16px;
+      }
+
+      .feature-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: #e2e8f0;
+        margin-bottom: 8px;
+      }
+
+      .feature-desc {
+        font-size: 14px;
+        color: #64748b;
+        line-height: 1.5;
+        flex: 1;
+      }
+
+      .feature-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 12px;
+        padding: 6px 12px;
+        background: rgba(255, 255, 255, 0.04);
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 500;
+        color: #94a3b8;
+        width: fit-content;
+      }
+
+      .footer {
+        margin-top: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-top: 24px;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .footer-text {
+        font-size: 16px;
+        color: #64748b;
+      }
+
+      .footer-link {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 14px;
+        color: #60a5fa;
+      }
+
+      .dot-accent {
+        position: absolute;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #3b82f6;
+        opacity: 0.4;
+      }
+      .dot-1 {
+        top: 30px;
+        right: 40px;
+      }
+      .dot-2 {
+        bottom: 40px;
+        left: 30px;
+        width: 4px;
+        height: 4px;
+        background: #8b5cf6;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="bg-gradient"></div>
+
+      <div class="dot-accent dot-1"></div>
+      <div class="dot-accent dot-2"></div>
+
+      <div class="content">
+        <div class="header">
+          <div class="title-section">
+            <div class="brand">
+              <img class="logo" src="../images/logo-rounded.png" alt="Huiyu Pi" />
+              <div class="brand-name">Huiyu Pi</div>
+            </div>
+            <div class="title">功能亮点</div>
+          </div>
+          <div class="badge">
+            <span>🚀</span>
+            <span>v1.1.0</span>
+          </div>
+        </div>
+
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">🧠</div>
+            <div class="feature-title">多 LLM 支持</div>
+            <div class="feature-desc">
+              支持 Claude、GPT、DeepSeek、Gemini 等 10+ 提供商，包括本地模型
+            </div>
+            <div class="feature-tag">
+              <span>🔌</span>
+              <span>零绑定，自带 API Key</span>
+            </div>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">📁</div>
+            <div class="feature-title">完整 IDE 体验</div>
+            <div class="feature-desc">内置文件浏览器和 CodeMirror 编辑器，支持 10+ 种编程语言</div>
+            <div class="feature-tag">
+              <span>✏️</span>
+              <span>浏览器内直接编辑</span>
+            </div>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">🖥️</div>
+            <div class="feature-title">集成终端</div>
+            <div class="feature-desc">xterm.js + WebSocket 完整终端模拟器，多标签页、断线重连</div>
+            <div class="feature-tag">
+              <span>⚡</span>
+              <span>可调整布局</span>
+            </div>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">🔀</div>
+            <div class="feature-title">Git 集成</div>
+            <div class="feature-desc">查看差异、按 hunk 暂存、浏览提交历史，全部在浏览器中完成</div>
+            <div class="feature-tag">
+              <span>📊</span>
+              <span>git-graph 可视化</span>
+            </div>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">🔌</div>
+            <div class="feature-title">MCP 协议</div>
+            <div class="feature-desc">连接外部 MCP 服务器，将其工具暴露给编程 Agent</div>
+            <div class="feature-tag">
+              <span>🌐</span>
+              <span>全局/项目级配置</span>
+            </div>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">🎨</div>
+            <div class="feature-title">可定制主题</div>
+            <div class="feature-desc">CSS 变量控制深色/浅色主题，无需重建即可创建自己的皮肤</div>
+            <div class="feature-tag">
+              <span>🎭</span>
+              <span>5+ 内置主题</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer">
+          <div class="footer-text">完全免费 · 开源 · 自托管</div>
+          <div class="footer-link">github.com/huiyu9144/Huiyu-Pi</div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

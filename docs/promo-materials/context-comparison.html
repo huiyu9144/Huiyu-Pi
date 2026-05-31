@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1200" />
+    <title>Huiyu Pi - 上下文消耗对比</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@500&display=swap");
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 1200px;
+        height: 630px;
+        overflow: hidden;
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        background: #0a0a0a;
+        color: #fff;
+      }
+
+      .card {
+        width: 1200px;
+        height: 630px;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        padding: 48px 64px;
+        overflow: hidden;
+      }
+
+      .bg-gradient {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: radial-gradient(
+          ellipse 800px 500px at 50% 50%,
+          rgba(59, 130, 246, 0.05) 0%,
+          transparent 70%
+        );
+        z-index: 0;
+      }
+
+      .content {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+
+      .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 36px;
+      }
+
+      .title-section {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .title {
+        font-size: 36px;
+        font-weight: 800;
+        letter-spacing: -1px;
+        background: linear-gradient(135deg, #fff 0%, #e2e8f0 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 8px;
+      }
+
+      .subtitle {
+        font-size: 15px;
+        color: #64748b;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 20px;
+        background: rgba(34, 197, 94, 0.1);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #4ade80;
+      }
+
+      .chart-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .chart-row {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+      }
+
+      .tool-info {
+        width: 180px;
+        flex-shrink: 0;
+        text-align: right;
+      }
+
+      .tool-name {
+        font-size: 16px;
+        font-weight: 600;
+        color: #e2e8f0;
+        margin-bottom: 2px;
+      }
+
+      .tool-tokens {
+        font-size: 12px;
+        font-family: "JetBrains Mono", monospace;
+        color: #64748b;
+      }
+
+      .bar-container {
+        flex: 1;
+        height: 44px;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 10px;
+        position: relative;
+        overflow: visible;
+      }
+
+      .bar-fill {
+        height: 100%;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding-right: 16px;
+        min-width: 60px;
+      }
+
+      .bar-fill.red {
+        background: linear-gradient(90deg, #ef4444, #dc2626);
+      }
+      .bar-fill.orange {
+        background: linear-gradient(90deg, #f97316, #ea580c);
+      }
+      .bar-fill.yellow {
+        background: linear-gradient(90deg, #eab308, #ca8a04);
+      }
+      .bar-fill.blue {
+        background: linear-gradient(90deg, #3b82f6, #2563eb);
+      }
+      .bar-fill.purple {
+        background: linear-gradient(90deg, #8b5cf6, #7c3aed);
+      }
+      .bar-fill.green {
+        background: linear-gradient(90deg, #22c55e, #16a34a);
+      }
+
+      .bar-label {
+        font-size: 14px;
+        font-weight: 700;
+        font-family: "JetBrains Mono", monospace;
+        color: #fff;
+        white-space: nowrap;
+      }
+
+      .bar-value-outside {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 13px;
+        font-weight: 700;
+        font-family: "JetBrains Mono", monospace;
+        white-space: nowrap;
+      }
+
+      .chart-row.huiyu .bar-container {
+        background: rgba(34, 197, 94, 0.08);
+        border: 1px solid rgba(34, 197, 94, 0.2);
+      }
+
+      .chart-row.huiyu .tool-name {
+        color: #4ade80;
+        font-weight: 700;
+      }
+
+      .chart-row.huiyu .tool-tokens {
+        color: #4ade80;
+      }
+
+      .zero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+        color: #fff;
+        padding: 4px 12px;
+        border-radius: 16px;
+        font-size: 11px;
+        font-weight: 700;
+        font-family: "JetBrains Mono", monospace;
+        margin-left: 8px;
+        vertical-align: middle;
+      }
+
+      .footer {
+        margin-top: auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-top: 20px;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+      }
+
+      .footer-text {
+        font-size: 14px;
+        color: #64748b;
+      }
+
+      .footer-text .highlight {
+        color: #4ade80;
+        font-weight: 600;
+      }
+
+      .footer-link {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 13px;
+        color: #60a5fa;
+      }
+
+      .source-note {
+        font-size: 11px;
+        color: #475569;
+        margin-top: 4px;
+      }
+
+      .dot-accent {
+        position: absolute;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #3b82f6;
+        opacity: 0.3;
+      }
+      .dot-1 {
+        top: 24px;
+        right: 32px;
+      }
+      .dot-2 {
+        bottom: 32px;
+        left: 24px;
+        width: 4px;
+        height: 4px;
+        background: #8b5cf6;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="bg-gradient"></div>
+
+      <div class="dot-accent dot-1"></div>
+      <div class="dot-accent dot-2"></div>
+
+      <div class="content">
+        <div class="header">
+          <div class="title-section">
+            <div class="title">上下文消耗对比</div>
+            <div class="subtitle">Huiyu Pi 从零开始，大幅降低 Token 消耗</div>
+            <div class="source-note">数据来源：各工具官方文档 / 源码分析 / 社区实测</div>
+          </div>
+          <div class="badge">
+            <span>⚡</span>
+            <span>Zero Context</span>
+          </div>
+        </div>
+
+        <div class="chart-container">
+          <div class="chart-row">
+            <div class="tool-info">
+              <div class="tool-name">Claude Code</div>
+              <div class="tool-tokens">系统提示 2.7K + 工具 24.2K</div>
+            </div>
+            <div class="bar-container">
+              <div class="bar-fill red" style="width: 100%">
+                <span class="bar-label">~27K</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="chart-row">
+            <div class="tool-info">
+              <div class="tool-name">Codex CLI</div>
+              <div class="tool-tokens">系统提示 + 工具定义</div>
+            </div>
+            <div class="bar-container">
+              <div class="bar-fill orange" style="width: 74%">
+                <span class="bar-label">~20K</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="chart-row">
+            <div class="tool-info">
+              <div class="tool-name">Trae (字节)</div>
+              <div class="tool-tokens">max_context_tokens: 16384</div>
+            </div>
+            <div class="bar-container">
+              <div class="bar-fill yellow" style="width: 60%">
+                <span class="bar-label">~16K</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="chart-row">
+            <div class="tool-info">
+              <div class="tool-name">Cursor</div>
+              <div class="tool-tokens">取决于底层模型配置</div>
+            </div>
+            <div class="bar-container">
+              <div class="bar-fill blue" style="width: 52%">
+                <span class="bar-label">~14K</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="chart-row">
+            <div class="tool-info">
+              <div class="tool-name">CodeBuddy (腾讯)</div>
+              <div class="tool-tokens">IDE + CLI + 插件形态</div>
+            </div>
+            <div class="bar-container">
+              <div class="bar-fill purple" style="width: 44%">
+                <span class="bar-label">~12K</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="chart-row huiyu">
+            <div class="tool-info">
+              <div class="tool-name">
+                Huiyu Pi
+                <span class="zero-badge">ZERO</span>
+              </div>
+              <div class="tool-tokens">系统提示 150 + 工具 350</div>
+            </div>
+            <div class="bar-container">
+              <div class="bar-fill green" style="width: 2%"></div>
+              <span class="bar-value-outside" style="color: #4ade80; left: calc(2% + 12px)"
+                >~500 tokens</span
+              >
+            </div>
+          </div>
+        </div>
+
+        <div class="footer">
+          <div class="footer-text">
+            上下文越少，AI 注意力越集中 · 响应更快 · <span class="highlight">成本大幅降低</span>
+          </div>
+          <div class="footer-link">github.com/huiyu9144/Huiyu-Pi</div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

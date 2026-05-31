@@ -53,7 +53,8 @@ const FILE_REF_PREFIX = "forge-preview:";
 
 const FILE_PATH_RE = /📄\s+([^\s`<>]+\.\w+)/g;
 
-const BARE_PATH_RE = /((?:[A-Za-z]:[\\/]|[~\/])[^\s`<>|"]+?\.(?:html?|mdx?|md|markdown|mdown|htm))\b/g;
+const BARE_PATH_RE =
+  /((?:[A-Za-z]:[\\/]|[~/])[^\s`<>|"]+?\.(?:html?|mdx?|md|markdown|mdown|htm))\b/g;
 
 function normalizePath(p: string): string {
   return p.replace(/\\/g, "/");
@@ -248,13 +249,7 @@ const CodeRenderer = ({ className, children, ...rest }: HTMLAttributes<HTMLEleme
   );
 };
 
-function FilePreviewLink({
-  filePath,
-  children,
-}: {
-  filePath: string;
-  children: ReactNode;
-}) {
+function FilePreviewLink({ filePath, children }: { filePath: string; children: ReactNode }) {
   const openPreviewFile = useUiStore((s) => s.openPreviewFile);
   return (
     <button
@@ -302,7 +297,9 @@ const components: Components = {
     </div>
   ),
   th: ({ children }) => (
-    <th className="pi-table-cell border border-neutral-800 bg-neutral-950 px-2 py-1 text-left font-semibold">{children}</th>
+    <th className="pi-table-cell border border-neutral-800 bg-neutral-950 px-2 py-1 text-left font-semibold">
+      {children}
+    </th>
   ),
   td: ({ children }) => (
     <td className="pi-table-cell border border-neutral-800 px-2 py-1 align-top">{children}</td>
@@ -340,7 +337,12 @@ const components: Components = {
   pre: ({ children }) => <>{children}</>,
 };
 
-export function ChatMarkdown({ text, size = "sm", chatStyleBreaks = false, disablePathDetection = false }: Props) {
+export function ChatMarkdown({
+  text,
+  size = "sm",
+  chatStyleBreaks = false,
+  disablePathDetection = false,
+}: Props) {
   const sizeClass = size === "xs" ? "text-xs" : "text-sm";
   const plugins = chatStyleBreaks ? [remarkGfm, remarkMath, remarkBreaks] : [remarkGfm, remarkMath];
   const processed = disablePathDetection ? text : wrapFilePaths(text);
@@ -352,12 +354,21 @@ export function ChatMarkdown({ text, size = "sm", chatStyleBreaks = false, disab
   return (
     <div className={`${sizeClass} break-words [overflow-wrap:anywhere]`}>
       {segments.map((segment, i) => {
-        const m = segment.match(linkRe);
+        const m = linkRe.exec(segment);
         if (m !== null && m[1] !== undefined && m[2] !== undefined) {
-          return <FilePreviewLink key={i} filePath={m[2]}>{m[1]}</FilePreviewLink>;
+          return (
+            <FilePreviewLink key={i} filePath={m[2]}>
+              {m[1]}
+            </FilePreviewLink>
+          );
         }
         return (
-          <ReactMarkdown key={i} remarkPlugins={plugins} rehypePlugins={[rehypeKatex]} components={components}>
+          <ReactMarkdown
+            key={i}
+            remarkPlugins={plugins}
+            rehypePlugins={[rehypeKatex]}
+            components={components}
+          >
             {segment}
           </ReactMarkdown>
         );

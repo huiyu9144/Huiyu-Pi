@@ -51,7 +51,9 @@ export function useInstallPrompt() {
     setDismissed(true);
     try {
       localStorage.setItem(DISMISS_KEY, "true");
-    } catch { /* storage unavailable */ }
+    } catch {
+      /* storage unavailable */
+    }
   }, []);
 
   const install = useCallback(async (): Promise<void> => {
@@ -63,7 +65,9 @@ export function useInstallPrompt() {
       setDismissed(true);
       try {
         localStorage.setItem(DISMISS_KEY, "true");
-      } catch { /* storage unavailable */ }
+      } catch {
+        /* storage unavailable */
+      }
     }
   }, [deferred]);
 

@@ -487,7 +487,7 @@ async function walkFlat(dir: string, root: string, relPath: string, out: string[
   }
 }
 
-export async function readFile(absPath: string, root?: string): Promise<ReadResult> {
+export async function readFile(absPath: string, _root?: string): Promise<ReadResult> {
   const resolved = await verifyPathReadable(absPath);
   const st = await stat(resolved).catch(() => undefined);
   if (st === undefined) throw new NotFoundError(resolved);
@@ -544,7 +544,7 @@ export type ReferenceCheckResult =
 
 export async function checkFileReference(
   absPath: string,
-  root?: string,
+  _root?: string,
 ): Promise<ReferenceCheckResult> {
   const resolved = await verifyPathReadable(absPath);
   const st = await stat(resolved).catch(() => undefined);
@@ -600,7 +600,7 @@ export async function writeFile(absPath: string, root: string, content: string):
  */
 export async function downloadStream(
   absPath: string,
-  root?: string,
+  _root?: string,
 ): Promise<
   | { kind: "file"; filename: string; size: number; stream: Readable }
   | { kind: "directory"; filename: string; stream: Readable }

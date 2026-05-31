@@ -14,9 +14,6 @@ import {
   SnapshotNotFoundError,
   ConfirmPathMismatchError,
   PathTraversalError,
-  type SnapshotMeta,
-  type SnapshotManifest,
-  type SnapshotDeltaEntry,
 } from "../snapshot-store.js";
 import { getProject } from "../project-manager.js";
 import { getTree } from "../file-manager.js";
@@ -52,7 +49,16 @@ const fileEntrySchema = {
 
 const snapshotDetailSchema = {
   type: "object",
-  required: ["id", "projectId", "label", "createdAt", "trigger", "files", "totalFiles", "totalSize"],
+  required: [
+    "id",
+    "projectId",
+    "label",
+    "createdAt",
+    "trigger",
+    "files",
+    "totalFiles",
+    "totalSize",
+  ],
   properties: {
     id: { type: "string" },
     projectId: { type: "string" },
@@ -108,443 +114,479 @@ export const snapshotRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post<{
     Params: { projectId: string };
     Body: { label?: string; trigger?: "manual" | "pre-agent" | "post-agent"; sessionId?: string };
-  }>("/projects/:projectId/snapshots", {
-    schema: {
-      params: {
-        type: "object",
-        required: ["projectId"],
-        properties: { projectId: { type: "string" } },
-      },
-      body: {
-        type: "object",
-        properties: {
-          label: { type: "string" },
-          trigger: { type: "string", enum: ["manual", "pre-agent", "post-agent"] },
-          sessionId: { type: "string" },
-        },
-      },
-      response: {
-        200: {
+  }>(
+    "/projects/:projectId/snapshots",
+    {
+      schema: {
+        params: {
           type: "object",
-          required: ["snapshot", "warnings"],
+          required: ["projectId"],
+          properties: { projectId: { type: "string" } },
+        },
+        body: {
+          type: "object",
           properties: {
-            snapshot: snapshotMetaSchema,
-            warnings: { type: "array", items: { type: "string" } },
+            label: { type: "string" },
+            trigger: { type: "string", enum: ["manual", "pre-agent", "post-agent"] },
+            sessionId: { type: "string" },
           },
         },
-        413: errorSchema,
-        409: errorSchema,
-        404: errorSchema,
+        response: {
+          200: {
+            type: "object",
+            required: ["snapshot", "warnings"],
+            properties: {
+              snapshot: snapshotMetaSchema,
+              warnings: { type: "array", items: { type: "string" } },
+            },
+          },
+          413: errorSchema,
+          409: errorSchema,
+          404: errorSchema,
+        },
       },
     },
-  }, async (req, reply) => {
-    const { projectId } = req.params;
-    const project = await getProject(projectId);
-    if (project === undefined) {
-      return reply.code(404).send({ error: "project_not_found" });
-    }
-    try {
-      const result = await createSnapshot(
-        projectId,
-        project.path,
-        req.body?.label ?? "手动快照",
-        req.body?.trigger ?? "manual",
-        req.body?.sessionId,
-      );
-      return { snapshot: result.snapshot, warnings: result.warnings };
-    } catch (err) {
-      return mapError(reply, err);
-    }
-  });
+    async (req, reply) => {
+      const { projectId } = req.params;
+      const project = await getProject(projectId);
+      if (project === undefined) {
+        return reply.code(404).send({ error: "project_not_found" });
+      }
+      try {
+        const result = await createSnapshot(
+          projectId,
+          project.path,
+          req.body?.label ?? "手动快照",
+          req.body?.trigger ?? "manual",
+          req.body?.sessionId,
+        );
+        return { snapshot: result.snapshot, warnings: result.warnings };
+      } catch (err) {
+        return mapError(reply, err);
+      }
+    },
+  );
 
   fastify.get<{
     Params: { projectId: string; snapshotId: string };
-  }>("/projects/:projectId/snapshots/:snapshotId/delta", {
-    schema: {
-      params: {
-        type: "object",
-        required: ["projectId", "snapshotId"],
-        properties: {
-          projectId: { type: "string" },
-          snapshotId: { type: "string" },
-        },
-      },
-      response: {
-        200: {
+  }>(
+    "/projects/:projectId/snapshots/:snapshotId/delta",
+    {
+      schema: {
+        params: {
           type: "object",
-          required: ["delta"],
+          required: ["projectId", "snapshotId"],
           properties: {
-            delta: {
-              type: "object",
-              required: ["snapshotId", "snapshotLabel", "entries", "summary"],
-              properties: {
-                snapshotId: { type: "string" },
-                snapshotLabel: { type: "string" },
-                entries: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    required: ["path", "status", "snapshotSize", "currentSize"],
-                    properties: {
-                      path: { type: "string" },
-                      status: { type: "string", enum: ["added", "modified", "deleted"] },
-                      snapshotSize: { type: "integer" },
-                      currentSize: { type: "integer" },
+            projectId: { type: "string" },
+            snapshotId: { type: "string" },
+          },
+        },
+        response: {
+          200: {
+            type: "object",
+            required: ["delta"],
+            properties: {
+              delta: {
+                type: "object",
+                required: ["snapshotId", "snapshotLabel", "entries", "summary"],
+                properties: {
+                  snapshotId: { type: "string" },
+                  snapshotLabel: { type: "string" },
+                  entries: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      required: ["path", "status", "snapshotSize", "currentSize"],
+                      properties: {
+                        path: { type: "string" },
+                        status: { type: "string", enum: ["added", "modified", "deleted"] },
+                        snapshotSize: { type: "integer" },
+                        currentSize: { type: "integer" },
+                      },
                     },
                   },
-                },
-                summary: {
-                  type: "object",
-                  required: ["added", "modified", "deleted"],
-                  properties: {
-                    added: { type: "integer" },
-                    modified: { type: "integer" },
-                    deleted: { type: "integer" },
+                  summary: {
+                    type: "object",
+                    required: ["added", "modified", "deleted"],
+                    properties: {
+                      added: { type: "integer" },
+                      modified: { type: "integer" },
+                      deleted: { type: "integer" },
+                    },
                   },
                 },
               },
             },
           },
+          404: errorSchema,
         },
-        404: errorSchema,
       },
     },
-  }, async (req, reply) => {
-    const { projectId, snapshotId } = req.params;
-    const project = await getProject(projectId);
-    if (project === undefined) {
-      return reply.code(404).send({ error: "project_not_found" });
-    }
-    try {
-      const tree = await getTree(project.path, { maxDepth: Infinity });
-      const delta = await computeDelta(projectId, snapshotId, tree);
-      return { delta };
-    } catch (err) {
-      return mapError(reply, err);
-    }
-  });
+    async (req, reply) => {
+      const { projectId, snapshotId } = req.params;
+      const project = await getProject(projectId);
+      if (project === undefined) {
+        return reply.code(404).send({ error: "project_not_found" });
+      }
+      try {
+        const tree = await getTree(project.path, { maxDepth: Infinity });
+        const delta = await computeDelta(projectId, snapshotId, tree);
+        return { delta };
+      } catch (err) {
+        return mapError(reply, err);
+      }
+    },
+  );
 
   fastify.get<{
     Params: { projectId: string };
-  }>("/projects/:projectId/snapshots", {
-    schema: {
-      params: {
-        type: "object",
-        required: ["projectId"],
-        properties: { projectId: { type: "string" } },
-      },
-      response: {
-        200: {
+  }>(
+    "/projects/:projectId/snapshots",
+    {
+      schema: {
+        params: {
           type: "object",
-          required: ["snapshots"],
-          properties: {
-            snapshots: { type: "array", items: snapshotMetaSchema },
+          required: ["projectId"],
+          properties: { projectId: { type: "string" } },
+        },
+        response: {
+          200: {
+            type: "object",
+            required: ["snapshots"],
+            properties: {
+              snapshots: { type: "array", items: snapshotMetaSchema },
+            },
           },
         },
       },
     },
-  }, async (req) => {
-    const { projectId } = req.params;
-    const snapshots = await listSnapshots(projectId);
-    return { snapshots };
-  });
+    async (req) => {
+      const { projectId } = req.params;
+      const snapshots = await listSnapshots(projectId);
+      return { snapshots };
+    },
+  );
 
   fastify.get<{
     Params: { projectId: string; snapshotId: string };
-  }>("/projects/:projectId/snapshots/:snapshotId", {
-    schema: {
-      params: {
-        type: "object",
-        required: ["projectId", "snapshotId"],
-        properties: {
-          projectId: { type: "string" },
-          snapshotId: { type: "string" },
-        },
-      },
-      response: {
-        200: {
+  }>(
+    "/projects/:projectId/snapshots/:snapshotId",
+    {
+      schema: {
+        params: {
           type: "object",
-          required: ["snapshot"],
-          properties: { snapshot: snapshotDetailSchema },
+          required: ["projectId", "snapshotId"],
+          properties: {
+            projectId: { type: "string" },
+            snapshotId: { type: "string" },
+          },
         },
-        404: errorSchema,
+        response: {
+          200: {
+            type: "object",
+            required: ["snapshot"],
+            properties: { snapshot: snapshotDetailSchema },
+          },
+          404: errorSchema,
+        },
       },
     },
-  }, async (req, reply) => {
-    const { projectId, snapshotId } = req.params;
-    try {
-      const snapshot = await getSnapshot(projectId, snapshotId);
-      return { snapshot };
-    } catch (err) {
-      return mapError(reply, err);
-    }
-  });
+    async (req, reply) => {
+      const { projectId, snapshotId } = req.params;
+      try {
+        const snapshot = await getSnapshot(projectId, snapshotId);
+        return { snapshot };
+      } catch (err) {
+        return mapError(reply, err);
+      }
+    },
+  );
 
   fastify.post<{
     Params: { projectId: string; snapshotId: string };
     Body: { confirmProjectPath: string };
-  }>("/projects/:projectId/snapshots/:snapshotId/restore", {
-    schema: {
-      params: {
-        type: "object",
-        required: ["projectId", "snapshotId"],
-        properties: {
-          projectId: { type: "string" },
-          snapshotId: { type: "string" },
-        },
-      },
-      body: {
-        type: "object",
-        required: ["confirmProjectPath"],
-        properties: { confirmProjectPath: { type: "string" } },
-      },
-      response: {
-        200: {
+  }>(
+    "/projects/:projectId/snapshots/:snapshotId/restore",
+    {
+      schema: {
+        params: {
           type: "object",
-          required: ["restored", "safetySnapshot", "warnings"],
+          required: ["projectId", "snapshotId"],
           properties: {
-            restored: snapshotMetaSchema,
-            safetySnapshot: snapshotMetaSchema,
-            warnings: { type: "array", items: { type: "string" } },
+            projectId: { type: "string" },
+            snapshotId: { type: "string" },
           },
         },
-        400: errorSchema,
-        404: errorSchema,
+        body: {
+          type: "object",
+          required: ["confirmProjectPath"],
+          properties: { confirmProjectPath: { type: "string" } },
+        },
+        response: {
+          200: {
+            type: "object",
+            required: ["restored", "safetySnapshot", "warnings"],
+            properties: {
+              restored: snapshotMetaSchema,
+              safetySnapshot: snapshotMetaSchema,
+              warnings: { type: "array", items: { type: "string" } },
+            },
+          },
+          400: errorSchema,
+          404: errorSchema,
+        },
       },
     },
-  }, async (req, reply) => {
-    const { projectId, snapshotId } = req.params;
-    const project = await getProject(projectId);
-    if (project === undefined) {
-      return reply.code(404).send({ error: "project_not_found" });
-    }
-    try {
-      const result = await restoreSnapshot(
-        projectId,
-        project.path,
-        snapshotId,
-        req.body.confirmProjectPath,
-      );
-      return {
-        restored: result.restored,
-        safetySnapshot: result.safetySnapshot,
-        warnings: result.warnings,
-      };
-    } catch (err) {
-      return mapError(reply, err);
-    }
-  });
+    async (req, reply) => {
+      const { projectId, snapshotId } = req.params;
+      const project = await getProject(projectId);
+      if (project === undefined) {
+        return reply.code(404).send({ error: "project_not_found" });
+      }
+      try {
+        const result = await restoreSnapshot(
+          projectId,
+          project.path,
+          snapshotId,
+          req.body.confirmProjectPath,
+        );
+        return {
+          restored: result.restored,
+          safetySnapshot: result.safetySnapshot,
+          warnings: result.warnings,
+        };
+      } catch (err) {
+        return mapError(reply, err);
+      }
+    },
+  );
 
   fastify.post<{
     Params: { projectId: string };
     Body: { targetSnapshotId: string };
-  }>("/projects/:projectId/snapshots/session-delta", {
-    schema: {
-      params: {
-        type: "object",
-        required: ["projectId"],
-        properties: { projectId: { type: "string" } },
-      },
-      body: {
-        type: "object",
-        required: ["targetSnapshotId"],
-        properties: {
-          targetSnapshotId: { type: "string" },
-        },
-      },
-      response: {
-        200: {
+  }>(
+    "/projects/:projectId/snapshots/session-delta",
+    {
+      schema: {
+        params: {
           type: "object",
-          required: ["delta"],
+          required: ["projectId"],
+          properties: { projectId: { type: "string" } },
+        },
+        body: {
+          type: "object",
+          required: ["targetSnapshotId"],
           properties: {
-            delta: {
-              type: "object",
-              required: ["targetId", "entries", "summary"],
-              properties: {
-                targetId: { type: "string" },
-                entries: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    required: ["path", "status", "snapshotSize", "currentSize"],
-                    properties: {
-                      path: { type: "string" },
-                      status: { type: "string", enum: ["added", "modified", "deleted"] },
-                      snapshotSize: { type: "integer" },
-                      currentSize: { type: "integer" },
+            targetSnapshotId: { type: "string" },
+          },
+        },
+        response: {
+          200: {
+            type: "object",
+            required: ["delta"],
+            properties: {
+              delta: {
+                type: "object",
+                required: ["targetId", "entries", "summary"],
+                properties: {
+                  targetId: { type: "string" },
+                  entries: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      required: ["path", "status", "snapshotSize", "currentSize"],
+                      properties: {
+                        path: { type: "string" },
+                        status: { type: "string", enum: ["added", "modified", "deleted"] },
+                        snapshotSize: { type: "integer" },
+                        currentSize: { type: "integer" },
+                      },
                     },
                   },
-                },
-                summary: {
-                  type: "object",
-                  required: ["added", "modified", "deleted"],
-                  properties: {
-                    added: { type: "integer" },
-                    modified: { type: "integer" },
-                    deleted: { type: "integer" },
+                  summary: {
+                    type: "object",
+                    required: ["added", "modified", "deleted"],
+                    properties: {
+                      added: { type: "integer" },
+                      modified: { type: "integer" },
+                      deleted: { type: "integer" },
+                    },
                   },
                 },
               },
             },
           },
+          404: errorSchema,
         },
-        404: errorSchema,
       },
     },
-  }, async (req, reply) => {
-    const { projectId } = req.params;
-    const { targetSnapshotId } = req.body;
-    const project = await getProject(projectId);
-    if (project === undefined) {
-      return reply.code(404).send({ error: "project_not_found" });
-    }
-    try {
-      const tree = await getTree(project.path, { maxDepth: Infinity });
-      const delta = await computeSessionDelta(projectId, targetSnapshotId, tree, project.path);
-      return { delta };
-    } catch (err) {
-      return mapError(reply, err);
-    }
-  });
+    async (req, reply) => {
+      const { projectId } = req.params;
+      const { targetSnapshotId } = req.body;
+      const project = await getProject(projectId);
+      if (project === undefined) {
+        return reply.code(404).send({ error: "project_not_found" });
+      }
+      try {
+        const tree = await getTree(project.path, { maxDepth: Infinity });
+        const delta = await computeSessionDelta(projectId, targetSnapshotId, tree, project.path);
+        return { delta };
+      } catch (err) {
+        return mapError(reply, err);
+      }
+    },
+  );
 
   fastify.post<{
     Params: { projectId: string };
     Body: { targetSnapshotId: string; confirmProjectPath: string };
-  }>("/projects/:projectId/snapshots/restore-diff", {
-    schema: {
-      params: {
-        type: "object",
-        required: ["projectId"],
-        properties: { projectId: { type: "string" } },
-      },
-      body: {
-        type: "object",
-        required: ["targetSnapshotId", "confirmProjectPath"],
-        properties: {
-          targetSnapshotId: { type: "string" },
-          confirmProjectPath: { type: "string" },
-        },
-      },
-      response: {
-        200: {
+  }>(
+    "/projects/:projectId/snapshots/restore-diff",
+    {
+      schema: {
+        params: {
           type: "object",
-          required: ["restored", "safetySnapshot", "warnings"],
+          required: ["projectId"],
+          properties: { projectId: { type: "string" } },
+        },
+        body: {
+          type: "object",
+          required: ["targetSnapshotId", "confirmProjectPath"],
           properties: {
-            restored: {
-              type: "object",
-              required: ["targetId", "entries", "summary"],
-              properties: {
-                targetId: { type: "string" },
-                entries: {
-                  type: "array",
-                  items: {
+            targetSnapshotId: { type: "string" },
+            confirmProjectPath: { type: "string" },
+          },
+        },
+        response: {
+          200: {
+            type: "object",
+            required: ["restored", "safetySnapshot", "warnings"],
+            properties: {
+              restored: {
+                type: "object",
+                required: ["targetId", "entries", "summary"],
+                properties: {
+                  targetId: { type: "string" },
+                  entries: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      required: ["path", "status", "snapshotSize", "currentSize"],
+                      properties: {
+                        path: { type: "string" },
+                        status: { type: "string", enum: ["added", "modified", "deleted"] },
+                        snapshotSize: { type: "integer" },
+                        currentSize: { type: "integer" },
+                      },
+                    },
+                  },
+                  summary: {
                     type: "object",
-                    required: ["path", "status", "snapshotSize", "currentSize"],
+                    required: ["added", "modified", "deleted"],
                     properties: {
-                      path: { type: "string" },
-                      status: { type: "string", enum: ["added", "modified", "deleted"] },
-                      snapshotSize: { type: "integer" },
-                      currentSize: { type: "integer" },
+                      added: { type: "integer" },
+                      modified: { type: "integer" },
+                      deleted: { type: "integer" },
                     },
                   },
                 },
-                summary: {
-                  type: "object",
-                  required: ["added", "modified", "deleted"],
-                  properties: {
-                    added: { type: "integer" },
-                    modified: { type: "integer" },
-                    deleted: { type: "integer" },
-                  },
-                },
               },
+              safetySnapshot: snapshotMetaSchema,
+              warnings: { type: "array", items: { type: "string" } },
             },
-            safetySnapshot: snapshotMetaSchema,
-            warnings: { type: "array", items: { type: "string" } },
           },
+          400: errorSchema,
+          404: errorSchema,
         },
-        400: errorSchema,
-        404: errorSchema,
       },
     },
-  }, async (req, reply) => {
-    const { projectId } = req.params;
-    const { targetSnapshotId, confirmProjectPath } = req.body;
-    const project = await getProject(projectId);
-    if (project === undefined) {
-      return reply.code(404).send({ error: "project_not_found" });
-    }
-    try {
-      const result = await restoreSessionDelta(
-        projectId,
-        project.path,
-        targetSnapshotId,
-        confirmProjectPath,
-      );
-      return {
-        restored: result.restored,
-        safetySnapshot: result.safetySnapshot,
-        warnings: result.warnings,
-      };
-    } catch (err) {
-      return mapError(reply, err);
-    }
-  });
+    async (req, reply) => {
+      const { projectId } = req.params;
+      const { targetSnapshotId, confirmProjectPath } = req.body;
+      const project = await getProject(projectId);
+      if (project === undefined) {
+        return reply.code(404).send({ error: "project_not_found" });
+      }
+      try {
+        const result = await restoreSessionDelta(
+          projectId,
+          project.path,
+          targetSnapshotId,
+          confirmProjectPath,
+        );
+        return {
+          restored: result.restored,
+          safetySnapshot: result.safetySnapshot,
+          warnings: result.warnings,
+        };
+      } catch (err) {
+        return mapError(reply, err);
+      }
+    },
+  );
 
   fastify.delete<{
     Params: { projectId: string; snapshotId: string };
-  }>("/projects/:projectId/snapshots/:snapshotId", {
-    schema: {
-      params: {
-        type: "object",
-        required: ["projectId", "snapshotId"],
-        properties: {
-          projectId: { type: "string" },
-          snapshotId: { type: "string" },
-        },
-      },
-      response: {
-        200: {
+  }>(
+    "/projects/:projectId/snapshots/:snapshotId",
+    {
+      schema: {
+        params: {
           type: "object",
-          required: ["deleted"],
-          properties: { deleted: { type: "string" } },
+          required: ["projectId", "snapshotId"],
+          properties: {
+            projectId: { type: "string" },
+            snapshotId: { type: "string" },
+          },
         },
-        404: errorSchema,
+        response: {
+          200: {
+            type: "object",
+            required: ["deleted"],
+            properties: { deleted: { type: "string" } },
+          },
+          404: errorSchema,
+        },
       },
     },
-  }, async (req, reply) => {
-    const { projectId, snapshotId } = req.params;
-    try {
-      const deleted = await deleteSnapshot(projectId, snapshotId);
-      return { deleted };
-    } catch (err) {
-      return mapError(reply, err);
-    }
-  });
+    async (req, reply) => {
+      const { projectId, snapshotId } = req.params;
+      try {
+        const deleted = await deleteSnapshot(projectId, snapshotId);
+        return { deleted };
+      } catch (err) {
+        return mapError(reply, err);
+      }
+    },
+  );
 
   fastify.get<{
     Params: { projectId: string };
-  }>("/projects/:projectId/snapshots/storage", {
-    schema: {
-      params: {
-        type: "object",
-        required: ["projectId"],
-        properties: { projectId: { type: "string" } },
-      },
-      response: {
-        200: {
+  }>(
+    "/projects/:projectId/snapshots/storage",
+    {
+      schema: {
+        params: {
           type: "object",
-          required: ["totalSnapshots", "totalSizeBytes"],
-          properties: {
-            totalSnapshots: { type: "integer", minimum: 0 },
-            totalSizeBytes: { type: "integer", minimum: 0 },
+          required: ["projectId"],
+          properties: { projectId: { type: "string" } },
+        },
+        response: {
+          200: {
+            type: "object",
+            required: ["totalSnapshots", "totalSizeBytes"],
+            properties: {
+              totalSnapshots: { type: "integer", minimum: 0 },
+              totalSizeBytes: { type: "integer", minimum: 0 },
+            },
           },
         },
       },
     },
-  }, async (req) => {
-    const { projectId } = req.params;
-    const info = await getStorageInfo(projectId);
-    return info;
-  });
+    async (req) => {
+      const { projectId } = req.params;
+      const info = await getStorageInfo(projectId);
+      return info;
+    },
+  );
 };

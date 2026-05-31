@@ -120,8 +120,7 @@ export function ResizableDivider({
     document.body.style.removeProperty("user-select");
   };
 
-  const baseCls =
-    "group relative shrink-0";
+  const baseCls = "group relative shrink-0";
   const sizeCls = horizontal ? "h-1 w-full cursor-row-resize" : "w-1 h-full cursor-col-resize";
   const hitboxCls = horizontal
     ? "absolute inset-x-0 -top-1 -bottom-1"

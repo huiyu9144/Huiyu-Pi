@@ -3,11 +3,15 @@
 function countTokens(text) {
   const words = text.match(/[a-zA-Z0-9_]+/g) || [];
   const chineseChars = text.match(/[\u4e00-\u9fff\uff00-\uffef]/g) || [];
-  const other = text.replace(/[a-zA-Z0-9_\s]/g, '').replace(/[\u4e00-\u9fff\uff00-\uffef]/g, '').length;
+  const other = text
+    .replace(/[a-zA-Z0-9_\s]/g, "")
+    .replace(/[\u4e00-\u9fff\uff00-\uffef]/g, "").length;
   return Math.round(words.length * 1.3 + chineseChars.length * 0.6 + other * 0.25);
 }
 
-function hr() { console.log(''); }
+function hr() {
+  console.log("");
+}
 
 // ============================================================
 // 旧版本（优化前）
@@ -72,7 +76,7 @@ const new_configOwn = `Config ownership: PI_CONFIG_DIR (default ~/.pi/agent) is 
 // ============================================================
 // 计算
 // ============================================================
-console.log('=== 优化前后 Token 节省对比 ===');
+console.log("=== 优化前后 Token 节省对比 ===");
 hr();
 
 const old_ask = old_ask_guidelines.reduce((s, g) => s + countTokens(g), 0);
@@ -80,7 +84,9 @@ const new_ask = new_ask_guidelines.reduce((s, g) => s + countTokens(g), 0);
 console.log(`1. ask_user_question 指南:`);
 console.log(`   优化前: ${old_ask} tokens (4条)`);
 console.log(`   优化后: ${new_ask} tokens (2条)`);
-console.log(`   节省: ${old_ask - new_ask} tokens (${((1-new_ask/old_ask)*100).toFixed(0)}%)`);
+console.log(
+  `   节省: ${old_ask - new_ask} tokens (${((1 - new_ask / old_ask) * 100).toFixed(0)}%)`,
+);
 hr();
 
 const old_conv = old_conv15.reduce((s, g) => s + countTokens(g), 0);
@@ -88,7 +94,9 @@ const new_conv = new_conv5.reduce((s, g) => s + countTokens(g), 0);
 console.log(`2. 编码约定:`);
 console.log(`   优化前: ${old_conv} tokens (15条)`);
 console.log(`   优化后: ${new_conv} tokens (5条 + 引用)`);
-console.log(`   节省: ${old_conv - new_conv} tokens (${((1-new_conv/old_conv)*100).toFixed(0)}%)`);
+console.log(
+  `   节省: ${old_conv - new_conv} tokens (${((1 - new_conv / old_conv) * 100).toFixed(0)}%)`,
+);
 hr();
 
 const old_doc = countTokens(old_docTable);
@@ -96,7 +104,9 @@ const new_doc = countTokens(new_docTable);
 console.log(`3. 必读文档映射表:`);
 console.log(`   优化前: ${old_doc} tokens (12行表格)`);
 console.log(`   优化后: ${new_doc} tokens (2行列表)`);
-console.log(`   节省: ${old_doc - new_doc} tokens (${((1-new_doc/old_doc)*100).toFixed(0)}%)`);
+console.log(
+  `   节省: ${old_doc - new_doc} tokens (${((1 - new_doc / old_doc) * 100).toFixed(0)}%)`,
+);
 hr();
 
 const old_cfg = countTokens(old_configOwn);
@@ -104,24 +114,30 @@ const new_cfg = countTokens(new_configOwn);
 console.log(`4. 配置目录说明:`);
 console.log(`   优化前: ${old_cfg} tokens (独立段落)`);
 console.log(`   优化后: ${new_cfg} tokens (合并到项目说明)`);
-console.log(`   节省: ${old_cfg - new_cfg} tokens (${((1-new_cfg/old_cfg)*100).toFixed(0)}%)`);
+console.log(
+  `   节省: ${old_cfg - new_cfg} tokens (${((1 - new_cfg / old_cfg) * 100).toFixed(0)}%)`,
+);
 hr();
 
 const totalOld = old_ask + old_conv + old_doc + old_cfg;
 const totalNew = new_ask + new_conv + new_doc + new_cfg;
-console.log('='.repeat(50));
-console.log('  总计');
-console.log('='.repeat(50));
+console.log("=".repeat(50));
+console.log("  总计");
+console.log("=".repeat(50));
 console.log(`  优化前合计: ${totalOld} tokens`);
 console.log(`  优化后合计: ${totalNew} tokens`);
-console.log(`  总计节省:   ${totalOld - totalNew} tokens (${((1-totalNew/totalOld)*100).toFixed(0)}%)`);
+console.log(
+  `  总计节省:   ${totalOld - totalNew} tokens (${((1 - totalNew / totalOld) * 100).toFixed(0)}%)`,
+);
 hr();
 
 const fullOld = 2309; // 之前统计的默认上下文总token数
 const fullNew = fullOld - (totalOld - totalNew);
-console.log('  影响整体上下文大小:');
+console.log("  影响整体上下文大小:");
 console.log(`  优化前全上下文: ~${fullOld} tokens`);
 console.log(`  优化后全上下文: ~${fullNew} tokens`);
-console.log(`  整体再节省: ${fullOld - fullNew} tokens (${((1-fullNew/fullOld)*100).toFixed(1)}%)`);
-console.log(`  vs Codex/Claude Code: 节省 ${((1-fullNew/20000)*100).toFixed(1)}%`);
-console.log(`  vs Cline: 节省 ${((1-fullNew/8000)*100).toFixed(1)}%`);
+console.log(
+  `  整体再节省: ${fullOld - fullNew} tokens (${((1 - fullNew / fullOld) * 100).toFixed(1)}%)`,
+);
+console.log(`  vs Codex/Claude Code: 节省 ${((1 - fullNew / 20000) * 100).toFixed(1)}%`);
+console.log(`  vs Cline: 节省 ${((1 - fullNew / 8000) * 100).toFixed(1)}%`);

@@ -96,7 +96,9 @@ export function ChangedFilesBadge({
               setDismissed(true);
               try {
                 localStorage.setItem(`huiyu-pi/dismissed-badge/${sessionId}`, "1");
-              } catch {}
+              } catch {
+                /* quota exceeded */
+              }
             }}
             className="absolute -top-1.5 -right-1.5 hidden h-4 w-4 items-center justify-center rounded-full border border-neutral-700 bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-neutral-200 group-hover:inline-flex"
             title="Dismiss"

@@ -224,9 +224,7 @@ function Tabs({
           // inactive tabs — without this signal, the only place the
           // collision shows up is the banner inside the active tab.
           const extChanged = externallyChanged[f.path] === true;
-          const baseClass = active
-            ? "bg-neutral-950 text-neutral-100"
-            : "text-neutral-400";
+          const baseClass = active ? "bg-neutral-950 text-neutral-100" : "text-neutral-400";
           const conflictClass = extChanged
             ? "bg-amber-900/30 text-amber-200 light:bg-amber-100 light:text-amber-800"
             : "";

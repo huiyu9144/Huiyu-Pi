@@ -277,9 +277,7 @@ export function GlobalSearchBar() {
                         onMouseEnter={() => setActiveIndex(flatIndex)}
                         onClick={() => dispatchResult(group, match)}
                         className={`flex w-full items-start gap-2 px-3 py-1.5 text-left text-xs ${
-                          isActive
-                            ? "text-neutral-100"
-                            : "text-neutral-400"
+                          isActive ? "text-neutral-100" : "text-neutral-400"
                         }`}
                       >
                         <span className="mt-0.5 shrink-0 rounded bg-neutral-800 px-1 py-0.5 text-[9px] uppercase tracking-wider text-neutral-400">

@@ -4,30 +4,80 @@ import { useProjectStore } from "../store/project-store";
 
 const PREVIEWABLE_EXTS = new Set([
   // Markdown
-  ".md", ".mdx", ".markdown", ".mdown",
+  ".md",
+  ".mdx",
+  ".markdown",
+  ".mdown",
   // HTML / web
-  ".html", ".htm",
+  ".html",
+  ".htm",
   // Plain text
   ".txt",
   // Data / config / markup
-  ".json", ".yaml", ".yml", ".toml", ".xml", ".csv", ".tsv", ".env", ".ini", ".cfg", ".conf",
+  ".json",
+  ".yaml",
+  ".yml",
+  ".toml",
+  ".xml",
+  ".csv",
+  ".tsv",
+  ".env",
+  ".ini",
+  ".cfg",
+  ".conf",
   // Logs
   ".log",
   // Styles
-  ".css", ".scss", ".less", ".sass",
+  ".css",
+  ".scss",
+  ".less",
+  ".sass",
   // JavaScript / TypeScript
-  ".js", ".jsx", ".ts", ".tsx", ".vue", ".svelte",
+  ".js",
+  ".jsx",
+  ".ts",
+  ".tsx",
+  ".vue",
+  ".svelte",
   // Programming languages
-  ".py", ".java", ".go", ".rs", ".rb", ".php", ".cs", ".swift", ".kt", ".kts", ".r",
-  ".c", ".cpp", ".cxx", ".cc", ".h", ".hpp", ".m", ".mm",
+  ".py",
+  ".java",
+  ".go",
+  ".rs",
+  ".rb",
+  ".php",
+  ".cs",
+  ".swift",
+  ".kt",
+  ".kts",
+  ".r",
+  ".c",
+  ".cpp",
+  ".cxx",
+  ".cc",
+  ".h",
+  ".hpp",
+  ".m",
+  ".mm",
   // Shell / scripts
-  ".sh", ".bash", ".zsh", ".bat", ".cmd", ".ps1",
+  ".sh",
+  ".bash",
+  ".zsh",
+  ".bat",
+  ".cmd",
+  ".ps1",
   // SQL
   ".sql",
   // Build / config files
-  ".gradle", ".cmake", ".mk", ".dockerfile",
+  ".gradle",
+  ".cmake",
+  ".mk",
+  ".dockerfile",
   // Other text-based
-  ".svg", ".graphql", ".gql", ".proto",
+  ".svg",
+  ".graphql",
+  ".gql",
+  ".proto",
 ]);
 const HTML_EXTS = new Set([".html", ".htm"]);
 
@@ -53,7 +103,7 @@ function formatSize(bytes: number): string {
 export function FileResultCard({
   filePath,
   content,
-  toolName,
+  toolName: _toolName,
 }: {
   filePath: string;
   content: string;
@@ -65,7 +115,7 @@ export function FileResultCard({
   const activeProject = projects.find((p) => p.id === activeProjectId);
 
   const fileName = filePath.split(/[/\\]/).pop() ?? filePath;
-  const ext = getExt(filePath);
+  const _ext = getExt(filePath);
   const lineCount = content.split("\n").length;
   const byteSize = new TextEncoder().encode(content).length;
 
@@ -85,13 +135,16 @@ export function FileResultCard({
 
   const handleOpenFolder = (): void => {
     if (activeProject?.path !== undefined) {
-      const dirPath = filePath.includes("/") || filePath.includes("\\")
-        ? filePath.replace(/[/\\][^/\\]+$/, "")
-        : ".";
+      const dirPath =
+        filePath.includes("/") || filePath.includes("\\")
+          ? filePath.replace(/[/\\][^/\\]+$/, "")
+          : ".";
       const absDir = dirPath.startsWith(activeProject.path)
         ? dirPath
         : `${activeProject.path}/${dirPath}`.replace(/\\/g, "/");
-      navigator.clipboard.writeText(absDir).catch(() => {});
+      navigator.clipboard.writeText(absDir).catch(() => {
+        /* clipboard not available */
+      });
     }
   };
 

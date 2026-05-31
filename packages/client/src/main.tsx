@@ -12,8 +12,8 @@ bootTheme();
 // browser from prior builds. Running this on every mount guarantees
 // the old SW is evicted.
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.getRegistrations().then((regs) => {
-    for (const reg of regs) reg.unregister();
+  void navigator.serviceWorker.getRegistrations().then((regs) => {
+    for (const reg of regs) void reg.unregister();
   });
 }
 

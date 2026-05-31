@@ -158,7 +158,11 @@ export const FilesPanelLayer = memo(function FilesPanelLayer({
   );
 
   if (filesIsLeftmost) {
-    return <div className="flex flex-1 flex-col overflow-hidden bg-neutral-900 group">{filesContent}</div>;
+    return (
+      <div className="flex flex-1 flex-col overflow-hidden bg-neutral-900 group">
+        {filesContent}
+      </div>
+    );
   }
 
   return (
@@ -179,10 +183,7 @@ export const FilesPanelLayer = memo(function FilesPanelLayer({
         minSize={MIN_FILES_WIDTH}
         maxSize={Math.max(
           MIN_FILES_WIDTH,
-          windowWidth -
-            MIN_CHAT_WIDTH -
-            240 -
-            (editorVisible ? MIN_EDITOR_WIDTH : 0),
+          windowWidth - MIN_CHAT_WIDTH - 240 - (editorVisible ? MIN_EDITOR_WIDTH : 0),
         )}
       />
       <div

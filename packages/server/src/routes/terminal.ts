@@ -395,7 +395,7 @@ export const terminalRoutes: FastifyPluginAsync = async (fastify) => {
       });
 
       socket.on("close", (code, reason) => {
-        const reasonStr = typeof reason === "string" ? reason : reason?.toString() ?? "";
+        const reasonStr = typeof reason === "string" ? reason : (reason?.toString() ?? "");
         cleanup("ws_close", reasonStr === "tab_closed");
       });
       socket.on("error", (err) => {
