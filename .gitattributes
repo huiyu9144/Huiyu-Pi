@@ -1,0 +1,18 @@
+# Binary file types — never run CRLF conversion on these
+*.ico binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.svg binary
+*.webp binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.otf binary
+*.mp4 binary
+*.webm binary
+*.zip binary
+*.tar binary
+*.gz binary
