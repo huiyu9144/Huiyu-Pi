@@ -5,7 +5,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 function readEnv(key: string): string | undefined {
-  const v = process.env[key];
+  const v = process.env[key]?.trim();
   return v === undefined || v === "" ? undefined : v;
 }
 
@@ -40,11 +40,11 @@ function readBool(key: string, fallback: boolean): boolean {
 }
 
 /**
- * Forge-owned root. `~/.pi-forge` is the single dotdir we own.
+ * Forge-owned root. `~/.huiyu-pi` is the single dotdir we own.
  * By default it holds both the project registry and the workspace where
  * user code lives:
  *
- *   ~/.pi-forge/
+ *   ~/.huiyu-pi/
  *     ├── projects.json   ← FORGE_DATA_DIR by default
  *     └── workspace/      ← WORKSPACE_PATH by default
  *
@@ -62,7 +62,7 @@ if (HOME === "/" || HOME === "") {
       "or run the server with a real user account.",
   );
 }
-const FORGE_HOME = join(HOME, ".pi-forge");
+const FORGE_HOME = join(HOME, ".huiyu-pi");
 const WORKSPACE_PATH = resolve(readEnv("WORKSPACE_PATH") ?? join(FORGE_HOME, "workspace"));
 // Default to the current user's home so local dev on macOS/Linux just works.
 // In the documented Docker setup this still resolves to `/root/.pi/agent`
@@ -72,8 +72,8 @@ const PI_CONFIG_DIR = resolve(readEnv("PI_CONFIG_DIR") ?? join(HOME, ".pi", "age
 const SESSION_DIR = resolve(readEnv("SESSION_DIR") ?? `${WORKSPACE_PATH}/.pi/sessions`);
 /**
  * Forge-owned data dir. Holds `projects.json` (the project registry
- * pi-forge layers on top of pi) and any other state that's ours, not
- * pi's. Defaults to `FORGE_HOME` (~/.pi-forge) so projects.json
+ * Huiyu Pi layers on top of pi) and any other state that's ours, not
+ * pi's. Defaults to `FORGE_HOME` (~/.huiyu-pi) so projects.json
  * sits next to the workspace folder. Kept SEPARATE from `PI_CONFIG_DIR`
  * (~/.pi/agent), which is owned by the pi SDK — auth.json, models.json,
  * settings.json. Dropping our state into the SDK's dir was the original
@@ -151,7 +151,12 @@ export const config = Object.freeze({
   // port-forwarding to work) set `HOST=0.0.0.0` explicitly. The
   // shipped Docker image does this in its Dockerfile so the
   // documented `docker compose up` flow keeps working out of the box.
-  host: readEnv("HOST") ?? "127.0.0.1",
+  // On Windows, Node's getaddrinfo can't resolve "0.0.0.0"; passing
+  // empty string skips DNS lookup and binds to all interfaces.
+  host: (() => {
+    const h = readEnv("HOST") ?? "127.0.0.1";
+    return h === "0.0.0.0" && process.platform === "win32" ? "" : h;
+  })(),
   logLevel: readEnv("LOG_LEVEL") ?? "info",
   isTest: (readEnv("NODE_ENV") ?? "") === "test",
   trustProxy: readBool("TRUST_PROXY", false),
@@ -280,7 +285,7 @@ export const config = Object.freeze({
      * is hashed and persisted to `${FORGE_DATA_DIR}/password-hash`,
      * and subsequent logins ignore the env value.
      *
-     * Defaults to false: pi-forge is single-tenant and the user
+     * Defaults to false: Huiyu Pi is single-tenant and the user
      * setting `--ui-password` / `UI_PASSWORD` does so deliberately,
      * so forcing them to immediately pick a different password is
      * friction without a meaningful threat-model win. Deployments
@@ -321,7 +326,7 @@ export const config = Object.freeze({
   corsOrigin: CORS_ORIGIN,
   /**
    * Extra env-var names the operator wants the integrated terminal
-   * (and the `!` exec route) to inherit from the pi-forge process.
+   * (and the `!` exec route) to inherit from the Huiyu Pi process.
    *
    * The terminal env starts from a small allowlist of harmless system
    * vars (PATH, HOME, USER, SHELL, TERM, locales — see
@@ -340,7 +345,7 @@ export const config = Object.freeze({
    */
   terminalPassthroughEnv: Object.freeze(readStringList("TERMINAL_PASSTHROUGH_ENV")),
   /**
-   * Opt-in: append a pi-forge-defined "secret hygiene" rule to the
+   * Opt-in: append a Huiyu Pi-defined "secret hygiene" rule to the
    * agent's system prompt. The rule asks the model to treat env-var
    * values as credentials by default and not echo them into responses
    * or tool outputs unless explicitly asked. See
@@ -350,7 +355,7 @@ export const config = Object.freeze({
    *
    * Default OFF. Operators who want it explicitly opt in by setting
    * `AGENT_SECRET_HYGIENE_RULE=true`. Kept opt-in (rather than
-   * default-on) so the pi-forge doesn't ship invisible behavioral
+   * default-on) so Huiyu Pi doesn't ship invisible behavioral
    * rules that constrain the agent in ways the user never asked for.
    * Deliberately not surfaced in `docker-compose.yml` or
    * `.env.example` — this is an advanced knob, intentionally

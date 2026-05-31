@@ -1,10 +1,10 @@
 /**
- * pi-forge-customized ResourceLoader for the agent.
+ * Huiyu Pi-customized ResourceLoader for the agent.
  *
  * Why this exists: pi's `DefaultResourceLoader` accepts an
  * `appendSystemPrompt: string[]` that gets concatenated onto the
  * agent's base system prompt. We optionally use this hook to inject
- * one pi-forge-specific behavioral rule about secret hygiene — a
+ * one Huiyu Pi-specific behavioral rule about secret hygiene — a
  * soft safeguard that tells the model to treat env-var values as
  * credentials by default and not echo them back into responses /
  * tool output.
@@ -75,7 +75,7 @@ export const FORGE_SECRET_HYGIENE_RULE =
   "or pasted into bug reports.";
 
 /**
- * Build a ResourceLoader pre-loaded with the pi-forge's optional
+ * Build a ResourceLoader pre-loaded with the Huiyu Pi's optional
  * `appendSystemPrompt` addendum. Mirrors the SDK's own internal
  * construction at sdk.js:87 (instantiate + await reload()), so the
  * loader is ready to hand to `createAgentSession` as-is.
@@ -119,7 +119,7 @@ export async function buildForgeResourceLoader(
     agentDir,
     settingsManager,
     appendSystemPrompt,
-    // In-process pi extensions pi-forge always registers. The
+    // In-process pi extensions Huiyu Pi always registers. The
     // `compactionContinuationExtension` hooks the `context` event and
     // appends a one-line imperative nudge to LLM input when the last
     // message is a `compactionSummary` — fixes the bug where weaker

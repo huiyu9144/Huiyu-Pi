@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   AtSign,
   Check,
@@ -9,6 +10,7 @@ import {
   ExternalLink,
   FileCode,
   FileDiff,
+  History,
   Rows2,
   Users,
   X,
@@ -17,6 +19,7 @@ import { FileResultCard } from "./FileResultCard";
 import {
   EMPTY_COMPACTIONS,
   EMPTY_MESSAGES,
+  EMPTY_SESSIONS,
   EMPTY_STRING,
   useSessionStore,
   type ActiveTool,
@@ -32,7 +35,9 @@ import { QuickActionRunCard } from "./QuickActionRunCard";
 import { useQuickActionRunsStore } from "../store/quick-actions-store";
 import { parseSubagentDetails, type SubagentResult } from "../lib/subagent-parser";
 import { useUiStore } from "../store/ui-store";
+import { useSnapshotStore } from "../store/snapshot-store";
 import { api } from "../lib/api-client";
+import { ConfirmDialog } from "./Modal";
 
 /**
  * Per-ChatView diff view-type preference. Each diff-rendering surface
@@ -55,6 +60,8 @@ const ChatDiffViewContext = createContext<{
 });
 
 const CHAT_VIEW_TYPE_KEY = "forge.chat.viewType";
+let lastSnapTime = 0;
+const SNAP_DEBOUNCE_MS = 2000;
 function readChatViewType(): ChatViewType {
   try {
     return localStorage.getItem(CHAT_VIEW_TYPE_KEY) === "split" ? "split" : "unified";
@@ -182,6 +189,9 @@ export function ChatView({ sessionId }: Props) {
     lastUserMessageCountRef.current = userCount;
   }, [messages]);
 
+  const snapState = useSnapshotStore((s) => s);
+  const deltaCacheRef = useRef<Map<string, { delta: import("../lib/api-client").SnapshotDelta; ts: number }>>(new Map());
+
   // Global-search scroll-to-message: when the search bar dispatches a
   // pending target for this session, locate the matching wrapper by
   // its `data-message-index` attribute and bring it into view. Wait
@@ -206,24 +216,26 @@ export function ChatView({ sessionId }: Props) {
     <ChatDiffViewContext.Provider
       value={{ viewType: chatViewType, setViewType: setAndPersistChatViewType }}
     >
-      <div className="flex flex-1 flex-col overflow-hidden">
-        {/* Banner sits ABOVE the scroll container so it stays pinned to the top
-            of the chat view regardless of how far the user has scrolled into a
-            long session. Earlier we rendered it inside the scroll container,
-            which meant a long-running streaming session pushed the
-            "Reconnecting…" / compaction banners off-screen. */}
+      <div className="relative flex flex-1 flex-col overflow-hidden">
+        {/* Banner — floating overlay on top of the chat area so it
+            doesn't squeeze the scroll container. Centred horizontally
+            with a small gap from the top edge. Pointer-events are
+            split so clicks pass through the wrapper but hit the
+            banner itself. */}
         {banner !== undefined && (
-          <div className="flex items-start gap-2 border-b border-amber-700/40 bg-amber-900/20 px-6 py-2 text-xs text-amber-200 light:border-amber-300 light:bg-amber-50 light:text-amber-800">
-            <div className="flex-1">{banner}</div>
-            <button
-              type="button"
-              onClick={() => clearBanner(sessionId)}
-              className="-mr-1 shrink-0 rounded p-0.5 text-amber-300 hover:bg-amber-900/40 hover:text-amber-100 light:text-amber-700 light:hover:bg-amber-100 light:hover:text-amber-900"
-              title="Dismiss"
-              aria-label="Dismiss banner"
-            >
-              <X size={14} />
-            </button>
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-50 flex justify-center pt-3">
+            <div className="pointer-events-auto flex items-start gap-2 rounded-lg border border-amber-700/40 bg-amber-900/90 px-4 py-2 text-xs text-amber-200 shadow-lg backdrop-blur-sm light:border-amber-300 light:bg-amber-50/95 light:text-amber-800">
+              <div className="flex-1">{banner}</div>
+              <button
+                type="button"
+                onClick={() => clearBanner(sessionId)}
+                className="-mr-1 shrink-0 rounded p-0.5 text-amber-300 hover:bg-amber-900/40 hover:text-amber-100 light:text-amber-700 light:hover:bg-amber-100 light:hover:text-amber-900"
+                title="Dismiss"
+                aria-label="Dismiss banner"
+              >
+                <X size={14} />
+              </button>
+            </div>
           </div>
         )}
         <div ref={scrollRef} onScroll={onScroll} className="chat-scroll-container flex-1 overflow-y-auto px-6 py-4" style={{ scrollbarGutter: "stable" }}>
@@ -424,7 +436,7 @@ export function ChatView({ sessionId }: Props) {
                 flushPendingBatch();
                 out.push(
                   <div key={i} data-message-index={i}>
-                    <Message message={m} toolResultsById={toolResultsById} />
+                    <Message message={m} toolResultsById={toolResultsById} msgIndex={i} sessionId={sessionId} />
                   </div>,
                 );
               }
@@ -573,21 +585,26 @@ function ChatEditDiff({
   filename,
   adds,
   dels,
+  flat,
 }: {
   diff: string;
   filename: string | undefined;
   adds: number;
   dels: number;
+  flat?: boolean;
 }) {
   const { viewType, setViewType } = useContext(ChatDiffViewContext);
   return (
-    <details className="group rounded border border-neutral-800 bg-neutral-950 text-xs">
-      <summary className="flex cursor-pointer items-center justify-between gap-2 px-3 py-2 text-neutral-300">
-        <span className="flex min-w-0 items-baseline gap-2">
-          <span className="text-neutral-500">edit{filename !== undefined ? " " : ""}</span>
-          {filename !== undefined && <span className="truncate font-mono">{filename}</span>}
-          <span className="ml-2 text-emerald-400 light:text-emerald-700">+{adds}</span>
-          <span className="ml-1 text-red-400 light:text-red-700">−{dels}</span>
+    <details className={`group rounded ${flat ? "bg-[#121212]" : "border border-neutral-800 bg-neutral-950"} text-xs`}>
+      <summary className="flex cursor-pointer items-center justify-between gap-2 pl-4 pr-3 py-2 text-neutral-300">
+        <span className="flex min-w-0 items-center gap-1">
+          <ChevronRight size={10} className="shrink-0 transition-transform group-open:rotate-90" />
+          <span className="flex items-baseline gap-2">
+            <span className="text-neutral-500">edit{filename !== undefined ? " " : ""}</span>
+            {filename !== undefined && <span className="truncate font-mono">{filename}</span>}
+            <span className="ml-2 text-emerald-400 light:text-emerald-700">+{adds}</span>
+            <span className="ml-1 text-red-400 light:text-red-700">−{dels}</span>
+          </span>
         </span>
         <button
           onClick={(e) => {
@@ -608,7 +625,29 @@ function ChatEditDiff({
           {viewType === "split" ? <Rows2 size={11} /> : <Columns2 size={11} />}
         </button>
       </summary>
-      <DiffBlock diff={diff} viewType={viewType} />
+      {flat ? (
+        <pre className="select-text overflow-auto pl-4 pr-3 pb-2 font-mono text-[11px] leading-tight">
+          {diff.split("\n").map((line, i) => {
+            let lineClass = "text-neutral-400";
+            if (line.startsWith("+++") || line.startsWith("---")) {
+              lineClass = "text-neutral-500";
+            } else if (line.startsWith("@@")) {
+              lineClass = "bg-neutral-900 text-cyan-400 light:text-cyan-700";
+            } else if (line.startsWith("+")) {
+              lineClass = "bg-emerald-950/60 text-emerald-200 light:bg-emerald-50 light:text-emerald-800";
+            } else if (line.startsWith("-")) {
+              lineClass = "bg-red-950/60 text-red-200 light:bg-red-50 light:text-red-800";
+            }
+            return (
+              <div key={i} className={lineClass}>
+                {line.length === 0 ? "\u00a0" : line}
+              </div>
+            );
+          })}
+        </pre>
+      ) : (
+        <DiffBlock diff={diff} viewType={viewType} />
+      )}
     </details>
   );
 }
@@ -693,7 +732,7 @@ function FileRefBadge({ ref: r }: { ref: FileRef }) {
         type="button"
         onClick={() => isInline && setExpanded((v) => !v)}
         disabled={!isInline}
-        className={`flex min-h-11 w-full items-center gap-1.5 px-2 py-1 text-left text-[11px] md:min-h-0 ${
+        className={`flex min-h-11 w-full items-center gap-1.5 pl-1 pr-1 py-1 text-left text-[11px] md:min-h-0 ${
           isInline
             ? "text-neutral-400"
             : "cursor-default text-emerald-200 light:text-emerald-800"
@@ -740,9 +779,13 @@ function FileRefBadge({ ref: r }: { ref: FileRef }) {
 function Message({
   message,
   toolResultsById,
+  msgIndex,
+  sessionId,
 }: {
   message: AgentMessageLike;
   toolResultsById?: Map<string, AgentMessageLike>;
+  msgIndex?: number;
+  sessionId?: string;
 }) {
   // Per-message toggle: rendered markdown (default) ↔ raw plaintext.
   // Useful when the user wants to copy a literal `**bold**` or see
@@ -790,7 +833,7 @@ function Message({
             <button
               type="button"
               onClick={() => setCollapsed((c) => !c)}
-              className="rounded p-0.5 text-neutral-500 hover:text-neutral-300"
+              className="rounded !pl-0 !pr-0.5 !py-0.5 text-neutral-500 hover:text-neutral-300"
               title={collapsed ? "Expand message" : "Collapse message"}
               aria-label={collapsed ? "Expand message" : "Collapse message"}
             >
@@ -801,6 +844,9 @@ function Message({
           </div>
           {text.length > 0 && (
             <div className="flex items-center gap-1">
+              {sessionId !== undefined && msgIndex !== undefined && (
+                <RestoreSnapshotButton sessionId={sessionId} msgIndex={msgIndex} />
+              )}
               <CopyButton getText={() => text} title="Copy message text" />
               <RawToggle showRaw={showRaw} onToggle={setShowRaw} />
             </div>
@@ -916,11 +962,12 @@ function Message({
 
   // Fallback: stringify so we can see what we missed.
   return (
-    <details className="rounded-lg border border-neutral-800 bg-neutral-900/40 px-3 py-2 text-xs text-neutral-400">
-      <summary className="cursor-pointer">
+    <details className="group rounded-lg border border-neutral-800 bg-neutral-900/40 pl-4 pr-3 py-2 text-xs text-neutral-400">
+      <summary className="flex cursor-pointer items-center gap-1">
+        <ChevronRight size={10} className="shrink-0 transition-transform group-open:rotate-90" />
         unknown message ({String(message.role ?? message.type ?? "?")})
       </summary>
-      <pre className="mt-2 overflow-auto whitespace-pre-wrap text-[10px] text-neutral-500">
+      <pre className="mt-2 overflow-auto whitespace-pre-wrap text-[10px] text-neutral-500 pl-4 pr-3">
         {JSON.stringify(message, null, 2)}
       </pre>
     </details>
@@ -957,7 +1004,7 @@ function TurnDiffFooter({ sessionId }: { sessionId: string }) {
         useUiStore.getState().setFilesOpen(true);
         useUiStore.getState().setRightTab("changes");
       }}
-      className="mt-2 flex items-center gap-1.5 rounded-md border border-neutral-800 bg-neutral-950 px-2.5 py-1 text-[11px] text-neutral-400 hover:border-neutral-600 hover:text-neutral-200"
+      className="mt-2 flex items-center gap-1.5 rounded-md border border-neutral-800 bg-neutral-950 pl-1 pr-1.5 py-1 text-[11px] text-neutral-400 hover:border-neutral-600 hover:text-neutral-200"
       title="Open changes tab to review"
     >
       <FileDiff size={11} />
@@ -1008,7 +1055,7 @@ function AssistantMessageBubble({
   const isDone = stopReason !== undefined || !isStreaming;
   return (
     <div
-      className="message-bubble group rounded-lg border-[0.5px] border-neutral-800 bg-neutral-900 px-4 py-3"
+      className="message-bubble group rounded-lg border-[0.5px] border-neutral-800 bg-neutral-900 pl-0 pr-4 py-3"
       data-message-role="assistant"
     >
       <div className="mb-1 flex items-center justify-between">
@@ -1016,7 +1063,7 @@ function AssistantMessageBubble({
           <button
             type="button"
             onClick={() => setCollapsed((c) => !c)}
-            className="rounded p-0.5 text-neutral-500 hover:text-neutral-300"
+            className="rounded !pl-4 !pr-0.5 !py-0.5 text-neutral-500 hover:text-neutral-300"
             title={collapsed ? "Expand message" : "Collapse message"}
             aria-label={collapsed ? "Expand message" : "Collapse message"}
           >
@@ -1038,7 +1085,7 @@ function AssistantMessageBubble({
         )}
       </div>
       {!collapsed && (
-        <>
+        <div className="pl-4">
           <div className="space-y-2 text-sm text-neutral-100">
             {renderAssistantBlocks(content, toolResultsById, showRaw)}
           </div>
@@ -1054,7 +1101,7 @@ function AssistantMessageBubble({
           {isDone && sessionId !== undefined && (
             <TurnDiffFooter sessionId={sessionId} />
           )}
-        </>
+        </div>
       )}
     </div>
   );
@@ -1099,12 +1146,12 @@ function AssistantRenderSegmentView({
 
   if (!segment.batchable && toolEntry !== undefined) {
     return (
-      <div className="space-y-2">
+      <div className="space-y-2 rounded-lg bg-[#121212] border border-[#1a1a1a] py-2">
         {segment.entries.map((entry, index) =>
           entry.kind === "thinking" ? (
-            <AssistantBlock key={`thinking-${index}`} block={entry.block} />
+            <AssistantBlock key={`thinking-${index}`} block={entry.block} flat />
           ) : (
-            <ToolCallEntry key={`tool-${index}`} block={entry.block} result={entry.result} />
+            <ToolCallEntry key={`tool-${index}`} block={entry.block} result={entry.result} flat />
           ),
         )}
       </div>
@@ -1221,7 +1268,7 @@ function renderAssistantBlocks(
 }
 
 const MAX_TOOL_BATCH_SIZE = 10;
-const NON_BATCHABLE_TOOL_NAMES = new Set(["edit", "write"]);
+const NON_BATCHABLE_TOOL_NAMES = new Set(["edit"]);
 
 type ToolBatchEntry =
   | { kind: "tool"; block: Record<string, unknown>; result: AgentMessageLike | undefined }
@@ -1321,10 +1368,10 @@ function ToolCallBatchCard({ entries }: { entries: ToolBatchEntry[] }) {
     })
     .slice(0, 3);
   return (
-    <details className="group rounded border border-neutral-800 bg-neutral-950 text-xs">
-      <summary className="flex cursor-pointer flex-col gap-2 px-3 py-2 text-neutral-300 sm:flex-row sm:items-center sm:justify-between">
+    <details className="group rounded-lg bg-[#121212] border border-[#1a1a1a] text-xs">
+      <summary className="flex cursor-pointer flex-col gap-2 pl-4 pr-3 py-2 text-neutral-300 sm:flex-row sm:items-center sm:justify-between">
         <span className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
-          <span className="text-neutral-500">→</span>
+          <ChevronRight size={12} className="shrink-0 text-neutral-500 transition-transform group-open:rotate-90" />
           <span className="font-mono">tools</span>
           <span className="text-neutral-500">
             ×{toolCount} {toolCount === 1 ? "call" : "calls"}
@@ -1352,12 +1399,12 @@ function ToolCallBatchCard({ entries }: { entries: ToolBatchEntry[] }) {
           )}
         </div>
       </summary>
-      <div className="space-y-2 border-t border-neutral-800/60 px-3 py-2">
+      <div className="space-y-2 border-t border-neutral-800/60 pr-3 py-2">
         {entries.map((entry, j) =>
           entry.kind === "thinking" ? (
-            <AssistantBlock key={j} block={entry.block} />
+            <AssistantBlock key={j} block={entry.block} flat />
           ) : (
-            <ToolCallEntry key={j} block={entry.block} result={entry.result} />
+            <ToolCallEntry key={j} block={entry.block} result={entry.result} flat />
           ),
         )}
       </div>
@@ -1369,11 +1416,12 @@ function AssistantBlock({
   block,
   toolResultsById,
   showRaw = false,
+  flat = false,
 }: {
   block: Record<string, unknown>;
   toolResultsById?: Map<string, AgentMessageLike>;
-  /** When true, render text blocks as plain `<pre>` instead of markdown. */
   showRaw?: boolean;
+  flat?: boolean;
 }) {
   const type = block.type;
 
@@ -1383,9 +1431,12 @@ function AssistantBlock({
 
   if (type === "thinking" && typeof block.thinking === "string") {
     return (
-      <details className="rounded border border-neutral-800 py-1 pr-2 text-xs text-neutral-400">
-        <summary className="cursor-pointer">Thinking…</summary>
-        <pre className="mt-1 whitespace-pre-wrap break-words font-sans text-[12px]">
+      <details className={`group rounded ${flat ? "" : "border border-neutral-800"} pl-0 py-1 pr-2 text-xs text-neutral-400 [&:open]:pb-2 [&_summary]:list-none [&_pre]:m-0`}>
+        <summary className="cursor-pointer flex items-center gap-1 pl-4">
+          <ChevronRight size={12} className="shrink-0 text-neutral-500 transition-transform group-open:rotate-90" />
+          Thinking…
+        </summary>
+        <pre className="mt-1 whitespace-pre-wrap break-words font-sans text-[12px] pl-4">
           {block.thinking}
         </pre>
       </details>
@@ -1399,9 +1450,12 @@ function AssistantBlock({
   }
 
   return (
-    <details className="text-xs text-neutral-500">
-      <summary className="cursor-pointer">block ({String(type ?? "?")})</summary>
-      <pre className="mt-1 overflow-auto whitespace-pre-wrap text-[10px]">
+    <details className="group text-xs text-neutral-500 [&_summary]:list-none [&_pre]:m-0 [&_pre]:pl-0">
+      <summary className="cursor-pointer flex items-center gap-1 pl-4">
+        <ChevronRight size={12} className="shrink-0 text-neutral-500 transition-transform group-open:rotate-90" />
+        block ({String(type ?? "?")})
+      </summary>
+      <pre className="mt-1 overflow-auto whitespace-pre-wrap text-[10px] pl-4">
         {JSON.stringify(block, null, 2)}
       </pre>
     </details>
@@ -1427,9 +1481,11 @@ function AssistantBlock({
 function ToolCallEntry({
   block,
   result,
+  flat = false,
 }: {
   block: Record<string, unknown>;
   result: AgentMessageLike | undefined;
+  flat?: boolean;
 }) {
   const name = String(block.name ?? "tool");
   const args = block.input ?? block.arguments ?? {};
@@ -1506,10 +1562,9 @@ function ToolCallEntry({
         : "border-neutral-800";
 
   return (
-    <div className={`rounded border ${borderClass} bg-neutral-950 text-xs`}>
-      <div className="flex items-center justify-between py-2 pl-1 pr-3 text-neutral-300">
+    <div className={flat ? "text-xs" : `rounded border ${borderClass} bg-neutral-950 text-xs`}>
+      <div className="flex items-center justify-between py-2 pl-4 pr-3 text-neutral-300">
         <div className="min-w-0 flex-1 truncate">
-          <span className="text-neutral-500">→ </span>
           <span className="font-mono">{name}</span>
           {preview !== undefined && (
             <span className="ml-2 truncate font-mono text-neutral-400" title={preview}>
@@ -1532,19 +1587,21 @@ function ToolCallEntry({
       </div>
 
       {argsText.length > 0 && (
-        <details className="border-t border-neutral-800/60">
-          <summary className="cursor-pointer px-3 py-1.5 text-[11px] text-neutral-400">
+        <details className={`group ${flat ? "" : "border-t border-neutral-800/60"} [&_summary]:list-none`}>
+          <summary className="flex cursor-pointer items-center gap-1 pl-4 pr-3 py-1.5 text-[11px] text-neutral-400">
+            <ChevronRight size={10} className="shrink-0 transition-transform group-open:rotate-90" />
             Input
           </summary>
-          <pre className="overflow-auto px-3 pb-2 font-mono text-[11px] text-neutral-400">
+          <pre className="overflow-auto pl-4 pr-3 pb-2 font-mono text-[11px] text-neutral-400">
             {argsText}
           </pre>
         </details>
       )}
 
       {result !== undefined && (
-        <details className="border-t border-neutral-800/60">
-          <summary className="cursor-pointer px-3 py-1.5 text-[11px] text-neutral-400">
+        <details className={`group ${flat ? "" : "border-t border-neutral-800/60"} [&_summary]:list-none`}>
+          <summary className="flex cursor-pointer items-center gap-1 pl-4 pr-3 py-1.5 text-[11px] text-neutral-400">
+            <ChevronRight size={10} className="shrink-0 transition-transform group-open:rotate-90" />
             Output
             {editStats !== undefined && (
               <span className="ml-2 font-mono text-[10px]">
@@ -1557,16 +1614,17 @@ function ToolCallEntry({
             )}
           </summary>
           {editDiff !== undefined && editStats !== undefined ? (
-            <div className="px-3 pb-2">
+            <div className="pb-2">
               <ChatEditDiff
                 diff={editDiff}
                 filename={editFn}
                 adds={editStats.adds}
                 dels={editStats.dels}
+                flat={flat}
               />
             </div>
           ) : (
-            <pre className="max-h-96 overflow-auto px-3 pb-2 font-mono text-[11px] text-neutral-300">
+            <pre className="max-h-96 overflow-auto pl-4 pr-3 pb-2 font-mono text-[11px] text-neutral-300">
               {outputText.length > 0 ? outputText : "(empty)"}
             </pre>
           )}
@@ -1603,14 +1661,15 @@ function ToolResult({ message }: { message: AgentMessageLike }) {
       return <FileResultCard filePath={fn} content={text} toolName={toolName} />;
     }
     return (
-      <details className="rounded border border-neutral-800 bg-neutral-950 text-xs">
-        <summary className="cursor-pointer px-3 py-2 text-neutral-300">
-          <span className="text-neutral-500">read{fn !== undefined ? " " : ""}</span>
-          {fn !== undefined && <span className="font-mono">{fn}</span>}
-        </summary>
-        <pre className="overflow-auto px-3 pb-2 font-mono text-[11px] text-neutral-400">{text}</pre>
-      </details>
-    );
+    <details className="group rounded border border-neutral-800 bg-neutral-950 text-xs">
+      <summary className="flex cursor-pointer items-center gap-1 pl-4 pr-3 py-2 text-neutral-300">
+        <ChevronRight size={10} className="shrink-0 transition-transform group-open:rotate-90" />
+        <span className="text-neutral-500">read{fn !== undefined ? " " : ""}</span>
+        {fn !== undefined && <span className="font-mono">{fn}</span>}
+      </summary>
+      <pre className="overflow-auto pl-4 pr-3 pb-2 font-mono text-[11px] text-neutral-400">{text}</pre>
+    </details>
+  );
   }
 
   if (toolName === "bash") {
@@ -1636,15 +1695,16 @@ function ToolResult({ message }: { message: AgentMessageLike }) {
       return <FileResultCard filePath={fn} content={text} toolName={toolName} />;
     }
     return (
-      <details className="rounded border border-neutral-800 bg-neutral-950 text-xs">
-        <summary className="cursor-pointer px-3 py-2 text-neutral-300">
-          <span className="text-neutral-500">write{fn !== undefined ? " " : ""}</span>
-          {fn !== undefined && <span className="font-mono">{fn}</span>}
-          <span className="ml-2 text-neutral-500">({text.split("\n").length} lines)</span>
-        </summary>
-        <pre className="overflow-auto px-3 pb-2 font-mono text-[11px] text-neutral-400">{text}</pre>
-      </details>
-    );
+    <details className="group rounded border border-neutral-800 bg-neutral-950 text-xs">
+      <summary className="flex cursor-pointer items-center gap-1 pl-4 pr-3 py-2 text-neutral-300">
+        <ChevronRight size={10} className="shrink-0 transition-transform group-open:rotate-90" />
+        <span className="text-neutral-500">write{fn !== undefined ? " " : ""}</span>
+        {fn !== undefined && <span className="font-mono">{fn}</span>}
+        <span className="ml-2 text-neutral-500">({text.split("\n").length} lines)</span>
+      </summary>
+      <pre className="overflow-auto pl-4 pr-3 pb-2 font-mono text-[11px] text-neutral-400">{text}</pre>
+    </details>
+  );
   }
 
   // pi-subagents: replace the generic tool card with a richer surface
@@ -1658,13 +1718,14 @@ function ToolResult({ message }: { message: AgentMessageLike }) {
   // Generic tool result fallback.
   return (
     <details
-      className={`rounded border ${isError ? "border-red-700/40 light:border-red-300" : "border-neutral-800"} bg-neutral-950 text-xs`}
+      className={`group rounded border ${isError ? "border-red-700/40 light:border-red-300" : "border-neutral-800"} bg-neutral-950 text-xs`}
     >
-      <summary className="cursor-pointer px-3 py-2 text-neutral-300">
+      <summary className="flex cursor-pointer items-center gap-1 pl-4 pr-3 py-2 text-neutral-300">
+        <ChevronRight size={10} className="shrink-0 transition-transform group-open:rotate-90" />
         <span className="text-neutral-500">{toolName}</span>
         {isError && <span className="ml-2 text-red-400 light:text-red-700">error</span>}
       </summary>
-      <pre className="overflow-auto px-3 pb-2 font-mono text-[11px] text-neutral-400">{text}</pre>
+      <pre className="overflow-auto pl-4 pr-3 pb-2 font-mono text-[11px] text-neutral-400">{text}</pre>
     </details>
   );
 }
@@ -1870,11 +1931,12 @@ function SubagentResultCard({
           can still see what was sent and what came back. Failures
           surface here as Output content rather than disappearing. */}
       {argsText.length > 0 && (
-        <details className="border-t border-sky-900/30">
-          <summary className="cursor-pointer px-2.5 py-1 text-[11px] text-neutral-400">
+        <details className="group border-t border-sky-900/30">
+          <summary className="flex cursor-pointer items-center gap-1 pl-4 pr-2.5 py-1 text-[11px] text-neutral-400">
+            <ChevronRight size={10} className="shrink-0 transition-transform group-open:rotate-90" />
             Input
           </summary>
-          <pre className="overflow-auto px-2.5 pb-2 font-mono text-[11px] text-neutral-400">
+          <pre className="overflow-auto pl-4 pr-2.5 pb-2 font-mono text-[11px] text-neutral-400">
             {argsText}
           </pre>
         </details>
@@ -1885,12 +1947,13 @@ function SubagentResultCard({
           // Management calls and successful runs stay collapsed so the
           // chat is scannable — the user can click to inspect.
           open={isError}
-          className="border-t border-sky-900/30"
+          className="group border-t border-sky-900/30"
         >
-          <summary className="cursor-pointer px-2.5 py-1 text-[11px] text-neutral-400">
+          <summary className="flex cursor-pointer items-center gap-1 pl-4 pr-2.5 py-1 text-[11px] text-neutral-400">
+            <ChevronRight size={10} className="shrink-0 transition-transform group-open:rotate-90" />
             Output
           </summary>
-          <pre className="overflow-auto px-2.5 pb-2 font-mono text-[11px] text-neutral-300 whitespace-pre-wrap">
+          <pre className="overflow-auto pl-4 pr-2.5 pb-2 font-mono text-[11px] text-neutral-300 whitespace-pre-wrap">
             {outputText}
           </pre>
         </details>
@@ -1951,7 +2014,7 @@ function BashExecution({ message }: { message: AgentMessageLike }) {
   const excluded = message.excludeFromContext === true;
   return (
     <div className="rounded border border-neutral-800 bg-neutral-950 text-xs">
-      <div className="flex items-center justify-between gap-2 px-3 py-2 text-neutral-400">
+      <div className="flex items-center justify-between gap-2 px-3 py-2 text-neutral-400 pl-1">
         <div className="min-w-0 flex-1 truncate">
           <span className="text-neutral-500">$ </span>
           <span className="font-mono text-neutral-200">{command}</span>
@@ -1990,7 +2053,7 @@ function BashExecution({ message }: { message: AgentMessageLike }) {
         </div>
       </div>
       {output.length > 0 && (
-        <pre className="max-h-64 overflow-auto px-3 pb-2 font-mono text-[11px] text-neutral-300">
+        <pre className="max-h-64 overflow-auto px-3 pb-2 font-mono text-[11px] text-neutral-300 pl-1">
           {output}
         </pre>
       )}
@@ -2118,6 +2181,224 @@ function isObjectShape(v: unknown): v is Record<string, unknown> {
  * the `group` class) so the chrome doesn't compete with the message
  * content. Native `title` carries the absolute date+time for a
  * second-level disclosure on top of the visible short time.
+ */
+function RestoreSnapshotButton({
+  msgIndex,
+  sessionId,
+}: {
+  msgIndex: number;
+  sessionId: string;
+}) {
+  const project = useActiveProject();
+  const loadSnapshots = useSnapshotStore((s) => s.loadSnapshots);
+  const getSessionDelta = useSnapshotStore((s) => s.getSessionDelta);
+  const restoreSessionDiff = useSnapshotStore((s) => s.restoreSessionDiff);
+  const restoring = useSnapshotStore((s) => s.restoring);
+  const messages = useSessionStore((s) => s.messagesBySession[sessionId] ?? EMPTY_MESSAGES);
+  const loadSessionsForProject = useSessionStore((s) => s.loadSessionsForProject);
+
+  const [open, setOpen] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [delta, setDelta] = useState<import("../lib/api-client").SessionDelta | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [pos, setPos] = useState({ top: 0, left: 0 });
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const openTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const targetRef = useRef<string | null>(null);
+
+  if (project === undefined) return null;
+
+  const loadDelta = async () => {
+    try {
+      // Always ensure sessions + snapshots are loaded
+      await Promise.all([
+        loadSessionsForProject(project.id),
+        loadSnapshots(project.id),
+      ]);
+
+      // Re-read from store after refresh
+      const allRefreshed = useSnapshotStore.getState().snapshots
+        .filter((s) => s.trigger === "pre-agent" && s.projectId === project.id)
+        .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+      const sessionSnapshots = allRefreshed.filter((s) => s.sessionId === sessionId);
+
+      const clickedMsg = messages[msgIndex];
+      const clickedTimestamp = typeof clickedMsg?.timestamp === "number" ? clickedMsg.timestamp : undefined;
+      if (clickedTimestamp === undefined) { setLoading(false); return; }
+
+      // Find the snapshot created just before this message was sent,
+      // matching the same sessionId and the closest timestamp < message time.
+      let matchedId: string | undefined;
+      for (let i = sessionSnapshots.length - 1; i >= 0; i--) {
+        const snapMs = new Date(sessionSnapshots[i]!.createdAt).getTime();
+        if (snapMs < clickedTimestamp) { matchedId = sessionSnapshots[i]!.id; break; }
+      }
+      if (matchedId === undefined) { setLoading(false); return; }
+
+      targetRef.current = matchedId;
+      const d = await getSessionDelta(project.id, matchedId);
+      setDelta(d ?? null);
+    } catch (err) {
+      console.error("[RestoreSnapshotButton] loadDelta failed:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const scheduleOpen = () => {
+    if (closeTimer.current !== undefined) { clearTimeout(closeTimer.current); closeTimer.current = undefined; }
+    if (open) return;
+    openTimer.current = setTimeout(() => {
+      if (btnRef.current !== null) {
+        const r = btnRef.current.getBoundingClientRect();
+        setPos({ top: r.bottom + 4, left: Math.max(8, r.right - 320) });
+      }
+      setOpen(true);
+      if (delta === null && !loading) {
+        setLoading(true);
+        void loadDelta();
+      }
+    }, 200);
+  };
+
+  const scheduleClose = () => {
+    if (openTimer.current !== undefined) { clearTimeout(openTimer.current); openTimer.current = undefined; }
+    closeTimer.current = setTimeout(() => setOpen(false), 120);
+  };
+
+  const cancelClose = () => {
+    if (closeTimer.current !== undefined) { clearTimeout(closeTimer.current); closeTimer.current = undefined; }
+  };
+
+  const handleClick = async () => {
+    if (delta === null && !loading) {
+      setLoading(true);
+      await loadDelta();
+    }
+    if (targetRef.current !== null) setShowConfirm(true);
+  };
+
+  const handleRestore = async () => {
+    if (targetRef.current === null || project === undefined) return;
+    setShowConfirm(false);
+    setOpen(false);
+    await restoreSessionDiff(project.id, targetRef.current, project.path);
+  };
+
+  const badge = (s: string) => {
+    const map: Record<string, { cls: string; label: string }> = {
+      added: { cls: "bg-emerald-900/50 text-emerald-400 border-emerald-800/60", label: "Add" },
+      modified: { cls: "bg-amber-900/40 text-amber-400 border-amber-800/60", label: "Mod" },
+      deleted: { cls: "bg-red-900/40 text-red-400 border-red-800/60", label: "Del" },
+    };
+    const m = map[s] ?? { cls: "bg-neutral-800 text-neutral-400 border-neutral-700", label: s };
+    return (
+      <span className={`inline-block shrink-0 rounded border px-1.5 py-px text-[9px] font-medium leading-tight ${m.cls}`}>
+        {m.label}
+      </span>
+    );
+  };
+
+  const popup = open
+    ? createPortal(
+        <div
+          className="fixed z-[100]"
+          style={{ top: pos.top, left: pos.left, width: 320 }}
+          onMouseEnter={cancelClose}
+          onMouseLeave={scheduleClose}
+        >
+          <div className="mb-px h-1" />
+          <div className="overflow-hidden rounded-lg border border-neutral-800 bg-neutral-900 shadow-xl">
+            <div className="px-3 py-2">
+              <span className="text-xs font-medium text-neutral-200">Session Restore Preview</span>
+            </div>
+            {loading ? (
+              <div className="flex items-center justify-center gap-2 px-3 py-6 text-xs text-neutral-500">
+                <span className="inline-block h-3 w-3 animate-spin rounded-full border border-neutral-600 border-t-neutral-400" />
+                Computing diff...
+              </div>
+            ) : delta !== null ? (
+              <>
+                <div className="max-h-64 overflow-y-auto custom-scrollbar">
+                  {delta.entries.length === 0 ? (
+                    <div className="px-3 py-4 text-center text-xs text-neutral-500">No session changes to restore</div>
+                  ) : (
+                    delta.entries.slice(0, 50).map((e) => (
+                      <div
+                        key={e.path}
+                        className="flex items-center gap-2 px-3 py-1.5 hover:bg-neutral-800/60"
+                      >
+                        {badge(e.status)}
+                        <span className="min-w-0 flex-1 truncate font-mono text-[11px] text-neutral-300" title={e.path}>
+                          {e.path}
+                        </span>
+                      </div>
+                    ))
+                  )}
+                  {delta.entries.length > 50 && (
+                    <div className="px-3 py-1.5 text-[10px] text-neutral-500">
+                      +{delta.entries.length - 50} more
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center gap-3 px-3 py-2 text-[10px] text-neutral-400">
+                  <span>Add <span className="text-emerald-400">{delta.summary.added}</span></span>
+                  <span>Mod <span className="text-amber-400">{delta.summary.modified}</span></span>
+                  <span>Del <span className="text-red-400">{delta.summary.deleted}</span></span>
+                </div>
+              </>
+            ) : (
+              <div className="px-3 py-4 text-center text-xs text-neutral-500">No changes detected</div>
+            )}
+          </div>
+        </div>,
+        document.body,
+      )
+    : null;
+
+  return (
+    <div className="relative" onMouseEnter={scheduleOpen} onMouseLeave={scheduleClose}>
+      <button
+        ref={btnRef}
+        type="button"
+        disabled={restoring}
+        className="inline-flex min-h-11 min-w-11 items-center justify-center rounded px-1.5 py-0.5 text-neutral-400 md:min-h-0 md:min-w-0"
+        title="Restore session changes after this message"
+        onClick={handleClick}
+      >
+        {restoring ? (
+          <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border border-neutral-500 border-t-transparent" />
+        ) : (
+          <History size={14} />
+        )}
+      </button>
+
+      {popup}
+
+      <ConfirmDialog
+        open={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        onConfirm={handleRestore}
+        title="Confirm Session Restore"
+        message={
+          delta !== null
+            ? `Restore this session's changes after this message.\n\n${delta.entries.length} files will change:\n· ${delta.summary.added} added\n· ${delta.summary.modified} modified\n· ${delta.summary.deleted} deleted\n\nOther sessions' changes will be preserved.\nCurrent state will be auto-saved as a backup.`
+            : "Restore this session's changes after this message.\n\nCurrent state will be auto-saved as a backup."
+        }
+        primaryLabel="Restore"
+        tone="danger"
+      />
+    </div>
+  );
+}
+
+/**
+ * Mini timestamp badge that shows a short time (HH:MM) with title
+ * attribute for the full ISO date. Uses the `timestamp` property from
+ * the raw message object (if present). Sits inline in the message
+ * header row so it doesn't steal vertical space. The title acts as
+ * a second-level disclosure on top of the visible short time.
  */
 function MessageTimestamp({ ts }: { ts: unknown }) {
   if (typeof ts !== "number" || !Number.isFinite(ts) || ts <= 0) return null;

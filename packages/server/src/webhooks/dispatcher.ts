@@ -61,9 +61,9 @@ const ERROR_PREVIEW_LIMIT = 200;
  */
 const RESERVED_HEADERS = new Set([
   "content-type",
-  "x-pi-forge-event",
-  "x-pi-forge-delivery",
-  "x-pi-forge-signature",
+  "x-huiyu-pi-event",
+  "x-huiyu-pi-delivery",
+  "x-huiyu-pi-signature",
   "user-agent",
 ]);
 
@@ -183,7 +183,7 @@ async function deliverOnce(
   const body = JSON.stringify(payload);
   const headers: Record<string, string> = {
     "Content-Type": "application/json; charset=utf-8",
-    "User-Agent": "pi-forge-webhook/1.0",
+    "User-Agent": "huiyu-pi-webhook/1.0",
     "X-Pi-Forge-Event": payload.event,
     "X-Pi-Forge-Delivery": payload.deliveryId,
   };

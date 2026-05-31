@@ -21,7 +21,7 @@ PersistentVolumes:
 |---|---|---|
 | `/workspace` | User code (projects live as subfolders) | `pi-forge-workspace` (10 Gi) |
 | `/home/pi/.pi/agent` | Pi SDK config (`auth.json`, `models.json`, `settings.json`) | `pi-forge-pi-config` (1 Gi) |
-| `/home/pi/.pi-forge` | Pi-forge state (`projects.json`, `mcp.json`, override files, `jwt-secret`, `password-hash`) | `pi-forge-data` (1 Gi) |
+| `/home/pi/.huiyu-pi` | Pi-forge state (`projects.json`, `mcp.json`, override files, `jwt-secret`, `password-hash`) | `pi-forge-data` (1 Gi) |
 
 All three are `ReadWriteMany` so rolling updates can mount the volumes
 from the new pod before the old detaches. If your storage class is

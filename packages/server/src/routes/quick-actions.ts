@@ -127,7 +127,7 @@ function handleError(reply: FastifyReply, err: unknown): FastifyReply {
 
 /**
  * Spawn the command under `/bin/sh -c` with a scrubbed env (same
- * posture as the integrated terminal — no pi-forge / provider
+ * posture as the integrated terminal — no Huiyu Pi / provider
  * secrets leak into chip output). stdout and stderr are captured
  * separately so the chat card can render them in distinct blocks.
  */
@@ -374,7 +374,7 @@ export const quickActionRoutes: FastifyPluginAsync = async (fastify) => {
           "Execute a command-kind quick action in the named project's " +
           "cwd. Returns captured stdout/stderr and the exit code. The " +
           "spawned shell inherits a SCRUBBED env (same as the " +
-          "integrated terminal — no pi-forge or provider secrets). " +
+          "integrated terminal — no Huiyu Pi or provider secrets). " +
           "Hard-gated under MINIMAL_UI: command runs return 403 " +
           "`command_actions_disabled_in_minimal` regardless of who " +
           "is calling. Prompt-kind actions are not executable here " +

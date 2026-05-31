@@ -585,7 +585,7 @@ export const controlRoutes: FastifyPluginAsync = async (fastify) => {
   // Per-session thinking-level override. The SDK persists thinkingLevel as
   // first-class session state — it appends a thinkingLevel entry to the
   // JSONL and reconstructs the value on replay/resume — so this route is
-  // a thin pass-through, no pi-forge-side storage.
+  // a thin pass-through, no Huiyu-Pi-side storage.
   //
   // BUT setThinkingLevel has the same settings.json side effect as
   // setModel: it calls settingsManager.setDefaultThinkingLevel(...), which

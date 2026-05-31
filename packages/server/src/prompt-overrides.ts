@@ -5,7 +5,7 @@ import { randomUUID } from "node:crypto";
 import { config } from "./config.js";
 
 /**
- * pi-forge-private per-project prompt overrides at
+ * Huiyu-Pi-private per-project prompt overrides at
  * `${FORGE_DATA_DIR}/prompts-overrides.json`. Mirrors the
  * skill-overrides shape and rationale: each project keeps a tri-state
  * position on every prompt (enabled / disabled / inherit), the

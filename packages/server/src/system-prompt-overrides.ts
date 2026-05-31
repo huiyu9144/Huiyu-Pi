@@ -5,7 +5,7 @@ import { randomUUID } from "node:crypto";
 import { config } from "./config.js";
 
 /**
- * pi-forge-private per-project system-prompt addendum at
+ * Huiyu-Pi-private per-project system-prompt addendum at
  * `${FORGE_DATA_DIR}/system-prompt-overrides.json`. Each project can
  * store a free-form text block that is appended (via pi's
  * `appendSystemPrompt` extension hook) to the agent's base system

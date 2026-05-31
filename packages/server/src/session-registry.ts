@@ -184,16 +184,16 @@ export const BUILTIN_TOOL_NAMES: readonly string[] = [
   "grep",
   "find",
   "ls",
-  // ask_user_question is implemented in pi-forge (see ask-user-question/),
+  // ask_user_question is implemented in Huiyu Pi (see ask-user-question/),
   // not in the pi SDK. Listed here so the Tools settings tab surfaces it
   // under "Built-in tools" — disabling it filters it out of the allowlist
   // passed to createAgentSession, so the agent never sees the tool.
   "ask_user_question",
-  // todo is implemented in pi-forge (see todo/), contract-compatible with
+  // todo is implemented in Huiyu Pi (see todo/), contract-compatible with
   // @juicesharp/rpiv-todo. Same disable-via-settings semantics as
   // ask_user_question.
   "todo",
-  // process is implemented in pi-forge (see processes/), contract-
+  // process is implemented in Huiyu Pi (see processes/), contract-
   // compatible with @aliou/pi-processes. Manages background processes
   // the agent spawns (dev servers, watchers, etc.) — separate spawn
   // surface from bash, with lifecycle management + log capture +
@@ -330,7 +330,7 @@ function makeSubscribeHandler(live: LiveSession): () => void {
     // upstream HTTP failures into events rather than throwing — so a 401
     // from a bad apiKey, a network reset, an invalid endpoint, etc.
     // surface only via these events and are otherwise invisible to
-    // operators. The TUI renders this directly in chat; the pi-forge
+    // operators. The TUI renders this directly in chat; the Huiyu Pi
     // did not, leaving "no response" as the only signal.
     //
     // We hook every event the SDK emits when something goes wrong,
@@ -1746,7 +1746,7 @@ export async function disposeAllSessions(): Promise<void> {
 /**
  * Build a SettingsManager whose `getGlobalSettings()` and
  * `getProjectSettings()` return augmented `skills` patterns reflecting
- * the pi-forge's per-project overrides.
+ * the Huiyu Pi's per-project overrides.
  *
  * Why we don't use `applyOverrides({ skills })`: pi's package-manager
  * (the thing that auto-discovers and filters skills) reads

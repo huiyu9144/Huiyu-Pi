@@ -1,20 +1,21 @@
 import { Component, StrictMode, type ErrorInfo, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
-import { registerSW } from "virtual:pwa-register";
 import { App } from "./App";
 import "./index.css";
 import { bootTheme } from "./lib/theme";
 
-// Apply the persisted theme BEFORE React mounts so the first paint
-// uses the correct palette (no dark→light flash on a Light theme
-// reload). `bootTheme` reads localStorage synchronously and sets
-// `<html data-theme>`; CSS rules in index.css then provide the
-// matching neutral palette to every Tailwind class.
 bootTheme();
 
-// Auto-register the service worker (vite-plugin-pwa). `autoUpdate` mode
-// silently swaps in new shells on the next reload — no banner needed.
-registerSW({ immediate: true });
+// Unregister any previously installed service worker to ensure fresh
+// content from every build. VitePWA has been removed — no future SW
+// will be generated, but old SW instances may still be active in the
+// browser from prior builds. Running this on every mount guarantees
+// the old SW is evicted.
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.getRegistrations().then((regs) => {
+    for (const reg of regs) reg.unregister();
+  });
+}
 
 /**
  * Dev-time error boundary that renders the error visibly on the page when
@@ -34,7 +35,7 @@ class RootErrorBoundary extends Component<{ children: ReactNode }, { error: Erro
     // /api/v1/health`, which surfaced nothing useful server-side and
     // was confusing in dev tools. Real client-error reporting is a
     // Phase 18 polish item.
-    console.error("[pi-forge] root render error", error, info);
+    console.error("[huiyu-pi] root render error", error, info);
   }
 
   override render(): ReactNode {
@@ -51,7 +52,7 @@ class RootErrorBoundary extends Component<{ children: ReactNode }, { error: Erro
             overflow: "auto",
           }}
         >
-          <h1 style={{ color: "#fff", marginBottom: "1rem" }}>pi-forge: render crash</h1>
+          <h1 style={{ color: "#fff", marginBottom: "1rem" }}>Huiyu Pi: render crash</h1>
           <p style={{ color: "#d4d4d4", marginBottom: "1rem" }}>{this.state.error.message}</p>
           <pre style={{ fontSize: "11px", color: "#a3a3a3" }}>
             {this.state.error.stack ?? "(no stack)"}
@@ -68,10 +69,10 @@ class RootErrorBoundary extends Component<{ children: ReactNode }, { error: Erro
 }
 
 window.addEventListener("error", (e) => {
-  console.error("[pi-forge] uncaught error", e.error);
+  console.error("[huiyu-pi] uncaught error", e.error);
 });
 window.addEventListener("unhandledrejection", (e) => {
-  console.error("[pi-forge] unhandled rejection", e.reason);
+  console.error("[huiyu-pi] unhandled rejection", e.reason);
 });
 
 const rootEl = document.getElementById("root");

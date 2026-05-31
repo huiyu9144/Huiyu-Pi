@@ -75,7 +75,7 @@ async function startServer(): Promise<RunningServer> {
   const configDir = await mkdtemp(join(tmpdir(), "pi-forge-cfg-"));
   // FORGE_DATA_DIR isolates the projects.json this test reads
   // and writes. Without it the test would touch the dev's actual
-  // ~/.pi-forge/projects.json, leaking state across test runs
+  // ~/.huiyu-pi/projects.json, leaking state across test runs
   // (and clobbering the user's real project list).
   const dataDir = await mkdtemp(join(tmpdir(), "pi-forge-data-"));
   const port = await pickFreePort();

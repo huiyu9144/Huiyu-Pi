@@ -61,14 +61,14 @@ function normalizePath(p: string): string {
 
 function wrapFilePaths(text: string): string {
   let result = text.replace(FILE_PATH_RE, (_match, path: string) => {
-    return `[📄 ${path}](<${FILE_REF_PREFIX}${normalizePath(path)}>)`;
+    return `[${path}](<${FILE_REF_PREFIX}${normalizePath(path)}>)`;
   });
   result = result.replace(BARE_PATH_RE, (_match, filePath: string) => {
     const normalized = normalizePath(filePath);
     if (result.includes(`(${FILE_REF_PREFIX}${normalized})`)) return _match;
     if (result.includes(`(<${FILE_REF_PREFIX}${normalized}>)`)) return _match;
     const fileName = filePath.split(/[\\/]/).pop() ?? filePath;
-    return `[📄 ${fileName}](<${FILE_REF_PREFIX}${normalized}>)`;
+    return `[${fileName}](<${FILE_REF_PREFIX}${normalized}>)`;
   });
   return result;
 }
@@ -227,7 +227,7 @@ const CodeRenderer = ({ className, children, ...rest }: HTMLAttributes<HTMLEleme
       <Highlight code={code} language={language} theme={customTheme}>
         {({ style, tokens, getLineProps, getTokenProps }) => (
           <pre
-            className="overflow-x-auto rounded border border-neutral-800 p-2 font-mono text-[12px]"
+            className="overflow-x-auto rounded border border-neutral-800 pt-[10px] pb-2 pr-2 pl-[10px] font-mono text-[12px]"
             style={{ ...style, background: codeBg }}
           >
             {tokens.map((line, i) => {
@@ -260,7 +260,7 @@ function FilePreviewLink({
     <button
       type="button"
       onClick={() => openPreviewFile(filePath)}
-      className="inline-flex items-center gap-1 rounded bg-neutral-800/60 px-1.5 py-0.5 text-[#7BB8FF] light:text-blue-600 transition-colors hover:bg-neutral-700/60 hover:text-[#7BB8FF]"
+      className="inline-flex items-center gap-1 rounded bg-neutral-800/60 pl-1 pr-1.5 py-0.5 text-[#7BB8FF] light:text-blue-600 transition-colors hover:bg-neutral-700/60 hover:text-[#7BB8FF]"
       title={`Preview ${filePath}`}
     >
       <FileText size={12} />
@@ -345,9 +345,9 @@ export function ChatMarkdown({ text, size = "sm", chatStyleBreaks = false, disab
   const plugins = chatStyleBreaks ? [remarkGfm, remarkMath, remarkBreaks] : [remarkGfm, remarkMath];
   const processed = disablePathDetection ? text : wrapFilePaths(text);
 
-  const linkRe = /^\[📄 ([^\]]+)\]\(<?forge-preview:([^>)]+?)>?\)$/;
+  const linkRe = /^\[([^\]]+)\]\(<?forge-preview:([^>)]+?)>?\)$/;
 
-  const segments = processed.split(/(\[📄 [^\]]+\]\(<?forge-preview:[^>)]+?>?\))/g).filter(Boolean);
+  const segments = processed.split(/(\[[^\]]+\]\(<?forge-preview:[^>)]+?>?\))/g).filter(Boolean);
 
   return (
     <div className={`${sizeClass} break-words [overflow-wrap:anywhere]`}>

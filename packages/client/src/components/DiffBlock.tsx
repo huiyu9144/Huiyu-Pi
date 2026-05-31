@@ -155,6 +155,13 @@ export function DiffBlock({
   }
 
   if (strategy === "fallback") {
+    if (!looksLikeDiff(diff)) {
+      return (
+        <pre className="select-text overflow-auto pl-4 pr-3 pb-2 font-mono text-[11px] leading-tight text-neutral-300">
+          {diff}
+        </pre>
+      );
+    }
     if (typeof console !== "undefined") {
       console.warn(
         "[DiffBlock] parseDiff produced no hunks; rendering colored fallback. Diff prefix:",
@@ -169,7 +176,7 @@ export function DiffBlock({
   // column in unified mode. Split mode keeps both columns visible.
   const wrapperClass = `pi-diff-block ${
     viewType === "split" ? "pi-diff-split" : "pi-diff-unified"
-  } overflow-auto px-2 pb-2 text-[11px]`;
+  } select-text overflow-auto pl-4 pr-2 pb-2 text-[11px]`;
   return (
     <div className={wrapperClass}>
       {files.map((file) => (
@@ -459,6 +466,25 @@ function needsSyntheticHeader(diff: string): boolean {
 }
 
 /**
+ * Heuristic: does the text look like a unified diff or pi-format
+ * edit output? Returns false for natural-language error messages
+ * like "Could not find the exact text in ...".
+ */
+function looksLikeDiff(diff: string): boolean {
+  if (/^@@ /m.test(diff)) return true;
+  if (/^--- /m.test(diff) && /^\+\+\+ /m.test(diff)) return true;
+  const lines = diff.split("\n");
+  let diffLines = 0;
+  for (const line of lines) {
+    if (/^[+\- ] \d/.test(line) || /^[+\-]/.test(line)) {
+      diffLines += 1;
+      if (diffLines >= 2) return true;
+    }
+  }
+  return false;
+}
+
+/**
  * Plain-text fallback that paints diff lines manually. Catches:
  *   - SDK edit results that omit the `--- /+++` headers (parseDiff
  *     skips them but the user still has a clearly-marked unified diff
@@ -474,7 +500,7 @@ function needsSyntheticHeader(diff: string): boolean {
 function FallbackDiff({ diff }: { diff: string }) {
   const lines = diff.split("\n");
   return (
-    <pre className="overflow-auto px-3 pb-2 font-mono text-[11px] leading-tight">
+    <pre className="select-text overflow-auto pl-4 pr-3 pb-2 font-mono text-[11px] leading-tight">
       {lines.map((line, i) => (
         <div key={i} className={lineClass(line)}>
           {line.length === 0 ? " " : line}

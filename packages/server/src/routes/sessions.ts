@@ -119,7 +119,7 @@ export const sessionRoutes: FastifyPluginAsync = async (fastify) => {
         description:
           "List sessions for a project (live and on-disk merged, deduped by " +
           "id, sorted by recency). Without `projectId`, returns sessions from " +
-          "every project the pi-forge knows about.",
+          "every project the Huiyu Pi knows about.",
         tags: ["sessions"],
         querystring: {
           type: "object",

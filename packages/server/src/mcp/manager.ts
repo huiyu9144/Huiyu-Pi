@@ -304,7 +304,7 @@ export async function reconnectGatedStdioForProject(projectId: string): Promise<
   // Sequentially-awaited so the connect attempts don't all spawn
   // subprocesses at the same instant — if the operator just clicked
   // trust on a project with five stdio entries, staggering keeps the
-  // pi-forge log readable and avoids a thundering-herd spawn.
+  // Huiyu Pi log readable and avoids a thundering-herd spawn.
   for (const entry of toConnect) {
     await connectEntry(entry);
   }
@@ -533,7 +533,7 @@ async function openConnection(cfg: McpServerConfig, scope: Scope): Promise<Opene
  * stdout via the SDK's StdioClientTransport.
  *
  * **Env handling.** The SDK passes ONLY `cfg.env` (when set) to the
- * child; it does NOT inherit from the pi-forge process env. We
+ * child; it does NOT inherit from the Huiyu Pi process env. We
  * intentionally preserve that behavior — the operator must
  * explicitly pass through any credential / config the subprocess
  * needs. To keep common-case shells / runtimes working though, we
@@ -542,11 +542,11 @@ async function openConnection(cfg: McpServerConfig, scope: Scope): Promise<Opene
  * winning on collision so an explicit `PATH` override still works.
  *
  * **cwd.** Project-scoped entries default to the project path (the
- * user's repo root); global entries inherit the pi-forge process
+ * user's repo root); global entries inherit the Huiyu Pi process
  * cwd. An explicit `cfg.cwd` always wins.
  *
  * **stderr.** Inherited so the operator can see startup failures /
- * tracebacks in the pi-forge log without having to pipe-and-pump
+ * tracebacks in the Huiyu Pi log without having to pipe-and-pump
  * the child's stderr ourselves.
  */
 async function openStdio(cfg: McpServerConfig, scope: Scope): Promise<OpenedConnection> {
@@ -555,7 +555,7 @@ async function openStdio(cfg: McpServerConfig, scope: Scope): Promise<OpenedConn
   }
   // Project-scope cwd default: spawn relative to the user's repo
   // root so paths inside `args` resolve sanely. Global entries
-  // inherit pi-forge's cwd unless overridden.
+  // inherit Huiyu Pi's cwd unless overridden.
   const resolvedCwd = cfg.cwd ?? (scope === "global" ? undefined : projectCwdHint(scope.project));
   const env: Record<string, string> = {
     ...getDefaultEnvironment(),
@@ -568,7 +568,7 @@ async function openStdio(cfg: McpServerConfig, scope: Scope): Promise<OpenedConn
     ...(resolvedCwd !== undefined ? { cwd: resolvedCwd } : {}),
     stderr: "inherit",
   });
-  const client = new Client({ name: "pi-forge", version: "1.0.0" }, { capabilities: {} });
+  const client = new Client({ name: "huiyu-pi", version: "1.0.0" }, { capabilities: {} });
   await client.connect(transport);
   return { client, transport, resolvedTransport: undefined };
 }
@@ -611,7 +611,7 @@ async function openStreamableHttp(
     url,
     headers !== undefined ? { requestInit: { headers } } : undefined,
   );
-  const client = new Client({ name: "pi-forge", version: "1.0.0" }, { capabilities: {} });
+  const client = new Client({ name: "huiyu-pi", version: "1.0.0" }, { capabilities: {} });
   await client.connect(transport as unknown as SdkTransport);
   return { client, transport, resolvedTransport: "streamable-http" };
 }
@@ -641,7 +641,7 @@ async function openSse(
           } as unknown as EventSourceInit,
         })
       : new SSEClientTransport(url);
-  const client = new Client({ name: "pi-forge", version: "1.0.0" }, { capabilities: {} });
+  const client = new Client({ name: "huiyu-pi", version: "1.0.0" }, { capabilities: {} });
   await client.connect(transport);
   return { client, transport, resolvedTransport: "sse" };
 }
@@ -655,7 +655,7 @@ async function readProjectMcpJson(projectPath: string): Promise<Record<string, M
     if (raw.trim().length === 0) return {};
     const parsed = JSON.parse(raw) as unknown;
     if (typeof parsed !== "object" || parsed === null) return {};
-    // Accept both `{ servers: {...} }` (pi-forge shape) and
+    // Accept both `{ servers: {...} }` (Huiyu Pi shape) and
     // `{ mcpServers: {...} }` (Claude Desktop / pi-mcp-adapter shape)
     // so a project that already speaks the standard MCP file format
     // works without rewriting.

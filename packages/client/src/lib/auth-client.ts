@@ -1,6 +1,6 @@
-const TOKEN_KEY = "pi-forge/auth-token";
-const EXPIRES_KEY = "pi-forge/auth-expires-at";
-const MUST_CHANGE_KEY = "pi-forge/auth-must-change-password";
+const TOKEN_KEY = "huiyu-pi/auth-token";
+const EXPIRES_KEY = "huiyu-pi/auth-expires-at";
+const MUST_CHANGE_KEY = "huiyu-pi/auth-must-change-password";
 
 export interface StoredToken {
   token: string;

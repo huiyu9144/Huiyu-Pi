@@ -2,16 +2,16 @@
  * Config export / import as a flat `.tar.gz`.
  *
  * What's included (and why):
- *   - `mcp.json`              — pi-forge-owned MCP server registry
+ *   - `mcp.json`              — Huiyu Pi-owned MCP server registry
  *   - `settings.json`         — pi-owned defaults (model, thinking level, skills patterns)
  *   - `models.json`           — pi-owned custom providers
- *   - `skills-overrides.json` — pi-forge-private per-project skill enable/disable state
- *   - `tool-overrides.json`   — pi-forge-private per-project tool enable/disable state
+ *   - `skills-overrides.json` — Huiyu-Pi-private per-project skill enable/disable state
+ *   - `tool-overrides.json`   — Huiyu-Pi-private per-project tool enable/disable state
  *
  * The two `*-overrides.json` files live in `${FORGE_DATA_DIR}` (not
  * `${PI_CONFIG_DIR}` like the other three). They're included because
  * the user's per-project tool/skill toggle decisions are part of "the
- * pi-forge config a power-user wants to carry across installations" —
+ * the Huiyu Pi config a power-user wants to carry across installations" —
  * pairing a backup of `settings.json` (global skill patterns) without
  * also backing up the per-project overrides loses information.
  * `projectId`s in the overrides files are local UUIDs — re-importing
@@ -23,7 +23,7 @@
  *
  * What's deliberately EXCLUDED:
  *   - `auth.json` — provider API keys + OAuth tokens. OAuth tokens are
- *     installation-bound (a token issued for one pi-forge instance is
+ *     installation-bound (a token issued for one Huiyu Pi instance is
  *     not portable), and inline API keys are sensitive enough that
  *     bundling them into a download the user might forward by accident
  *     (Slack, Drive, ticket attachment) outweighs the convenience. The
@@ -73,7 +73,7 @@ const ALLOWED_SET: ReadonlySet<string> = new Set<string>(ALLOWED_FILES);
  * constants) so changes to `config.piConfigDir` / `config.forgeDataDir`
  * / `config.mcpConfigFile` at test time take effect. The two
  * `*-overrides.json` files live under FORGE_DATA_DIR, NOT PI_CONFIG_DIR
- * — pi-forge-private state, intentionally not commingled with the
+ * — Huiyu-Pi-private state, intentionally not commingled with the
  * SDK's directory.
  */
 const TARGETS: Record<AllowedFile, () => string> = {
@@ -99,13 +99,13 @@ export interface ImportSummary {
    * (a) the entry name isn't in `ALLOWED_FILES`; (b) the entry isn't a
    * regular file (directories, symlinks, hard links, devices). We don't
    * distinguish — the reason isn't actionable for the user beyond
-   * "re-export with a real pi-forge instance."
+   * "re-export with a real Huiyu Pi instance."
    */
   skipped: string[];
   /**
    * Allowed-name entries that PARSED but FAILED VALIDATION (e.g. not
    * valid JSON). These are NOT imported — partial imports can leave
-   * the pi-forge in worse shape than no import.
+   * the Huiyu Pi in worse shape than no import.
    */
   errors: { file: string; reason: string }[];
 }
@@ -177,7 +177,7 @@ export async function buildExportTar(): Promise<ExportResult> {
  *
  * The "validate before any disk write" ordering matters: a partial
  * import (e.g. `mcp.json` good, `settings.json` corrupt) would leave
- * the pi-forge in worse shape than before the user clicked Import.
+ * the Huiyu Pi in worse shape than before the user clicked Import.
  * Either everything valid lands, or nothing does — per file, ALL
  * pass validation before ANY rename runs.
  *

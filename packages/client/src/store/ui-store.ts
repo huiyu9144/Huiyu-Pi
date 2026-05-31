@@ -163,14 +163,14 @@ export const useUiStore = create<UiState>((set, get) => ({
   },
   todoPanelOpen: (() => {
     try {
-      return localStorage.getItem("pi-forge/todo-panel-open") === "true";
+      return localStorage.getItem("huiyu-pi/todo-panel-open") === "true";
     } catch {
       return false;
     }
   })(),
   setTodoPanelOpen: (open) => {
     try {
-      localStorage.setItem("pi-forge/todo-panel-open", open ? "true" : "false");
+      localStorage.setItem("huiyu-pi/todo-panel-open", open ? "true" : "false");
     } catch {
       // ignore — private-mode storage; choice still applies for this session
     }
@@ -190,7 +190,7 @@ export const useUiStore = create<UiState>((set, get) => ({
     set((state) => {
       const alreadyOpen = state.previewFilePath === path;
       const becomingOpen = !alreadyOpen;
-      try { localStorage.setItem("pi-forge/files-open", becomingOpen ? "true" : "false"); } catch {}
+      try { localStorage.setItem("huiyu-pi/files-open", becomingOpen ? "true" : "false"); } catch {}
       return {
         previewFilePath: alreadyOpen ? undefined : path,
         previewPanelOpen: becomingOpen,
@@ -201,25 +201,25 @@ export const useUiStore = create<UiState>((set, get) => ({
   closePreviewFile: () =>
     set((state) => {
       if (state.previewFilePath === undefined) return state;
-      try { localStorage.setItem("pi-forge/files-open", "false"); } catch {}
+      try { localStorage.setItem("huiyu-pi/files-open", "false"); } catch {}
       return { previewFilePath: undefined, previewPanelOpen: false, filesOpen: false };
     }),
 
   filesOpen: (() => {
-    try { return localStorage.getItem("pi-forge/files-open") === "true"; } catch { return false; }
+    try { return localStorage.getItem("huiyu-pi/files-open") === "true"; } catch { return false; }
   })(),
   setFilesOpen: (open) => {
-    try { localStorage.setItem("pi-forge/files-open", open ? "true" : "false"); } catch {}
+    try { localStorage.setItem("huiyu-pi/files-open", open ? "true" : "false"); } catch {}
     set({ filesOpen: open });
   },
   rightTab: (() => {
-    const raw = (() => { try { return localStorage.getItem("pi-forge/right-tab"); } catch { return null; } })();
+    const raw = (() => { try { return localStorage.getItem("huiyu-pi/right-tab"); } catch { return null; } })();
     const valid: readonly string[] = ["files", "search", "changes", "git", "context", "processes", "preview"];
     if (raw !== null && valid.includes(raw)) return raw as RightPaneTab;
     return "files";
   })(),
   setRightTab: (tab) => {
-    try { localStorage.setItem("pi-forge/right-tab", tab); } catch {}
+    try { localStorage.setItem("huiyu-pi/right-tab", tab); } catch {}
     set({ rightTab: tab });
   },
 }));

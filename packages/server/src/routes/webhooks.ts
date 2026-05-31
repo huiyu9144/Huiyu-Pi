@@ -57,7 +57,7 @@ const scopeSchema = {
  * Webhook config returned by the API. Secret is intentionally
  * REDACTED on the wire — the client doesn't need it, and
  * accidentally surfacing it in a logged response body would be
- * the kind of breach we wrote pi-forge to avoid. `hasSecret` is
+ * the kind of breach we wrote Huiyu Pi to avoid. `hasSecret` is
  * the boolean presence map equivalent (same pattern as
  * `readAuthSummary` for provider keys).
  */
@@ -412,7 +412,7 @@ export const webhookRoutes: FastifyPluginAsync = async (fastify) => {
         {
           event: "webhook.test",
           data: {
-            message: "This is a test event from pi-forge.",
+            message: "This is a test event from Huiyu Pi.",
             webhookId: w.id,
             webhookName: w.name,
           },

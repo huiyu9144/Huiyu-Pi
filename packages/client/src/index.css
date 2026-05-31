@@ -398,6 +398,12 @@
   user-select: none;
   -webkit-user-select: none;
 }
+.chat-message-list pre,
+.chat-message-list details > summary,
+.chat-message-list .font-mono {
+  user-select: text;
+  -webkit-user-select: text;
+}
 .message-bubble {
   user-select: text;
   -webkit-user-select: text;
@@ -406,6 +412,35 @@
      the bubble instead of pushing the selection rectangle out past
      the right edge. */
   overflow-wrap: anywhere;
+}
+
+/* Reset browser + component defaults inside message-bubble so every
+   child aligns to the same left edge (px-4). Culprits include:
+   - Chrome <summary> list-style (~40px)
+   - <details> content indent (varies by UA)
+   - <pre> default margin
+   - ReactMarkdown <ul>/<ol> ml-5 (ChatMarkdown component mapping)
+   - ReactMarkdown <blockquote> pl-3 */
+.message-bubble details > summary {
+  list-style: none;
+  padding-left: 0 !important;
+}
+.message-bubble details > pre,
+.message-bubble pre {
+  margin: 0;
+  text-indent: 0;
+}
+.message-bubble details > pre {
+  padding-left: 1rem !important;
+}
+.message-bubble ul,
+.message-bubble ol {
+  margin-left: 0;
+  padding-left: 0;
+  list-style-position: inside;
+}
+.message-bubble blockquote {
+  padding-left: 0;
 }
 
 /* ----------------------------- thinking indicator -----------------------------

@@ -116,7 +116,7 @@ export function TurnDiffPanel() {
   }
 
   return (
-    <div className="flex h-full flex-col text-xs text-neutral-300">
+    <div className="flex h-full flex-col text-xs text-neutral-300 select-text">
       <div className="flex items-center justify-between border-b border-neutral-800 px-3 py-2">
         <div className="flex items-center gap-2 font-medium text-neutral-200">
           <FileDiff size={13} />
@@ -164,9 +164,12 @@ export function TurnDiffPanel() {
           const name = entry.file.split("/").pop() ?? entry.file;
           return (
             <div key={entry.file} className="border-b border-neutral-800/60">
-              <button
+              <div
+                role="button"
+                tabIndex={0}
                 onClick={() => setExpanded((e) => ({ ...e, [entry.file]: !open }))}
-                className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left hover:bg-neutral-900"
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setExpanded((prev) => ({ ...prev, [entry.file]: !open })); } }}
+                className="flex w-full cursor-pointer items-center justify-between gap-2 px-3 py-2 hover:bg-neutral-900"
                 title={entry.file}
               >
                 <span className="flex min-w-0 items-baseline gap-2">
@@ -183,7 +186,7 @@ export function TurnDiffPanel() {
                   </span>
                   <span className="text-red-400 light:text-red-700">−{entry.deletions}</span>
                 </span>
-              </button>
+              </div>
               {open && <DiffBlock diff={entry.diff} viewType={viewType} />}
             </div>
           );

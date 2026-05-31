@@ -54,7 +54,7 @@ if %errorlevel% neq 0 (
 
 echo.
 echo ========================================
-echo  ✅ v%VERSION% released successfully!
+echo   v%VERSION% released successfully!
 echo ========================================
 echo  GitHub Actions is now building:
 echo    - Docker images ^(ghcr.io^)

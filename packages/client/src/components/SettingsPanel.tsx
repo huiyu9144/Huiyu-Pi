@@ -3715,8 +3715,90 @@ function GeneralTab() {
   const version = useUiConfigStore((s) => s.version);
   const loaded = useUiConfigStore((s) => s.loaded);
   const passwordAuthEnabled = useUiConfigStore((s) => s.passwordAuthEnabled);
+  const [allowEditOutside, setAllowEditOutside] = useState<boolean | undefined>(undefined);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    api.getSettings().then((s) => {
+      setAllowEditOutside(s.allowEditOutsideProject === true);
+    }).catch(() => {});
+  }, []);
+
+  const toggle = async (): Promise<void> => {
+    const next = !allowEditOutside;
+    setAllowEditOutside(next);
+    setSaving(true);
+    setSaveError(undefined);
+    try {
+      await api.updateSettings({ allowEditOutsideProject: next });
+    } catch (err) {
+      setAllowEditOutside(!next);
+      setSaveError(errorCode(err));
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="space-y-6 text-sm text-neutral-300">
+      <section className="space-y-3">
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-1">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-neutral-100">
+              Allow AI to edit content outside the project directory
+            </h3>
+            <p className="text-[11px] text-neutral-500">
+              When enabled, the AI can read, write, and delete files anywhere on your filesystem,
+              not just inside the current project directory.
+            </p>
+          </div>
+          <label className="relative inline-flex cursor-pointer items-center">
+            <input
+              type="checkbox"
+              className="peer sr-only"
+              checked={allowEditOutside === true}
+              onChange={() => void toggle()}
+              disabled={saving || allowEditOutside === undefined}
+            />
+            <div className="h-5 w-9 rounded-full bg-neutral-700 after:absolute after:left-[2px] after:top-[2px] after:h-4 after:w-4 after:rounded-full after:bg-neutral-300 after:transition-all after:content-[''] peer-checked:bg-amber-600 peer-checked:after:translate-x-full peer-checked:after:border-white" />
+          </label>
+        </div>
+        {allowEditOutside && (
+          <div className="space-y-2 rounded border border-red-800/50 bg-red-950/30 px-3 py-2.5">
+            <p className="text-[11px] font-medium text-red-300">
+              Warning: this setting grants the AI unrestricted filesystem access.
+            </p>
+            <ul className="list-inside list-disc space-y-1 text-[11px] text-red-300/80">
+              <li>
+                The AI may read, modify, or delete files in any directory on your computer,
+                including system files and other projects.
+              </li>
+              <li>
+                A malicious or hallucinated instruction could cause data loss or system
+                instability. You assume full responsibility for any damage.
+              </li>
+              <li>
+                Always review tool calls before the AI executes them. Keep regular backups
+                of important data.
+              </li>
+              <li>
+                This setting is persisted in <code className="font-mono">settings.json</code>{" "}
+                and takes effect for all projects and sessions.
+              </li>
+            </ul>
+            <p className="text-[11px] text-red-400/60">
+              By enabling this setting, you acknowledge and accept these risks.
+            </p>
+          </div>
+        )}
+        {saveError !== undefined && (
+          <p className="text-[11px] text-red-400">{saveError}</p>
+        )}
+      </section>
+
+      <hr className="border-neutral-800" />
+
       <header className="space-y-1">
         <h2 className="text-base font-semibold text-neutral-100">Huiyu Pi</h2>
         <p className="text-xs text-neutral-500">
@@ -3724,21 +3806,21 @@ function GeneralTab() {
           <span className="text-neutral-400">Huiyu</span>
           , based on{" "}
           <a
-            href="https://github.com/Devin-Marks/pi-forge"
+            href="https://github.com/huiyu9144/Huiyu-Pi"
             target="_blank"
             rel="noopener noreferrer"
             className="text-blue-400 underline hover:text-blue-300 light:text-blue-700 light:hover:text-blue-900"
           >
-            pi-forge
+            Huiyu Pi
           </a>{" "}
           by{" "}
           <a
-            href="https://github.com/Devin-Marks"
+            href="https://github.com/huiyu9144"
             target="_blank"
             rel="noopener noreferrer"
             className="text-blue-400 underline hover:text-blue-300 light:text-blue-700 light:hover:text-blue-900"
           >
-            Devin Marks
+            huiyu9144
           </a>
           . Powered by the{" "}
           <a
@@ -3750,6 +3832,21 @@ function GeneralTab() {
             pi coding agent
           </a>
           .
+        </p>
+        <p className="text-xs text-neutral-500">
+          Copyright &copy; 2026 huiyu9144. MIT License.
+        </p>
+        <p className="text-xs text-neutral-500">
+          Powered by{" "}
+          <a
+            href="https://github.com/earendil-works/pi"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-400 underline hover:text-blue-300 light:text-blue-700 light:hover:text-blue-900"
+          >
+            earendil-works/pi
+          </a>{" "}
+          Copyright &copy; 2025 Mario Zechner. MIT License.
         </p>
       </header>
 
@@ -3773,17 +3870,17 @@ function GeneralTab() {
         <ul className="space-y-1 text-xs">
           <li>
             <a
-              href="https://github.com/Devin-Marks/pi-forge"
+              href="https://github.com/huiyu9144/Huiyu-Pi"
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-400 underline hover:text-blue-300 light:text-blue-700 light:hover:text-blue-900"
             >
-              github.com/Devin-Marks/pi-forge
+              github.com/huiyu9144/Huiyu-Pi
             </a>
           </li>
           <li>
             <a
-              href="https://github.com/Devin-Marks/pi-forge/blob/main/CHANGELOG.md"
+              href="https://github.com/huiyu9144/Huiyu-Pi/blob/main/CHANGELOG.md"
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-400 underline hover:text-blue-300 light:text-blue-700 light:hover:text-blue-900"
@@ -3793,7 +3890,7 @@ function GeneralTab() {
           </li>
           <li>
             <a
-              href="https://github.com/Devin-Marks/pi-forge/blob/main/SECURITY.md"
+              href="https://github.com/huiyu9144/Huiyu-Pi/blob/main/SECURITY.md"
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-400 underline hover:text-blue-300 light:text-blue-700 light:hover:text-blue-900"

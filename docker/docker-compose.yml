@@ -26,12 +26,12 @@ services:
       - ${PI_CONFIG_HOST_PATH:-~/.pi/agent}:/home/pi/.pi/agent
       # Default differs from the host pi-forge dir so the container has
       # its own project list — see containers.md.
-      - ${FORGE_DATA_HOST_PATH:-~/.pi-forge-docker}:/home/pi/.pi-forge
+      - ${FORGE_DATA_HOST_PATH:-~/.huiyu-pi-docker}:/home/pi/.huiyu-pi
     environment:
       # Container-internal paths — fixed.
       - WORKSPACE_PATH=/workspace
       - PI_CONFIG_DIR=/home/pi/.pi/agent
-      - FORGE_DATA_DIR=/home/pi/.pi-forge
+      - FORGE_DATA_DIR=/home/pi/.huiyu-pi
       - PORT=3000
       # Auth — read from .env. Both empty = auth disabled.
       - UI_PASSWORD=${UI_PASSWORD:-}

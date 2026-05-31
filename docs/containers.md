@@ -61,7 +61,7 @@ Three bind-mounted volumes:
 |---|---|---|
 | `/workspace` | `WORKSPACE_HOST_PATH` (`../workspace`) | User's project source. Projects are subfolders |
 | `/home/pi/.pi/agent` | `PI_CONFIG_HOST_PATH` (`~/.pi/agent`) | Pi SDK config — provider keys, models, settings. Shared with host pi CLI by default so secrets aren't copied into the image |
-| `/home/pi/.pi-forge` | `FORGE_DATA_HOST_PATH` (`~/.pi-forge-docker`) | Forge state — `projects.json`, MCP / overrides / `jwt-secret` / `password-hash`. **Separate default** from the host path so the container has its own project list (host paths wouldn't resolve inside the container anyway) |
+| `/home/pi/.huiyu-pi` | `FORGE_DATA_HOST_PATH` (`~/.huiyu-pi-docker`) | Forge state — `projects.json`, MCP / overrides / `jwt-secret` / `password-hash`. **Separate default** from the host path so the container has its own project list (host paths wouldn't resolve inside the container anyway) |
 
 Session JSONLs default to `${WORKSPACE_PATH}/.pi/sessions/` so they
 live on the workspace bind mount — backing up the workspace backs up
@@ -81,7 +81,7 @@ or deployment wrapper:
 services:
   pi-forge:
     volumes:
-      - ~/.pi-forge-python:/home/pi/.local
+      - ~/.huiyu-pi-python:/home/pi/.local
 ```
 
 Then install with:
@@ -113,7 +113,7 @@ in `docker/.env`:
 | `HOST` | `0.0.0.0` (forced — required for Docker port-forward to work) |
 | `WORKSPACE_PATH` | `/workspace` |
 | `PI_CONFIG_DIR` | `/home/pi/.pi/agent` |
-| `FORGE_DATA_DIR` | `/home/pi/.pi-forge` |
+| `FORGE_DATA_DIR` | `/home/pi/.huiyu-pi` |
 | `PYTHONUSERBASE` | `/home/pi/.local` |
 
 Set `UI_PASSWORD` and / or `API_KEY` in `.env` for any non-loopback

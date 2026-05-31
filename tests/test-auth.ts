@@ -94,7 +94,7 @@ async function startServer(
 ): Promise<RunningServer> {
   const port = await pickFreePort();
   // Force per-spawn isolation of the data dir. The default
-  // (~/.pi-forge) leaks any password-hash / jwt-secret / projects.json
+  // (~/.huiyu-pi) leaks any password-hash / jwt-secret / projects.json
   // the developer has on their actual machine into the test, which
   // breaks the "auth disabled" / "API_KEY only" scenarios — they
   // assume no on-disk hash exists, but `authEnabled()` reads

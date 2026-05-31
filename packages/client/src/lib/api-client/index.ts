@@ -63,6 +63,12 @@ import {
   type UploadResponse,
   type RequestOpts,
   type Validator,
+  type SnapshotMeta,
+  type SnapshotDetail,
+  type SnapshotStorageInfo,
+  type SnapshotDelta,
+  type SnapshotDeltaEntry,
+  type SessionDelta,
 } from "./types";
 
 // Public type surface lives in ./types so consumers and the request
@@ -1322,11 +1328,141 @@ function vGitRemotes(value: unknown, status: number): GitRemotesResponse {
   };
 }
 
+function vSnapshotMeta(value: unknown, status: number): SnapshotMeta {
+  if (
+    !isObject(value) ||
+    typeof value.id !== "string" ||
+    typeof value.projectId !== "string" ||
+    typeof value.label !== "string" ||
+    typeof value.createdAt !== "string" ||
+    typeof value.trigger !== "string" ||
+    typeof value.totalFiles !== "number" ||
+    typeof value.totalSize !== "number"
+  ) {
+    fail(status, "expected SnapshotMeta");
+  }
+  const meta: SnapshotMeta = {
+    id: value.id,
+    projectId: value.projectId,
+    label: value.label,
+    createdAt: value.createdAt,
+    trigger: value.trigger as SnapshotMeta["trigger"],
+    totalFiles: value.totalFiles,
+    totalSize: value.totalSize,
+  };
+  if (typeof value.sessionId === "string") meta.sessionId = value.sessionId;
+  return meta;
+}
+
+function vSnapshotDetail(value: unknown, status: number): SnapshotDetail {
+  const meta = vSnapshotMeta(value, status);
+  if (!isObject(value) || !isObject(value.files)) {
+    fail(status, "expected SnapshotDetail");
+  }
+  const files: Record<string, import("./types").SnapshotFileEntry> = {};
+  for (const [path, entry] of Object.entries(value.files as Record<string, unknown>)) {
+    if (
+      !isObject(entry) ||
+      typeof entry.hash !== "string" ||
+      typeof entry.size !== "number" ||
+      typeof entry.encoding !== "string"
+    ) {
+      continue;
+    }
+    const f: import("./types").SnapshotFileEntry = {
+      hash: entry.hash,
+      size: entry.size,
+      encoding: entry.encoding as "utf-8" | "binary",
+    };
+    if (entry.skipped === true) f.skipped = true;
+    files[path] = f;
+  }
+  return { ...meta, files };
+}
+
 function vPathOnly(value: unknown, status: number): { path: string } {
   if (!isObject(value) || typeof value.path !== "string") {
     fail(status, "expected { path: string }");
   }
   return { path: value.path };
+}
+
+function vSnapshotDelta(value: unknown, status: number): SnapshotDelta {
+  if (
+    !isObject(value) ||
+    typeof value.snapshotId !== "string" ||
+    typeof value.snapshotLabel !== "string" ||
+    !Array.isArray(value.entries) ||
+    !isObject(value.summary)
+  ) {
+    fail(status, "expected SnapshotDelta");
+  }
+  const entries = (value.entries as unknown[]).map((e: unknown): SnapshotDeltaEntry => {
+    if (
+      !isObject(e) ||
+      typeof e.path !== "string" ||
+      typeof e.status !== "string" ||
+      typeof e.snapshotSize !== "number" ||
+      typeof e.currentSize !== "number"
+    ) {
+      fail(status, "expected SnapshotDeltaEntry");
+    }
+    return {
+      path: e.path,
+      status: e.status as "added" | "modified" | "deleted",
+      snapshotSize: e.snapshotSize,
+      currentSize: e.currentSize,
+    };
+  });
+  const summary = value.summary as Record<string, unknown>;
+  return {
+    snapshotId: value.snapshotId,
+    snapshotLabel: value.snapshotLabel,
+    entries,
+    summary: {
+      added: typeof summary.added === "number" ? summary.added : 0,
+      modified: typeof summary.modified === "number" ? summary.modified : 0,
+      deleted: typeof summary.deleted === "number" ? summary.deleted : 0,
+    },
+  };
+}
+
+function vSessionDelta(value: unknown, status: number): SessionDelta {
+  if (
+    !isObject(value) ||
+    typeof value.targetId !== "string" ||
+    !Array.isArray(value.entries) ||
+    !isObject(value.summary)
+  ) {
+    fail(status, "expected SessionDelta");
+  }
+  const entries = (value.entries as unknown[]).map((e: unknown): SnapshotDeltaEntry => {
+    if (
+      !isObject(e) ||
+      typeof e.path !== "string" ||
+      typeof e.status !== "string" ||
+      typeof e.snapshotSize !== "number" ||
+      typeof e.currentSize !== "number"
+    ) {
+      fail(status, "expected SnapshotDeltaEntry");
+    }
+    return {
+      path: e.path,
+      status: e.status as "added" | "modified" | "deleted",
+      snapshotSize: e.snapshotSize,
+      currentSize: e.currentSize,
+    };
+  });
+  const summary = value.summary as Record<string, unknown>;
+  return {
+    targetId: value.targetId,
+    entries,
+    summary: {
+      added: typeof summary.added === "number" ? summary.added : 0,
+      modified: typeof summary.modified === "number" ? summary.modified : 0,
+      deleted: typeof summary.deleted === "number" ? summary.deleted : 0,
+    },
+  };
 }
 
 /**
@@ -2048,7 +2184,7 @@ export const api = {
   /**
    * Toggle a skill's enabled state. `scope` defaults to "global" for
    * back-compat with the original two-arg form. Project scope writes
-   * the pi-forge-private overrides file; clear an override (= return
+   * the Huiyu Pi-private overrides file; clear an override (= return
    * to inherit) via `clearSkillProjectOverride` below.
    */
   setSkillEnabled: (
@@ -2103,7 +2239,7 @@ export const api = {
   /**
    * Unified tool listing — pi's seven builtins + every connected MCP
    * server's tools, each with an `enabled` flag reflecting the
-   * pi-forge-private overrides file. Optional `?projectId=` includes
+   * Huiyu Pi-private overrides file. Optional `?projectId=` includes
    * project-scope MCP servers.
    *
    * The server normalizes the response shape; we only sanity-check
@@ -2234,7 +2370,7 @@ export const api = {
 
   // ---------------- config export / import ----------------
   /**
-   * Download a `.tar.gz` of the pi-forge's portable config (mcp.json,
+   * Download a `.tar.gz` of the Huiyu Pi's portable config (mcp.json,
    * settings.json, models.json — auth.json deliberately excluded).
    * Returns a blob plus the filename the server suggested via
    * Content-Disposition AND the names actually packed (from the
@@ -2263,7 +2399,7 @@ export const api = {
     }
     const blob = await res.blob();
     const cd = res.headers.get("Content-Disposition") ?? "";
-    const filename = parseContentDispositionFilename(cd) ?? "pi-forge-config.tar.gz";
+    const filename = parseContentDispositionFilename(cd) ?? "huiyu-pi-config.tar.gz";
     const filesHeader = res.headers.get("X-Pi-Forge-Files") ?? "";
     const files = filesHeader.split(",").filter((s) => s.length > 0);
     return { blob, filename, files };
@@ -2333,7 +2469,7 @@ export const api = {
     }
     const blob = await res.blob();
     const cd = res.headers.get("Content-Disposition") ?? "";
-    const filename = parseContentDispositionFilename(cd) ?? "pi-forge-skills.tar.gz";
+    const filename = parseContentDispositionFilename(cd) ?? "huiyu-pi-skills.tar.gz";
     const countHeader = res.headers.get("X-Pi-Forge-File-Count") ?? "0";
     const fileCount = Number.parseInt(countHeader, 10) || 0;
     return { blob, filename, fileCount };
@@ -2815,6 +2951,127 @@ export const api = {
       { method: "POST", body },
     );
   },
+
+  // ---------------- snapshots ----------------
+  createSnapshot: (projectId: string, label?: string, trigger?: "manual" | "pre-agent" | "post-agent", sessionId?: string) =>
+    request(
+      `/api/v1/projects/${encodeURIComponent(projectId)}/snapshots`,
+      (v, s) => {
+        if (!isObject(v) || !isObject(v.snapshot) || !Array.isArray(v.warnings)) {
+          fail(s, "expected { snapshot, warnings }");
+        }
+        return {
+          snapshot: vSnapshotMeta(v.snapshot, s),
+          warnings: (v.warnings as unknown[]).filter((w): w is string => typeof w === "string"),
+        };
+      },
+      { method: "POST", body: { label: label ?? "手动快照", trigger: trigger ?? "manual", sessionId } },
+    ),
+  listSnapshots: (projectId: string) =>
+    request(
+      `/api/v1/projects/${encodeURIComponent(projectId)}/snapshots`,
+      (v, s) => {
+        if (!isObject(v) || !Array.isArray(v.snapshots)) {
+          fail(s, "expected { snapshots }");
+        }
+        return { snapshots: (v.snapshots as unknown[]).map((snap) => vSnapshotMeta(snap, s)) };
+      },
+    ),
+  getSnapshot: (projectId: string, snapshotId: string) =>
+    request(
+      `/api/v1/projects/${encodeURIComponent(projectId)}/snapshots/${encodeURIComponent(snapshotId)}`,
+      (v, s) => {
+        if (!isObject(v) || !isObject(v.snapshot)) {
+          fail(s, "expected { snapshot }");
+        }
+        return { snapshot: vSnapshotDetail(v.snapshot, s) };
+      },
+    ),
+  restoreSnapshot: (projectId: string, snapshotId: string, confirmProjectPath: string) =>
+    request(
+      `/api/v1/projects/${encodeURIComponent(projectId)}/snapshots/${encodeURIComponent(snapshotId)}/restore`,
+      (v, s) => {
+        if (
+          !isObject(v) ||
+          !isObject(v.restored) ||
+          !isObject(v.safetySnapshot) ||
+          !Array.isArray(v.warnings)
+        ) {
+          fail(s, "expected { restored, safetySnapshot, warnings }");
+        }
+        return {
+          restored: vSnapshotMeta(v.restored, s),
+          safetySnapshot: vSnapshotMeta(v.safetySnapshot, s),
+          warnings: (v.warnings as unknown[]).filter((w): w is string => typeof w === "string"),
+        };
+      },
+      { method: "POST", body: { confirmProjectPath } },
+    ),
+  deleteSnapshot: (projectId: string, snapshotId: string) =>
+    request(
+      `/api/v1/projects/${encodeURIComponent(projectId)}/snapshots/${encodeURIComponent(snapshotId)}`,
+      (v, s) => {
+        if (!isObject(v) || typeof v.deleted !== "string") fail(s, "expected { deleted }");
+        return { deleted: v.deleted };
+      },
+      { method: "DELETE" },
+    ),
+  getSnapshotStorage: (projectId: string) =>
+    request(
+      `/api/v1/projects/${encodeURIComponent(projectId)}/snapshots/storage`,
+      (v, s) => {
+        if (
+          !isObject(v) ||
+          typeof v.totalSnapshots !== "number" ||
+          typeof v.totalSizeBytes !== "number"
+        ) {
+          fail(s, "expected { totalSnapshots, totalSizeBytes }");
+        }
+        return { totalSnapshots: v.totalSnapshots, totalSizeBytes: v.totalSizeBytes };
+      },
+    ),
+  getSnapshotDelta: (projectId: string, snapshotId: string) =>
+    request(
+      `/api/v1/projects/${encodeURIComponent(projectId)}/snapshots/${encodeURIComponent(snapshotId)}/delta`,
+      (v, s) => {
+        if (!isObject(v) || !isObject(v.delta)) {
+          fail(s, "expected { delta }");
+        }
+        return { delta: vSnapshotDelta(v.delta, s) };
+      },
+    ),
+  getSessionDelta: (projectId: string, targetSnapshotId: string) =>
+    request(
+      `/api/v1/projects/${encodeURIComponent(projectId)}/snapshots/session-delta`,
+      (v, s) => {
+        if (!isObject(v) || !isObject(v.delta)) {
+          fail(s, "expected { delta }");
+        }
+        const d = v.delta as Record<string, unknown>;
+        if (typeof d.targetId !== "string") {
+          fail(s, "expected targetId");
+        }
+        return {
+          delta: vSessionDelta(d, s),
+        };
+      },
+      { method: "POST", body: { targetSnapshotId } },
+    ),
+  restoreSessionDiff: (projectId: string, targetSnapshotId: string, confirmProjectPath: string) =>
+    request(
+      `/api/v1/projects/${encodeURIComponent(projectId)}/snapshots/restore-diff`,
+      (v, s) => {
+        if (!isObject(v)) {
+          fail(s, "expected object");
+        }
+        return {
+          restored: vSessionDelta(v.restored, s),
+          safetySnapshot: vSnapshotMeta(v.safetySnapshot, s),
+          warnings: (v.warnings as unknown[]).filter((w): w is string => typeof w === "string"),
+        };
+      },
+      { method: "POST", body: { targetSnapshotId, confirmProjectPath } },
+    ),
 };
 
 // Export string validator for routes that return a bare string in future phases.

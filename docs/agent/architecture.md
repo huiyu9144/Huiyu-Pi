@@ -96,7 +96,7 @@ pi-forge/
 ├── docs/                                # User + operator docs — configuration, mobile,
 │                                        #   mcp, deployment, architecture, sse-events, etc.
 ├── tests/                               # Integration test scripts (run via `npm run test:ci`)
-├── bin/pi-forge.mjs                     # npm-bin entry; parses CLI args, imports server
+├── bin/huiyu-pi.mjs                     # npm-bin entry; parses CLI args, imports server
 ├── scripts/                             # bump-version, build-publish-dir, run-tests
 ├── AGENTS.md                            # This file
 └── CLAUDE.md                            # Symlink to AGENTS.md

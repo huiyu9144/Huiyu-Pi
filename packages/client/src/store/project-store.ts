@@ -1,8 +1,8 @@
 import { create } from "zustand";
 import { api, ApiError, type Project } from "../lib/api-client";
 
-const ACTIVE_KEY = "pi-forge/active-project-id";
-const COLLAPSED_KEY = "pi-forge/collapsed-projects";
+const ACTIVE_KEY = "huiyu-pi/active-project-id";
+const COLLAPSED_KEY = "huiyu-pi/collapsed-projects";
 
 function readCollapsed(): Record<string, boolean> {
   try {

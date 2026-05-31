@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState, type ReactNode, type RefObject } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
 /**
@@ -13,8 +14,9 @@ import { X } from "lucide-react";
  *  - Focus moves to the first focusable element inside on open;
  *    Tab-cycles within the dialog (basic trap, sufficient for our
  *    single-input + two-button dialogs).
- *  - Renders inline (no Portal) — the app shell is full-screen
- *    `flex h-screen` so a `fixed inset-0` overlay reliably covers it.
+ *  - Renders via Portal to document.body so fixed positioning
+ *    works correctly even inside stacking contexts (e.g. message
+ *    bubbles with isolation: isolate).
  */
 export function Modal({
   open,
@@ -126,7 +128,7 @@ export function Modal({
   }, [open]);
 
   if (!open) return null;
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
       onClick={onClose}
@@ -154,7 +156,8 @@ export function Modal({
         </header>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

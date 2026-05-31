@@ -1,5 +1,5 @@
 /**
- * Wires the pi-forge event streams into the webhook dispatcher.
+ * Wires the Huiyu Pi event streams into the webhook dispatcher.
  *
  * Four event sources feed the six webhook event types:
  *

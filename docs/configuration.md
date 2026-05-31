@@ -40,9 +40,9 @@ in `cli.ts`). The most-touched ones:
 |---|---|---|
 | `PORT` | `3000` | Fastify listen port. |
 | `HOST` | `127.0.0.1` | Loopback by default — set `0.0.0.0` to expose to the LAN. The shipped Dockerfile pins `0.0.0.0` so `docker compose up` works unchanged. |
-| `WORKSPACE_PATH` | `~/.pi-forge/workspace` | Where project code lives. Point at an existing dir (e.g. `~/Code`) to reuse code on disk. |
+| `WORKSPACE_PATH` | `~/.huiyu-pi/workspace` | Where project code lives. Point at an existing dir (e.g. `~/Code`) to reuse code on disk. |
 | `PI_CONFIG_DIR` | `~/.pi/agent` | Pi SDK config dir (`auth.json`, `models.json`, `settings.json`). |
-| `FORGE_DATA_DIR` | `~/.pi-forge` | Pi-forge state — `projects.json`, override files, `jwt-secret`, `password-hash`. |
+| `FORGE_DATA_DIR` | `~/.huiyu-pi` | Pi-forge state — `projects.json`, override files, `jwt-secret`, `password-hash`. |
 | `UI_PASSWORD` | (unset) | Enables browser JWT auth. After the user changes it via the UI, a scrypt hash is persisted to `${FORGE_DATA_DIR}/password-hash` and the env value is ignored. |
 | `API_KEY` | (unset) | Static bearer token for programmatic access. |
 | `JWT_SECRET` | (auto-generated) | HS256 signing key. Auto-generated and persisted to `${FORGE_DATA_DIR}/jwt-secret` (mode 0600) when `UI_PASSWORD` or `password-hash` is in play. Set explicitly (`openssl rand -hex 32`) to override; delete the file to rotate. |
@@ -222,7 +222,7 @@ The shipped `docker-compose.yml` mounts these paths by default:
 | Container path | Default host path | Notes |
 |---|---|---|
 | `/home/pi/.pi/agent` | `${PI_CONFIG_HOST_PATH:-~/.pi/agent}` | Shared with host pi CLI by default — same provider keys, custom providers, agent defaults |
-| `/home/pi/.pi-forge` | `${FORGE_DATA_HOST_PATH:-~/.pi-forge-docker}` | **Separate** from the host's `~/.pi-forge` so the container has its own project list — host project paths wouldn't resolve inside the container anyway |
+| `/home/pi/.huiyu-pi` | `${FORGE_DATA_HOST_PATH:-~/.huiyu-pi-docker}` | **Separate** from the host's `~/.huiyu-pi` so the container has its own project list — host project paths wouldn't resolve inside the container anyway |
 | `/workspace` | `${WORKSPACE_HOST_PATH:-../workspace}` | User code; sessions under `.pi/sessions/` here |
 
 See [`containers.md`](./containers.md) for UID/GID handling, image

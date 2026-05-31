@@ -11,7 +11,7 @@ import { useSessionStore } from "../store/session-store";
  * the inspector's job is to bucket *what's actually in the context*,
  * and that's predominantly tool-call JSON, code, diffs, and search
  * results — content where real tokenizers are denser. Empirically 3.0
- * lands much closer for pi-forge sessions than 4.0 did (4.0 made
+ * lands much closer for Huiyu Pi sessions than 4.0 did (4.0 made
  * tool-result-heavy turns visibly under-count by 20–40%). All three
  * callsites read this constant so the breakdown bar, the row badge,
  * and the "New" column stay consistent with each other; the
@@ -555,7 +555,7 @@ function categorizeContext(
       }
     }
   }
-  // CHARS_PER_TOKEN is tuned for code/JSON-heavy pi-forge sessions;
+  // CHARS_PER_TOKEN is tuned for code/JSON-heavy Huiyu Pi sessions;
   // see the constant's docstring at the top of the file. Image
   // rough estimate at 1500 tok/image — between Anthropic's ~1200
   // (1024px square) and OpenAI's ~1700 (high-detail). Same numbers

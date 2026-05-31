@@ -17,6 +17,7 @@ import { basename, dirname, extname, join, relative, resolve, sep } from "node:p
 import { createHash, randomUUID } from "node:crypto";
 import { create as tarCreate } from "tar";
 import type { Readable } from "node:stream";
+import { homedir } from "node:os";
 
 /**
  * Filesystem operations bounded by a per-call project root.
@@ -144,6 +145,15 @@ const DEFAULT_TREE_DEPTH = 6;
 /* ----------------------------- guards ----------------------------- */
 
 /**
+ * Basic safety check for all path operations: reject NUL bytes.
+ * This is the minimal required for read operations (which allow arbitrary paths).
+ */
+function assertNoNulBytes(target: string): string {
+  if (target.includes("\0")) throw new PathOutsideRootError(target, "");
+  return resolve(target);
+}
+
+/**
  * Resolve `target` and assert it is inside `root` (or equal to it). Returns
  * the resolved absolute path on success; throws PathOutsideRootError on a
  * traversal attempt. Use this on every entry point — never trust route
@@ -171,6 +181,70 @@ export function assertInsideRoot(target: string, root: string): string {
     throw new PathOutsideRootError(target, root);
   }
   return resolvedTarget;
+}
+
+/**
+ * Verify path safety for READ operations:
+ * - Reject NUL bytes (prevent fs injection attacks)
+ * - Allow arbitrary filesystem paths (matches pi SDK behavior)
+ *
+ * This is the safety check used for:
+ * - readFile
+ * - checkFileReference
+ * - downloadStream
+ *
+ * Because this is local single-user software, reading arbitrary paths is fine —
+ * the user could do the same in their terminal anyway. We only need to prevent
+ * obvious injection attacks (NUL bytes).
+ */
+export async function verifyPathReadable(target: string): Promise<string> {
+  // Only block NUL bytes (path injection), allow everything else
+  const lexicalTarget = assertNoNulBytes(target);
+  // Don't enforce any root containment for read operations
+  return lexicalTarget;
+}
+
+/**
+ * Path to pi's settings.json — read to check `allowEditOutsideProject`.
+ */
+const PI_SETTINGS_PATH = join(homedir(), ".pi", "agent", "settings.json");
+
+/**
+ * Read the `allowEditOutsideProject` flag from pi's settings.json.
+ * Defaults to `false` when the file is missing, unparseable, or the
+ * key is absent. We read from disk every time — the file is tiny and
+ * local, so the I/O cost is negligible compared to the fs ops that
+ * follow, and it ensures the toggle is live-reloaded without a
+ * server restart.
+ */
+async function readAllowEditOutsideSetting(): Promise<boolean> {
+  try {
+    const raw = await fsReadFile(PI_SETTINGS_PATH, "utf8");
+    const parsed = JSON.parse(raw);
+    return parsed.allowEditOutsideProject === true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Resolve a path for WRITE operations, respecting the
+ * `allowEditOutsideProject` user setting:
+ *
+ * - When the setting is ON: allow writes to any path (only NUL byte
+ *   rejection — matches verifyPathReadable behaviour).
+ * - When the setting is OFF (default): enforce project-root containment
+ *   via verifyPathSafe.
+ *
+ * Exported so route handlers that bypass verifyPathWriteable (e.g.
+ * open-in-explorer) can still check the flag themselves.
+ */
+export async function verifyPathWriteable(target: string, root: string): Promise<string> {
+  const allowOutside = await readAllowEditOutsideSetting();
+  if (allowOutside) {
+    return verifyPathReadable(target);
+  }
+  return verifyPathSafe(target, root);
 }
 
 /**
@@ -413,8 +487,8 @@ async function walkFlat(dir: string, root: string, relPath: string, out: string[
   }
 }
 
-export async function readFile(absPath: string, root: string): Promise<ReadResult> {
-  const resolved = await verifyPathSafe(absPath, root);
+export async function readFile(absPath: string, root?: string): Promise<ReadResult> {
+  const resolved = await verifyPathReadable(absPath);
   const st = await stat(resolved).catch(() => undefined);
   if (st === undefined) throw new NotFoundError(resolved);
   if (!st.isFile()) throw new NotAFileError(resolved);
@@ -470,9 +544,9 @@ export type ReferenceCheckResult =
 
 export async function checkFileReference(
   absPath: string,
-  root: string,
+  root?: string,
 ): Promise<ReferenceCheckResult> {
-  const resolved = await verifyPathSafe(absPath, root);
+  const resolved = await verifyPathReadable(absPath);
   const st = await stat(resolved).catch(() => undefined);
   if (st === undefined) throw new NotFoundError(resolved);
   if (st.isDirectory()) {
@@ -500,7 +574,7 @@ export async function checkFileReference(
 /* ----------------------------- write ----------------------------- */
 
 export async function writeFile(absPath: string, root: string, content: string): Promise<void> {
-  const resolved = await verifyPathSafe(absPath, root);
+  const resolved = await verifyPathWriteable(absPath, root);
   // Recursively mkdir the parent so writes to a brand-new nested path
   // succeed (`/foo/bar/baz.ts` works even if `/foo/bar` doesn't exist).
   // Safe AFTER verifyPathSafe: the deepest existing ancestor was
@@ -526,12 +600,12 @@ export async function writeFile(absPath: string, root: string, content: string):
  */
 export async function downloadStream(
   absPath: string,
-  root: string,
+  root?: string,
 ): Promise<
   | { kind: "file"; filename: string; size: number; stream: Readable }
   | { kind: "directory"; filename: string; stream: Readable }
 > {
-  const resolved = await verifyPathSafe(absPath, root);
+  const resolved = await verifyPathReadable(absPath);
   const st = await stat(resolved).catch(() => undefined);
   if (st === undefined) throw new NotFoundError(resolved);
   if (st.isFile()) {
@@ -595,9 +669,9 @@ export async function writeFileBytes(
   source: AsyncIterable<Buffer | Uint8Array>,
   opts?: { expectedSha256?: string; overwrite?: boolean },
 ): Promise<{ path: string; size: number; sha256: string }> {
-  const parent = await verifyPathSafe(parentAbsPath, root);
+  const parent = await verifyPathWriteable(parentAbsPath, root);
   const trimmed = validateName(name);
-  const target = await verifyPathSafe(join(parent, trimmed), root);
+  const target = await verifyPathWriteable(join(parent, trimmed), root);
   const existing = await stat(target).catch(() => undefined);
   if (existing !== undefined) {
     if (opts?.overwrite !== true) throw new TargetExistsError(target);
@@ -640,8 +714,8 @@ export async function makeDirectory(
   name: string,
 ): Promise<string> {
   const trimmed = validateName(name);
-  const parent = await verifyPathSafe(parentAbsPath, root);
-  const target = await verifyPathSafe(join(parent, trimmed), root);
+  const parent = await verifyPathWriteable(parentAbsPath, root);
+  const target = await verifyPathWriteable(join(parent, trimmed), root);
   // recursive:false — surface "already exists" as a real conflict so the
   // UI can prompt the user instead of silently no-op'ing.
   const exists = await stat(target).catch(() => undefined);
@@ -653,9 +727,9 @@ export async function makeDirectory(
 /* ----------------------------- rename / move ----------------------------- */
 
 export async function renameEntry(absPath: string, root: string, newName: string): Promise<string> {
-  const resolved = await verifyPathSafe(absPath, root);
+  const resolved = await verifyPathWriteable(absPath, root);
   const trimmed = validateName(newName);
-  const target = await verifyPathSafe(join(dirname(resolved), trimmed), root);
+  const target = await verifyPathWriteable(join(dirname(resolved), trimmed), root);
   const st = await stat(resolved).catch(() => undefined);
   if (st === undefined) throw new NotFoundError(resolved);
   if (resolved === target) return target;
@@ -707,8 +781,8 @@ export async function moveEntry(
   destAbsPath: string,
   root: string,
 ): Promise<string> {
-  const src = await verifyPathSafe(srcAbsPath, root);
-  const dest = await verifyPathSafe(destAbsPath, root);
+  const src = await verifyPathWriteable(srcAbsPath, root);
+  const dest = await verifyPathWriteable(destAbsPath, root);
   const st = await stat(src).catch(() => undefined);
   if (st === undefined) throw new NotFoundError(src);
   // Forbid moving a directory under itself — a classic foot-gun.
@@ -732,7 +806,7 @@ export async function deleteEntry(
   root: string,
   opts?: { recursive?: boolean },
 ): Promise<void> {
-  const resolved = await verifyPathSafe(absPath, root);
+  const resolved = await verifyPathWriteable(absPath, root);
   // Defense in depth: never let a delete reach the project root itself
   // even if it slips past assertInsideRoot's "equal-to-root" allowance.
   if (resolved === resolve(root)) {

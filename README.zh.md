@@ -120,7 +120,7 @@ huiyu-pi --api-key @/run/secrets/api-key --no-expose-docs
 huiyu-pi --help       # 查看全部参数
 ```
 
-默认情况下 Huiyu Pi 监听 `http://localhost:9144`，从 `~/.pi/agent/` 读取提供商配置（如果安装了 pi CLI 则共享同一份配置），状态数据存储在 `~/.pi-forge/`。可通过参数或环境变量覆盖所有配置。
+默认情况下 Huiyu Pi 监听 `http://localhost:9144`，从 `~/.pi/agent/` 读取提供商配置（如果安装了 pi CLI 则共享同一份配置），状态数据存储在 `~/.huiyu-pi/`。可通过参数或环境变量覆盖所有配置。
 
 ### 手动启动（开发模式）
 
@@ -134,6 +134,26 @@ npm run dev
 ### Windows / macOS / Linux 一键启动
 
 克隆仓库，运行 `start.bat`（Windows）或 `bash start.sh`（macOS/Linux）— 自动安装依赖并打开浏览器。
+
+### 局域网访问
+
+从同一网络的其他设备访问 Huiyu Pi：
+
+```bash
+start-lan.bat                 # Windows
+bash start-lan.sh             # macOS / Linux
+```
+
+或通过环境变量 / CLI 参数覆盖默认的回环地址：
+
+```bash
+HOST=0.0.0.0 huiyu-pi          # npm 全局安装
+huiyu-pi --host 0.0.0.0        # CLI 参数
+```
+
+启动后会显示检测到的局域网 IP（如 `http://192.168.1.100:9144`），在同一 WiFi/VLAN 下的任意设备浏览器中输入该地址即可打开界面。
+
+> **安全提醒：** 绑定 `0.0.0.0` 会将 Agent 的终端和文件系统暴露给**网络上的所有人**，请仅在可信的私有网络中启用。
 
 ---
 

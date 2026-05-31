@@ -30,6 +30,7 @@ import { askUserQuestionRoutes } from "./routes/ask-user-question.js";
 import { todoRoutes } from "./routes/todos.js";
 import { processesRoutes } from "./routes/processes.js";
 import { searchRoutes } from "./routes/search.js";
+import { snapshotRoutes } from "./routes/snapshots.js";
 import { terminalRoutes } from "./routes/terminal.js";
 import { disposeAll as disposeAllMcp, loadGlobal as loadGlobalMcp } from "./mcp/manager.js";
 import { initAskUserQuestionFanout, initProcessesFanout, initTodoFanout } from "./sse-bridge.js";
@@ -243,7 +244,7 @@ export async function buildServer(): Promise<FastifyInstance> {
 
   await fastify.register(swagger, {
     openapi: {
-      info: { title: "pi-forge API", version: "1.0.0" },
+      info: { title: "Huiyu Pi API", version: "1.0.0" },
       components: {
         securitySchemes: {
           bearerAuth: { type: "http", scheme: "bearer" },
@@ -255,7 +256,7 @@ export async function buildServer(): Promise<FastifyInstance> {
 
   // Bootstrap script injected into the swagger UI page. Resolves an
   // auth token in priority order — URL ?token=, then sessionStorage
-  // (set by an earlier visit), then localStorage["pi-forge/auth-
+  // (set by an earlier visit), then localStorage["huiyu-pi/auth-
   // token"] (the JWT the main UI persisted on login). Same-origin so
   // the localStorage read is allowed. Then patches fetch() to attach
   // the token as a Bearer header on every call swagger UI makes to
@@ -273,13 +274,13 @@ export async function buildServer(): Promise<FastifyInstance> {
       var url = new URL(window.location.href);
       var qpToken = url.searchParams.get("token");
       if (qpToken && qpToken.length > 0) {
-        sessionStorage.setItem("pi-forge/docs-token", qpToken);
+        sessionStorage.setItem("huiyu-pi/docs-token", qpToken);
         url.searchParams.delete("token");
         window.history.replaceState({}, document.title, url.toString());
       }
       var token =
-        sessionStorage.getItem("pi-forge/docs-token") ||
-        localStorage.getItem("pi-forge/auth-token");
+        sessionStorage.getItem("huiyu-pi/docs-token") ||
+        localStorage.getItem("huiyu-pi/auth-token");
       if (token && window.fetch) {
         var origFetch = window.fetch.bind(window);
         window.fetch = function (input, init) {
@@ -295,7 +296,7 @@ export async function buildServer(): Promise<FastifyInstance> {
         };
       }
     } catch (err) {
-      console.warn("pi-forge docs auth bootstrap failed:", err);
+      console.warn("Huiyu Pi docs auth bootstrap failed:", err);
     }
   })();`;
 
@@ -303,7 +304,7 @@ export async function buildServer(): Promise<FastifyInstance> {
     routePrefix: "/api/docs",
     uiConfig: { docExpansion: "list", persistAuthorization: true },
     theme: {
-      js: [{ filename: "pi-forge-auth.js", content: swaggerThemeJs }],
+      js: [{ filename: "huiyu-pi-auth.js", content: swaggerThemeJs }],
     },
   });
 
@@ -410,6 +411,7 @@ export async function buildServer(): Promise<FastifyInstance> {
       await api.register(webhookRoutes);
       await api.register(orchestrationRoutes);
       await api.register(searchRoutes);
+      await api.register(snapshotRoutes);
       await api.register(terminalRoutes);
     },
     { prefix: "/api/v1" },
@@ -490,7 +492,7 @@ export async function buildServer(): Promise<FastifyInstance> {
   // so /mcp/settings reports honest connection counts before the
   // first session is created. Project-scope servers load lazily on
   // first session-create per project. Failure here is non-fatal —
-  // a bad mcp.json shouldn't keep pi-forge from booting.
+  // a bad mcp.json shouldn't keep Huiyu Pi from booting.
   loadGlobalMcp().catch((err: unknown) => {
     fastify.log.error({ err }, "mcp: initial load failed");
   });
@@ -537,8 +539,8 @@ export async function start(): Promise<void> {
       // EACCES on `/workspace` (the legacy default) was the most common
       // dev startup failure. Surface a clear hint instead of letting
       // Fastify start in a broken state.
-      console.error(`[pi-forge] failed to create directory ${dir}:`, (err as Error).message);
-      console.error(`[pi-forge] hint: set WORKSPACE_PATH/FORGE_DATA_DIR to a writable location`);
+      console.error(`[huiyu-pi] failed to create directory ${dir}:`, (err as Error).message);
+      console.error(`[huiyu-pi] hint: set WORKSPACE_PATH/FORGE_DATA_DIR to a writable location`);
       process.exit(1);
     }
   }
@@ -551,7 +553,7 @@ export async function start(): Promise<void> {
   logSecretHygieneState();
   try {
     await fastify.listen({ port: config.port, host: config.host });
-    fastify.log.info(`pi-forge server listening on :${config.port}`);
+    fastify.log.info(`Huiyu Pi server listening on :${config.port}`);
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);

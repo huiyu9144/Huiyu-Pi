@@ -30,7 +30,7 @@ export function ChangedFilesBadge({
   const [count, setCount] = useState<number>(0);
   const [dismissed, setDismissed] = useState(() => {
     try {
-      return localStorage.getItem(`pi-forge/dismissed-badge/${sessionId}`) === "1";
+      return localStorage.getItem(`huiyu-pi/dismissed-badge/${sessionId}`) === "1";
     } catch {
       return false;
     }
@@ -39,7 +39,7 @@ export function ChangedFilesBadge({
   useEffect(() => {
     setCount(0);
     try {
-      setDismissed(localStorage.getItem(`pi-forge/dismissed-badge/${sessionId}`) === "1");
+      setDismissed(localStorage.getItem(`huiyu-pi/dismissed-badge/${sessionId}`) === "1");
     } catch {
       setDismissed(false);
     }
@@ -95,7 +95,7 @@ export function ChangedFilesBadge({
             onClick={() => {
               setDismissed(true);
               try {
-                localStorage.setItem(`pi-forge/dismissed-badge/${sessionId}`, "1");
+                localStorage.setItem(`huiyu-pi/dismissed-badge/${sessionId}`, "1");
               } catch {}
             }}
             className="absolute -top-1.5 -right-1.5 hidden h-4 w-4 items-center justify-center rounded-full border border-neutral-700 bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-neutral-200 group-hover:inline-flex"

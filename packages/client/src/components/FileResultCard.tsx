@@ -2,7 +2,33 @@ import { Eye, ExternalLink, FolderOpen } from "lucide-react";
 import { useUiStore } from "../store/ui-store";
 import { useProjectStore } from "../store/project-store";
 
-const PREVIEWABLE_EXTS = new Set([".md", ".mdx", ".markdown", ".mdown", ".html", ".htm"]);
+const PREVIEWABLE_EXTS = new Set([
+  // Markdown
+  ".md", ".mdx", ".markdown", ".mdown",
+  // HTML / web
+  ".html", ".htm",
+  // Plain text
+  ".txt",
+  // Data / config / markup
+  ".json", ".yaml", ".yml", ".toml", ".xml", ".csv", ".tsv", ".env", ".ini", ".cfg", ".conf",
+  // Logs
+  ".log",
+  // Styles
+  ".css", ".scss", ".less", ".sass",
+  // JavaScript / TypeScript
+  ".js", ".jsx", ".ts", ".tsx", ".vue", ".svelte",
+  // Programming languages
+  ".py", ".java", ".go", ".rs", ".rb", ".php", ".cs", ".swift", ".kt", ".kts", ".r",
+  ".c", ".cpp", ".cxx", ".cc", ".h", ".hpp", ".m", ".mm",
+  // Shell / scripts
+  ".sh", ".bash", ".zsh", ".bat", ".cmd", ".ps1",
+  // SQL
+  ".sql",
+  // Build / config files
+  ".gradle", ".cmake", ".mk", ".dockerfile",
+  // Other text-based
+  ".svg", ".graphql", ".gql", ".proto",
+]);
 const HTML_EXTS = new Set([".html", ".htm"]);
 
 function getExt(path: string): string {

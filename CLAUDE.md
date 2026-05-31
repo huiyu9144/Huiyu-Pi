@@ -18,29 +18,17 @@ communication. Those come from the pi SDK. This project is the HTTP bridge and U
 Single-tenant by design: one container, one workspace root, one user. No multi-user
 auth or isolation is needed or planned.
 
+Config ownership: `PI_CONFIG_DIR` (default `~/.pi/agent`) is pi SDK territory;
+`FORGE_DATA_DIR` (default `~/.huiyu-pi`) is pi-forge territory.
+
 ---
 
-## Required Reading by Task
+## Required Reading
 
-Before making changes, read the most specific guide(s):
+Before making changes, read the relevant `docs/agent/*.md` for that area:
+- architecture / server / client / api / sessions / config / filesystem / terminal / mcp / testing / releases / prs
 
-| If you are touching... | Read first |
-|---|---|
-| High-level architecture, repo layout, data flow, data models | `docs/agent/architecture.md` |
-| Fastify server setup, route registration, auth hooks, config/env reads, SDK wiring | `docs/agent/server.md` |
-| React components, Zustand stores, browser API calls, SSE client, themes, diff UI | `docs/agent/client.md` |
-| REST routes, OpenAPI schemas, SSE event payloads, public/private route behavior | `docs/agent/api.md` |
-| Sessions, prompt flow, resume/dispose/fork, attachments, pi SDK events, turn diffs | `docs/agent/sessions.md` |
-| Env vars, CLI flags, `PI_CONFIG_DIR`, `FORGE_DATA_DIR`, backup import/export | `docs/agent/config.md` |
-| File browser, workspace path validation, filesystem writes, git command wrapper | `docs/agent/filesystem.md` |
-| Integrated terminal, PTY lifecycle, WebSocket auth, tab reattach | `docs/agent/terminal.md` |
-| MCP registry, MCP custom tools, MCP truncation, MCP/tool overrides | `docs/agent/mcp.md` |
-| Tests, test runner usage, contract changes, adding/updating integration tests | `docs/agent/testing.md` |
-| Cutting a release, bumping versions, release notes, version bump PRs | `docs/agent/releases.md` |
-| End-of-session PR description, handoff summary, merge-ready change report | `docs/agent/prs.md` |
-
-Do not move existing files under `docs/` when updating these agent guides. Add or
-edit files under `docs/agent/` only unless the product docs themselves must change.
+Do not move files under `docs/` when updating agent guides.
 
 ---
 
@@ -108,48 +96,24 @@ So you can safely run it without worrying about mistakes.
 
 ## Critical Conventions
 
-1. **No default exports.** Use named exports everywhere in server and client code.
-2. **Operational env reads live only in `packages/server/src/config.ts`.** Every
-   operational env var must also have a CLI flag in `packages/server/src/cli.ts`.
-3. **All AgentSession interactions go through `session-registry.ts`.** Routes must
-   not import `AgentSession` or call `createAgentSession()` directly.
-4. **Routes are registered in `index.ts` only.** Route files export Fastify plugin
-   functions; they do not call `fastify.register()` themselves.
-5. **All filesystem operations go through `file-manager.ts` or `git-runner.ts`.**
-   Route handlers must never trust raw path params without file-manager validation.
-6. **Traversal attempts return 403, not 500.** Path validation is enforced in
-   `file-manager.ts`.
-7. **Auth is global with explicit opt-out.** Public routes require both
-   `config: { public: true }` and `security: []` in the OpenAPI schema.
-8. **Never return raw secrets.** `config-manager.ts readAuthSummary()` returns only
+1. **No default exports.** Use named exports everywhere.
+2. **Never return raw secrets.** `config-manager.ts readAuthSummary()` returns only
    provider presence/source, never actual key values.
-9. **All config/data writes are atomic.** Write a `.tmp` file, then `rename()`.
-10. **React state goes through Zustand stores.** Components should not hold
-    significant local state.
-11. **All browser HTTP calls go through `api-client.ts`.** Do not call `fetch()`
-    directly in components.
-12. **SSE clients must handle `snapshot` first** and silently ignore unknown event
-    types.
-13. **Git command failures are user-visible results.** Return 200 with
-    `{ success: false, error }`, not a server error; sanitize stderr.
-14. **Use structured route errors.** Session not found → 404; validation → 400;
-    traversal → 403; SDK crash → 500 `{ error: "agent_error", message }`.
-15. **Put git worktrees under `.worktrees/`.** Do not create worker worktrees
-    elsewhere in the repository or workspace.
+3. **All filesystem operations go through `file-manager.ts` or `git-runner.ts`.**
+   Do not trust raw path params without file-manager validation.
+4. **All config/data writes are atomic.** Write a `.tmp` file, then `rename()`.
+5. **React state goes through Zustand stores.** Components should not hold
+   significant local state.
+
+See `docs/agent/architecture.md` for the remaining conventions.
 
 ---
 
-## Config Ownership Quick Reference
+## Efficiency Rules
 
-The SDK and pi-forge own different directories:
-
-- `PI_CONFIG_DIR` (default `~/.pi/agent`) is pi SDK territory. Managed via
-  `config-manager.ts`; do not write it directly from routes.
-- `FORGE_DATA_DIR` (default `~/.pi-forge`) is pi-forge territory. Each file has a
-  dedicated owner module such as `project-manager.ts`, `mcp/manager.ts`, or
-  `webhooks/store.ts`.
-
-Read `docs/agent/config.md` before changing either area.
+- When creating a file, overwrite if it already exists. Do not rename or create variants.
+- Do not list directories or check existing files before creating — just create directly.
+- Do not suggest using open-file or ask if the user wants to open the file. Just mention the path and content.
 
 ---
 
@@ -168,6 +132,15 @@ Read `docs/agent/config.md` before changing either area.
 - Pi has no native sub-agent support; pi-forge surfaces `pi-subagents` child JSONLs.
 
 Read `docs/agent/sessions.md` and `docs/agent/mcp.md` for details.
+
+---
+
+## Output Deliverables
+
+- Save deliverables as `.md` or `.html` files in the project directory.
+- After writing, mention the file path so the user can click to preview.
+- For HTML: ensure it's a complete, standalone page.
+- For MD: use proper markdown formatting for best preview quality.
 
 ---
 

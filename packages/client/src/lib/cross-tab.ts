@@ -10,7 +10,7 @@
  * next natural refetch path (session list reload, SSE 404 catch,
  * etc.). Don't depend on broadcasts for correctness.
  *
- * Single channel per origin — `pi-forge`. Senders include
+ * Single channel per origin — `huiyu-pi`. Senders include
  * `from` (a per-tab id generated at module load) so a tab can ignore
  * its own broadcasts: BroadcastChannel delivers to every listener
  * INCLUDING other listeners in the same tab, but NOT back to the
@@ -18,7 +18,7 @@
  * and suspenders.
  */
 
-const CHANNEL_NAME = "pi-forge";
+const CHANNEL_NAME = "huiyu-pi";
 
 /**
  * A serializable UnifiedSession-shaped payload. Kept structural here

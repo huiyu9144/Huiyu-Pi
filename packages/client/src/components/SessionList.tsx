@@ -5,7 +5,7 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
 } from "react";
-import { AlertCircle, ChevronDown, ChevronRight, Loader2, MessageSquare, X } from "lucide-react";
+import { AlertCircle, ChevronDown, ChevronRight, Loader2, MessageCircle, X } from "lucide-react";
 import { EMPTY_SESSIONS, useSessionStore } from "../store/session-store";
 import { useProjectStore } from "../store/project-store";
 import { ConfirmDialog } from "./Modal";
@@ -33,6 +33,7 @@ export function SessionList({ projectId }: Props) {
   const setActiveSession = useSessionStore((s) => s.setActiveSession);
   const disposeSession = useSessionStore((s) => s.disposeSession);
   const renameSession = useSessionStore((s) => s.renameSession);
+  const consumePendingRename = useSessionStore((s) => s.consumePendingRename);
   const setActiveProject = useProjectStore((s) => s.setActive);
   const activeProjectId = useProjectStore((s) => s.activeProjectId);
 
@@ -107,6 +108,14 @@ export function SessionList({ projectId }: Props) {
       document.removeEventListener("keydown", onKey);
     };
   }, [armedDeleteId]);
+
+  useEffect(() => {
+    const id = consumePendingRename();
+    if (id !== undefined && sessions.some((s) => s.sessionId === id)) {
+      setRenamingId(id);
+      setRenameDraft("");
+    }
+  }, [consumePendingRename, sessions]);
 
   const onDeleteClick = (sessionId: string): void => {
     if (armedDeleteId === sessionId) {
@@ -231,11 +240,8 @@ export function SessionList({ projectId }: Props) {
   const commitRename = async (sessionId: string): Promise<void> => {
     const next = renameDraft.trim();
     cancelRename();
+    if (next.length === 0) return;
     try {
-      // Server requires a live session for rename. If the user double-clicks
-      // an on-disk-only row we'll surface the 404 via store.error and the
-      // App-level banner; no local-only fallback because the SDK is the
-      // source of truth for session_info entries.
       await renameSession(sessionId, next);
     } catch {
       // store.error surfaces; nothing else to do here
@@ -419,13 +425,20 @@ function SessionRow(props: SessionRowProps) {
       : `session ${s.sessionId.slice(0, 6)}`);
   return (
     <div
-      // Multiselect styling matches the file-tree's selection cue:
-      // saturated 2-px LEFT BORDER + tinted bg + hover that doesn't
-      // erase the selection. Border lives on every row (transparent
-      // when unselected) so toggling selection doesn't shift content
-      // by 2 px. Blue, not emerald, to disambiguate from any future
-      // success / drop affordances on these rows.
-      className={`group flex items-center gap-1 rounded border-l-2 ${isChild ? "ml-4" : ""} px-2 py-0.5 text-xs ${
+      onClick={(e) => {
+        if (isRenaming) return;
+        if ((e.target as HTMLElement).closest("[data-armed-delete]")) return;
+        if ((e.target as HTMLElement).closest("[data-chevron]")) return;
+        if (e.metaKey || e.ctrlKey) {
+          onToggleSelect(s.sessionId);
+          return;
+        }
+        onSelect(s.sessionId);
+      }}
+      onDoubleClick={() => {
+        if (!isRenaming) onStartRename(s.sessionId, s.name ?? "");
+      }}
+      className={`group flex items-center gap-1 rounded border-l-2 ${isChild ? "ml-4" : ""} px-2 py-0.5 text-xs ${isRenaming ? "cursor-text" : "cursor-default"} ${
         isSelected
           ? "border-blue-400 bg-blue-500/15 font-semibold text-neutral-100 hover:bg-blue-500/25"
           : isActive
@@ -438,6 +451,7 @@ function SessionRow(props: SessionRowProps) {
           line up across rows. */}
       {childCount > 0 ? (
         <button
+          data-chevron
           onClick={() => onToggleExpanded(s.sessionId, isExpanded)}
           className="inline-flex h-4 w-4 shrink-0 items-center justify-center text-[#545454] light:text-neutral-500 hover:text-neutral-200"
           title={`${childCount} sub-agent session${childCount === 1 ? "" : "s"}`}
@@ -457,18 +471,10 @@ function SessionRow(props: SessionRowProps) {
           onBlur={() => onCommitRename(s.sessionId)}
           placeholder={label}
           maxLength={200}
-          className="flex-1 rounded border border-neutral-700 bg-neutral-950 px-1.5 py-0.5 text-xs text-neutral-100 outline-none focus:border-neutral-500"
+          className="flex-1 rounded border border-neutral-700 bg-neutral-950 px-1.5 py-0.5 text-xs text-neutral-100 outline-none focus:border-neutral-500 cursor-text"
         />
       ) : (
         <button
-          onClick={(e) => {
-            if (e.metaKey || e.ctrlKey) {
-              onToggleSelect(s.sessionId);
-              return;
-            }
-            onSelect(s.sessionId);
-          }}
-          onDoubleClick={() => onStartRename(s.sessionId, s.name ?? "")}
           className="flex flex-1 items-center gap-1.5 truncate text-left"
           title={`${s.sessionId} — double-click to rename, Cmd/Ctrl+click to select for bulk delete`}
         >
@@ -479,9 +485,9 @@ function SessionRow(props: SessionRowProps) {
               <AlertCircle size={10} className={`shrink-0 ${isSelected || isActive ? "text-amber-400" : "text-amber-500/70"}`} />
             </span>
           ) : s.isLive ? (
-            <MessageSquare size={10} className={`shrink-0 ${isSelected || isActive ? "text-neutral-100" : "text-[#545454]"}`} />
+            <MessageCircle size={10} className={`shrink-0 ${isSelected || isActive ? "text-neutral-100" : "text-[#545454]"}`} />
           ) : (
-            <MessageSquare size={10} className={`shrink-0 ${isSelected || isActive ? "text-neutral-100" : "text-[#545454]"}`} />
+            <MessageCircle size={10} className={`shrink-0 ${isSelected || isActive ? "text-neutral-100" : "text-[#545454]"}`} />
           )}
           {isChild && (
             <span className="mr-1 text-purple-400 light:text-purple-700" title="sub-agent">

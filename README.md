@@ -120,7 +120,7 @@ huiyu-pi --api-key @/run/secrets/api-key --no-expose-docs
 huiyu-pi --help       # full flag table
 ```
 
-By default Huiyu Pi listens on `http://localhost:9144`, reads provider config from `~/.pi/agent/` (shared with the host pi CLI if you have one), and stores its own state in `~/.pi-forge/`. Override with flags or env vars — every server env var has a matching `--flag`.
+By default Huiyu Pi listens on `http://localhost:9144`, reads provider config from `~/.pi/agent/` (shared with the host pi CLI if you have one), and stores its own state in `~/.huiyu-pi/`. Override with flags or env vars — every server env var has a matching `--flag`.
 
 ### Manual Start (Development)
 
@@ -134,6 +134,27 @@ npm run dev
 ### Windows / macOS / Linux One-click
 
 Clone the repo, run `start.bat` (Windows) or `bash start.sh` (macOS/Linux) — installs everything and opens your browser.
+
+### LAN Access
+
+Access Huiyu Pi from other devices on the same network:
+
+```bash
+# Using the LAN startup script (dev mode)
+start-lan.bat          # Windows
+bash start-lan.sh      # macOS / Linux
+```
+
+Or override the default loopback address via environment variable or CLI flag:
+
+```bash
+HOST=0.0.0.0 huiyu-pi          # npm global install
+huiyu-pi --host 0.0.0.0        # CLI flag
+```
+
+The console will display the detected LAN IP (e.g. `http://192.168.1.100:9144`) — enter that URL on any device connected to the same WiFi/VLAN to open the UI.
+
+> **Security note:** Binding to `0.0.0.0` exposes the agent's shell and filesystem to **everyone on your network**. Only enable on trusted private networks.
 
 ---
 

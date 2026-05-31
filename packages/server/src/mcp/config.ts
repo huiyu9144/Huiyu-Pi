@@ -5,7 +5,7 @@ import { randomUUID } from "node:crypto";
 import { config } from "../config.js";
 
 /**
- * pi-forge-owned MCP server registry. Lives at
+ * Huiyu Pi-owned MCP server registry. Lives at
  * `${FORGE_DATA_DIR}/mcp.json` (mode 0600). The pi SDK has no
  * native MCP support — this file is read by `mcp/manager.ts`, the
  * configured servers are connected to via @modelcontextprotocol/sdk,
@@ -20,7 +20,7 @@ import { config } from "../config.js";
  *
  *   - **Remote** servers: have `url`. Spoken via StreamableHTTP /
  *     SSE. Auth via static headers.
- *   - **Stdio** servers: have `command`. The pi-forge spawns the
+ *   - **Stdio** servers: have `command`. The Huiyu Pi spawns the
  *     subprocess and speaks MCP over its stdin/stdout.
  *
  * Exactly one of `url` / `command` must be set per server; the route
@@ -71,7 +71,7 @@ export interface McpServerConfig {
   args?: string[];
   /**
    * Explicit environment for the subprocess. The MCP SDK's
-   * `StdioClientTransport` does NOT inherit the pi-forge process
+   * `StdioClientTransport` does NOT inherit the Huiyu Pi process
    * env by default — it uses `getDefaultEnvironment()` which only
    * exposes a small allowlist (PATH, HOME, locale vars, etc.). Set
    * this to pass through provider keys / config the MCP server
@@ -81,7 +81,7 @@ export interface McpServerConfig {
   env?: Record<string, string>;
   /**
    * Working directory for the subprocess. Defaults to the project
-   * path for project-scoped servers, and the pi-forge process cwd
+   * path for project-scoped servers, and the Huiyu Pi process cwd
    * for global servers.
    */
   cwd?: string;

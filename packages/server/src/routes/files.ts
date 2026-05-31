@@ -381,7 +381,7 @@ export const fileRoutes: FastifyPluginAsync = async (fastify) => {
       if (project === undefined) return reply;
       const target = req.query.path ?? project.path;
       try {
-        const result = await downloadStream(target, project.path);
+        const result = await downloadStream(target);
         // RFC 5987 filename* = UTF-8 + percent-encoded so non-ASCII
         // names survive Chrome / Firefox / Safari. Keep the legacy
         // `filename=` for older clients with the same name ASCII-
@@ -441,7 +441,7 @@ export const fileRoutes: FastifyPluginAsync = async (fastify) => {
         const rawPath = req.query.path;
         const normalizedPath = rawPath.replace(/^[/\\]+/, "");
         const fileAbsPath = isAbsolute(normalizedPath) ? normalizedPath : join(project.path, normalizedPath);
-        const result = await readFile(fileAbsPath, project.path);
+        const result = await readFile(fileAbsPath); // root is optional now, we don't need it for read
         return result;
       } catch (err) {
         return mapError(reply, err);

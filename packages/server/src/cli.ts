@@ -34,7 +34,7 @@ const FLAGS: Record<string, CliFlag> = {
   },
   "workspace-path": {
     type: "string",
-    description: "Directory for project data (~/.pi-forge/workspace)",
+    description: "Directory for project data (~/.huiyu-pi/workspace)",
     envVar: "WORKSPACE_PATH",
   },
   "pi-config-dir": {
@@ -44,7 +44,7 @@ const FLAGS: Record<string, CliFlag> = {
   },
   "forge-data-dir": {
     type: "string",
-    description: "Forge-owned data dir (~/.pi-forge)",
+    description: "Forge-owned data dir (~/.huiyu-pi)",
     envVar: "FORGE_DATA_DIR",
   },
   "session-dir": {

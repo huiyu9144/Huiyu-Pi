@@ -38,9 +38,9 @@ When you run pi-forge, the following data lands on disk:
 
 | Where | What | Lifetime |
 |---|---|---|
-| `${WORKSPACE_PATH}` (default `~/.pi-forge/workspace`) | Your project source code, anything the agent writes | Until you delete it |
+| `${WORKSPACE_PATH}` (default `~/.huiyu-pi/workspace`) | Your project source code, anything the agent writes | Until you delete it |
 | `${SESSION_DIR}` (default `${WORKSPACE_PATH}/.pi/sessions`) | JSONL transcripts of every session: prompts, responses, tool calls + results, model + provider + timestamps + token usage per turn | Until you delete it |
-| `${FORGE_DATA_DIR}/projects.json` (default `~/.pi-forge/projects.json`) | Project registry: id, name, absolute path, createdAt | Until you delete it |
+| `${FORGE_DATA_DIR}/projects.json` (default `~/.huiyu-pi/projects.json`) | Project registry: id, name, absolute path, createdAt | Until you delete it |
 | `${PI_CONFIG_DIR}/auth.json` (default `~/.pi/agent/auth.json`) | LLM provider API keys (Anthropic, OpenAI, etc.) | Until you remove the key |
 | `${PI_CONFIG_DIR}/models.json` | Custom provider definitions (OpenAI-compatible endpoints) | Until you delete it |
 | `${PI_CONFIG_DIR}/settings.json` | Default model, default thinking level, steering / followUp mode | Until you delete it |

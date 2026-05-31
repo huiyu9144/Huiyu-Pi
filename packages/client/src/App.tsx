@@ -29,11 +29,11 @@ import { useInstallPrompt } from "./hooks/useInstallPrompt";
 /* Persisted pane widths. Stored in localStorage so the user-tuned
    layout survives reloads. Defaults err on the side of "the chat is the
    primary surface" — files is narrow, editor is medium. */
-const FILES_WIDTH_KEY = "pi-forge/files-width";
-const EDITOR_WIDTH_KEY = "pi-forge/editor-width";
-const TERMINAL_HEIGHT_KEY = "pi-forge/terminal-height";
-const TODO_PANEL_HEIGHT_KEY = "pi-forge/todo-panel-height";
-const LAYOUT_VERSION_KEY = "pi-forge/layout-version";
+const FILES_WIDTH_KEY = "huiyu-pi/files-width";
+const EDITOR_WIDTH_KEY = "huiyu-pi/editor-width";
+const TERMINAL_HEIGHT_KEY = "huiyu-pi/terminal-height";
+const TODO_PANEL_HEIGHT_KEY = "huiyu-pi/todo-panel-height";
+const LAYOUT_VERSION_KEY = "huiyu-pi/layout-version";
 const LAYOUT_VERSION = 2;
 const DEFAULT_FILES_WIDTH = 560;
 const DEFAULT_EDITOR_WIDTH = 960;
@@ -106,23 +106,23 @@ export function App() {
   const installTooltipRef = useRef<HTMLDivElement>(null);
 
   const [terminalOpen, setTerminalOpen] = useState<boolean>(
-    () => localStorage.getItem("pi-forge/terminal-open") === "true",
+    () => localStorage.getItem("huiyu-pi/terminal-open") === "true",
   );
   const setTerminalOpenPersisted = (v: boolean): void => {
     setTerminalOpen(v);
-    localStorage.setItem("pi-forge/terminal-open", v ? "true" : "false");
+    localStorage.setItem("huiyu-pi/terminal-open", v ? "true" : "false");
   };
 
-  // Chat pane visibility — defaults to OPEN (the chat is the pi-forge's
+  // Chat pane visibility — defaults to OPEN (the chat is the Huiyu Pi's
   // primary surface), and the persistence key is absence-means-open so a
   // user who has never touched the toggle gets the chat. Hide is for the
   // "I just want to use the file editor + terminal" focus mode.
   const [chatOpen, setChatOpen] = useState<boolean>(
-    () => localStorage.getItem("pi-forge/chat-open") !== "false",
+    () => localStorage.getItem("huiyu-pi/chat-open") !== "false",
   );
   const setChatOpenPersisted = (v: boolean): void => {
     setChatOpen(v);
-    localStorage.setItem("pi-forge/chat-open", v ? "true" : "false");
+    localStorage.setItem("huiyu-pi/chat-open", v ? "true" : "false");
   };
 
   // Editor pane visibility — independent of `filesOpen` (the file
@@ -131,16 +131,16 @@ export function App() {
   // in sessionStorage via file-store; this toggle just controls
   // visibility of the rendered pane.
   const [editorOpen, setEditorOpen] = useState<boolean>(
-    () => localStorage.getItem("pi-forge/editor-open") !== "false",
+    () => localStorage.getItem("huiyu-pi/editor-open") !== "false",
   );
   const setEditorOpenPersisted = (v: boolean): void => {
     setEditorOpen(v);
-    localStorage.setItem("pi-forge/editor-open", v ? "true" : "false");
+    localStorage.setItem("huiyu-pi/editor-open", v ? "true" : "false");
   };
 
   // First-run picker dismissal. When no projects exist we render the
   // ProjectPicker by default, but the user can dismiss it to take a
-  // look around the empty pi-forge. Re-opens via the sidebar's
+  // look around the empty Huiyu Pi. Re-opens via the sidebar's
   // "+ New project" button. Reset whenever a project is created so
   // the picker doesn't reappear if the user later deletes all
   // projects in the same browser tab.

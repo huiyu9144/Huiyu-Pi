@@ -162,16 +162,6 @@ export function ProjectSidebar({ className = "" }: ProjectSidebarProps = {}) {
             <div
               key={p.id}
               className={`mt-1 px-2 ${draggingProjectId === p.id ? "opacity-60" : ""}`}
-              draggable={renamingId !== p.id}
-              onDragStart={(e) => {
-                if (renamingId === p.id) {
-                  e.preventDefault();
-                  return;
-                }
-                e.dataTransfer.effectAllowed = "move";
-                e.dataTransfer.setData("text/plain", p.id);
-                setDraggingProjectId(p.id);
-              }}
               onDragEnter={(e) => {
                 e.preventDefault();
                 if (draggingProjectId !== undefined && draggingProjectId !== p.id) {
@@ -196,6 +186,16 @@ export function ProjectSidebar({ className = "" }: ProjectSidebarProps = {}) {
                       ? "text-neutral-100"
                       : "text-[#545454] light:text-neutral-500"
                 }`}
+                draggable={renamingId !== p.id}
+                onDragStart={(e) => {
+                  if (renamingId === p.id) {
+                    e.preventDefault();
+                    return;
+                  }
+                  e.dataTransfer.effectAllowed = "move";
+                  e.dataTransfer.setData("text/plain", p.id);
+                  setDraggingProjectId(p.id);
+                }}
               >
                 {renamingId === p.id ? (
                   <input

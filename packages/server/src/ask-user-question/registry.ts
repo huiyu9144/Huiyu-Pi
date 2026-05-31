@@ -7,7 +7,7 @@ import type { AskUserQuestionResult, Question } from "./types.js";
  * answer route resolves it, and the SSE bridge re-emits open
  * entries on snapshot so reconnect resurfaces the modal.
  *
- * Single-process state — pi-forge is single-tenant by design, no
+ * Single-process state — Huiyu Pi is single-tenant by design, no
  * cross-process synchronisation needed. The Map is keyed by
  * requestId (uuid). A secondary index by sessionId keeps the
  * "list pending for this session" lookup O(1).

@@ -99,7 +99,7 @@ export async function readWebhooks(): Promise<WebhookConfig[]> {
 
 async function writeWebhooks(webhooks: WebhookConfig[]): Promise<void> {
   // mode 0o600 — webhooks.json holds HMAC secrets. Same posture as
-  // ~/.pi-forge/jwt-secret and ~/.pi-forge/password-hash.
+  // ~/.huiyu-pi/jwt-secret and ~/.huiyu-pi/password-hash.
   await atomicWriteJson(WEBHOOKS_FILE(), webhooks, 0o600);
 }
 
@@ -386,7 +386,7 @@ async function readDeliveriesRaw(): Promise<DeliveryRecord[]> {
 async function writeDeliveries(records: DeliveryRecord[]): Promise<void> {
   // Deliveries don't contain secrets but mode 0600 anyway: the
   // file lives alongside webhooks.json and there's no reason for
-  // anything outside the pi-forge process to read it.
+  // anything outside the Huiyu Pi process to read it.
   await atomicWriteJson(DELIVERIES_FILE(), records, 0o600);
 }
 

@@ -32,7 +32,7 @@ spec:
             [
               "sh",
               "-c",
-              "mkdir -p /workspace /home/pi/.pi/agent /home/pi/.pi-forge && chown -R 1000:1000 /workspace /home/pi/.pi/agent /home/pi/.pi-forge && chmod 700 /workspace /home/pi/.pi/agent /home/pi/.pi-forge || true",
+              "mkdir -p /workspace /home/pi/.pi/agent /home/pi/.huiyu-pi && chown -R 1000:1000 /workspace /home/pi/.pi/agent /home/pi/.huiyu-pi && chmod 700 /workspace /home/pi/.pi/agent /home/pi/.huiyu-pi || true",
             ]
           securityContext:
             allowPrivilegeEscalation: false
@@ -53,7 +53,7 @@ spec:
             - name: pi-config
               mountPath: /home/pi/.pi/agent
             - name: pi-forge-data
-              mountPath: /home/pi/.pi-forge
+              mountPath: /home/pi/.huiyu-pi
       containers:
         - name: pi-forge
           image: image-registry.openshift-image-registry.svc:5000/pi-forge/pi-forge:latest
@@ -81,7 +81,7 @@ spec:
             - name: PI_CONFIG_DIR
               value: /home/pi/.pi/agent
             - name: FORGE_DATA_DIR
-              value: /home/pi/.pi-forge
+              value: /home/pi/.huiyu-pi
             - name: PUID
               value: "1000"
             - name: PGID
@@ -165,7 +165,7 @@ spec:
             - name: pi-config
               mountPath: /home/pi/.pi/agent
             - name: pi-forge-data
-              mountPath: /home/pi/.pi-forge
+              mountPath: /home/pi/.huiyu-pi
             # /tmp emptyDir because readOnlyRootFilesystem:true on the
             # container blocks writes there. The agent's bash tool needs
             # /tmp for `mktemp`, `pip install`, `npm install`, `git clone`.

@@ -1,28 +1,13 @@
 /**
  * Prompt snippet + guidelines for the `ask_user_question` tool.
- *
- * ─────────────────────────────────────────────────────────────────────────
- * Adapted from @juicesharp/rpiv-ask-user-question (MIT).
- * Copyright (c) 2026 juicesharp.
- * https://github.com/juicesharp/rpiv-mono/tree/main/packages/rpiv-ask-user-question
- * ─────────────────────────────────────────────────────────────────────────
- *
- * The wording is preserved (with one substitution: "Type something."
- * → "Type something" in places where it's an input affordance, not
- * the sentinel-label text) because it's been tuned against real
- * model behavior. Rewriting from scratch risks worse tool-invocation
- * patterns. The functional implementation in tool.ts, validate.ts,
- * envelope.ts, and the React UI is independent.
  */
 import { MAX_OPTIONS, MAX_QUESTIONS, MIN_OPTIONS } from "./types.js";
 
 export const PROMPT_SNIPPET = `Ask the user up to ${MAX_QUESTIONS} structured questions (${MIN_OPTIONS}-${MAX_OPTIONS} options each) when requirements are ambiguous`;
 
 export const PROMPT_GUIDELINES: string[] = [
-  `Use ask_user_question whenever the user's request is underspecified and you cannot proceed without concrete decisions — you can ask up to ${MAX_QUESTIONS} questions per invocation.`,
-  `Each question MUST have ${MIN_OPTIONS}-${MAX_OPTIONS} options. Every option requires a concise label (1-5 words) and a description explaining what the choice means or its trade-offs. The user can additionally type a custom answer ("Type something." row is appended automatically to single-select questions) or pick "Chat about this" to abandon the questionnaire.`,
-  `Set multiSelect: true when multiple answers are valid; this suppresses the "Type something." row. Provide an options[].preview markdown string when an option benefits from richer side-by-side context (mockups, code snippets, diagrams, configs) — single-select only. NOTE: any non-empty preview on a single-select question ALSO suppresses the "Type something." row (no room in the side-by-side layout); "Chat about this" remains the escape hatch. If you recommend a specific option, make it the first option and append "(Recommended)" to its label.`,
-  "Do not stack multiple ask_user_question calls back-to-back — group all clarifying questions into one invocation.",
+  `Use ask_user_question when requirements are unclear — you can ask up to ${MAX_QUESTIONS} questions per call. Each question needs ${MIN_OPTIONS}-${MAX_OPTIONS} options with concise labels and descriptions.`,
+  `Use multiSelect when multiple answers are valid. Use preview for side-by-side comparisons (single-select only). Group all clarifying questions into one invocation — do not stack calls back-to-back.`,
 ];
 
 export const TOOL_DESCRIPTION = `Ask the user one or more structured questions during execution. Use when you need to:

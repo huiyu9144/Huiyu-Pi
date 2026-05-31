@@ -8,7 +8,7 @@
  *   2. The synthetic package.json has the right shape — name, version
  *      from root, bin entry, deps hoisted from the server workspace,
  *      provenance enabled, public access.
- *   3. `node publish/bin/pi-forge.mjs` boots the workbench, serves
+ *   3. `node publish/bin/huiyu-pi.mjs` boots the workbench, serves
  *      `/api/v1/health`, and serves the embedded SPA (`/`).
  *
  * Why this is its own test (not folded into test-scaffold):
@@ -17,7 +17,7 @@
  * CLIENT_DIST_PATH override, dynamic import of the server entry. A
  * regression in the shim would only surface here.
  *
- * Note: this test runs `node publish/bin/pi-forge.mjs` while still
+ * Note: this test runs `node publish/bin/huiyu-pi.mjs` while still
  * inside the repo, so Node's module resolution finds the server's
  * runtime deps via the hoisted root `node_modules/`. A real `npm i
  * pi-forge` install gets its deps from the synthetic package.json's
@@ -40,7 +40,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const repoRoot = resolve(__dirname, "..");
 const publishDir = resolve(repoRoot, "publish");
-const binPath = resolve(publishDir, "bin/pi-forge.mjs");
+const binPath = resolve(publishDir, "bin/huiyu-pi.mjs");
 const synthPkgPath = resolve(publishDir, "package.json");
 const rootPkg = JSON.parse(readFileSync(resolve(repoRoot, "package.json"), "utf8")) as {
   version: string;
@@ -153,15 +153,15 @@ async function main(): Promise<void> {
     engines: { node?: string };
     type: string;
   };
-  assert("synth name === 'pi-forge'", synth.name === "pi-forge", synth.name);
+  assert("synth name === 'huiyu-pi'", synth.name === "huiyu-pi", synth.name);
   assert(
     "synth version matches root version",
     synth.version === rootPkg.version,
     `${synth.version} vs ${rootPkg.version}`,
   );
   assert(
-    "synth bin entry points at bin/pi-forge.mjs",
-    synth.bin["pi-forge"] === "bin/pi-forge.mjs",
+    "synth bin entry points at bin/huiyu-pi.mjs",
+    synth.bin["huiyu-pi"] === "bin/huiyu-pi.mjs",
     JSON.stringify(synth.bin),
   );
   assert("synth type === 'module'", synth.type === "module");
@@ -195,12 +195,12 @@ async function main(): Promise<void> {
 
   // --- Boot the bin shim ---------------------------------------------
   // Use isolated dirs so this test doesn't touch the user's real
-  // ~/.pi-forge or ~/.pi/agent.
+  // ~/.huiyu-pi or ~/.pi/agent.
   const workspacePath = await mkdtemp(join(tmpdir(), "pi-forge-pub-ws-"));
   const piConfigDir = await mkdtemp(join(tmpdir(), "pi-forge-pub-pi-"));
   const forgeDataDir = await mkdtemp(join(tmpdir(), "pi-forge-pub-data-"));
   const port = await pickFreePort();
-  console.log(`[test-publish-package] launching publish/bin/pi-forge.mjs on :${port}`);
+  console.log(`[test-publish-package] launching publish/bin/huiyu-pi.mjs on :${port}`);
 
   const child = spawn(process.execPath, [binPath], {
     cwd: repoRoot,

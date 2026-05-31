@@ -12,7 +12,7 @@
  * model behavior — rules like "avoid &, nohup, disown, or setsid
  * when the process tool fits" steer the model toward the right
  * primitive. The reducer, lifecycle, log handling, UI, and SSE
- * wiring are pi-forge's own.
+ * wiring are Huiyu Pi's own.
  */
 
 export const PROMPT_SNIPPET = "Manage background processes without blocking the conversation";
@@ -21,7 +21,7 @@ export const PROMPT_GUIDELINES: string[] = [
   "Use the process tool for long-running commands such as dev servers, test watchers, build watchers, and log tails instead of bash.",
   "Avoid shell background patterns such as &, nohup, disown, or setsid when the process tool fits.",
   "After starting a process, continue other work instead of waiting for it. Do not repeatedly call list/output just to see whether it has finished.",
-  "Use the pi-forge process tool's notify flags (alertOnSuccess / alertOnFailure / alertOnKill) and logWatches when you need to react to events without polling.",
+  "Use the Huiyu Pi process tool's notify flags (alertOnSuccess / alertOnFailure / alertOnKill) and logWatches when you need to react to events without polling.",
 ];
 
 export const TOOL_DESCRIPTION = `Manage background processes. Actions:

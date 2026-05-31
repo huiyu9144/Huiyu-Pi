@@ -5,8 +5,9 @@ import { postCrossTab, subscribeCrossTab } from "../lib/cross-tab";
 import { useAskUserQuestionStore, type PendingAskQuestion } from "./ask-user-question-store";
 import { useTodoStore, type Task as TodoTaskShape } from "./todo-store";
 import { useProcessesStore, type ProcessInfo as ProcessShape } from "./processes-store";
+import { useSnapshotStore } from "./snapshot-store";
 
-const ACTIVE_SESSION_KEY = "pi-forge/active-session-id";
+const ACTIVE_SESSION_KEY = "huiyu-pi/active-session-id";
 
 /**
  * Stable empty constants for Zustand selectors. React 18's useSyncExternalStore
@@ -65,6 +66,52 @@ const refetchState = new Map<string, RefetchState>();
  * through `set()`.
  */
 const controllers = new Map<string, AbortController>();
+
+/**
+ * Stale-streaming recovery: every 10 s, check for sessions whose
+ * streamingBySession is still `true` but whose SSE controller has
+ * been removed (user navigated away, tab was backgrounded, network
+ * blip dropped the stream before agent_end arrived). Without this
+ * the sidebar spinner stays stuck forever — the server-side turn
+ * finished minutes ago but the client never learned.
+ *
+ * Cost: one Zustand `get()` read + a Map lookup per tick. Skips
+ * entirely when nothing is streaming. Fires at most one
+ * loadSessionsForProject per project per interval.
+ */
+const STALE_POLL_MS = 10_000;
+let stalePollTimer: ReturnType<typeof setInterval> | undefined;
+function startStalePoll(): void {
+  if (stalePollTimer !== undefined) return;
+  stalePollTimer = setInterval(() => {
+    const state = useSessionStore.getState();
+    const streamingIds = Object.entries(state.streamingBySession)
+      .filter(([, v]) => v === true)
+      .map(([id]) => id);
+    if (streamingIds.length === 0) return;
+    const staleIds = streamingIds.filter((id) => !controllers.has(id));
+    if (staleIds.length === 0) return;
+    // Collect affected projects, deduplicate, refresh once each.
+    const refreshedProjects = new Set<string>();
+    for (const sid of staleIds) {
+      const pid = findProjectIdForSession(state, sid);
+      if (pid !== undefined && !refreshedProjects.has(pid)) {
+        refreshedProjects.add(pid);
+        // Flip streaming off immediately so the spinner disappears;
+        // the subsequent list refetch brings isLive up to date.
+        useSessionStore.setState((s) => ({
+          streamingBySession: { ...s.streamingBySession, [sid]: false },
+          activeToolBySession: { ...s.activeToolBySession, [sid]: undefined },
+        }));
+        void state.loadSessionsForProject(pid);
+      }
+    }
+  }, STALE_POLL_MS);
+}
+// Start on first import — safe because useSessionStore is already
+// created by the time this module-level code runs (create() is
+// synchronous and the store export is hoisted).
+startStalePoll();
 
 /**
  * Phase 8 keeps the message type loose — pi's AgentMessage union is rich
@@ -180,6 +227,8 @@ function removeSessionFromState(current: SessionState, sessionId: string): Parti
   delete nextStreaming[sessionId];
   const nextBanner = { ...current.bannerBySession };
   delete nextBanner[sessionId];
+  const nextDismissed = { ...current.dismissedErrorBySession };
+  delete nextDismissed[sessionId];
   const nextStreamingText = { ...current.streamingTextBySession };
   delete nextStreamingText[sessionId];
   const nextActiveTool = { ...current.activeToolBySession };
@@ -196,6 +245,7 @@ function removeSessionFromState(current: SessionState, sessionId: string): Parti
     messagesBySession: nextMessages,
     streamingBySession: nextStreaming,
     bannerBySession: nextBanner,
+    dismissedErrorBySession: nextDismissed,
     streamingTextBySession: nextStreamingText,
     activeToolBySession: nextActiveTool,
     agentEndCountBySession: nextAgentEndCount,
@@ -234,6 +284,14 @@ interface SessionState {
   streamingBySession: Record<string, boolean>;
   /** Per-session last-known toolEvent + retry banners (lightly modelled). */
   bannerBySession: Record<string, string | undefined>;
+  /**
+   * Tracks the last error banner that was dismissed (either manually or
+   * via model switch) per session. When `agent_end` fires with the same
+   * error message, it is treated as a stale residue from a previous agent
+   * round and suppressed. Cleared when a new `agent_start` fires (new
+   * turn = fresh state) or the error changes.
+   */
+  dismissedErrorBySession: Record<string, string | undefined>;
   /**
    * Live assistant text being streamed in by message_update events. Reset on
    * agent_start, accumulates deltas, cleared on agent_end (the authoritative
@@ -287,6 +345,14 @@ interface SessionState {
   /** Errors surfaced from API calls (sticky until next successful op). */
   error: string | undefined;
   loadingList: boolean;
+  /**
+   * Session id that should auto-enter rename mode on next render.
+   * Set by `createSession` so the sidebar immediately shows an
+   * editable name input for the newly created session. Consumed
+   * (cleared) by `consumePendingRename` once the SessionList picks
+   * it up.
+   */
+  pendingRenameSessionId: string | undefined;
 
   loadSessionsForProject: (projectId: string) => Promise<void>;
   createSession: (projectId: string) => Promise<SessionSummary>;
@@ -320,6 +386,8 @@ interface SessionState {
    */
   setPendingDraft: (sessionId: string, draft: string) => void;
   consumePendingDraft: (sessionId: string) => void;
+  /** Consume + clear the pending rename signal for a newly created session. */
+  consumePendingRename: () => string | undefined;
   /** Set the pending scroll target for `sessionId` (used by global search). */
   requestScrollToMessage: (sessionId: string, messageIndex: number) => void;
   /** Consume + clear the pending scroll target for `sessionId`. */
@@ -347,6 +415,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   pendingDraftBySession: {},
   streamingBySession: {},
   bannerBySession: {},
+  dismissedErrorBySession: {},
   streamingTextBySession: {},
   activeToolBySession: {},
   agentEndCountBySession: {},
@@ -355,13 +424,17 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   pendingScrollByMessageIndex: {},
   error: undefined,
   loadingList: false,
+  pendingRenameSessionId: undefined,
 
   loadSessionsForProject: async (projectId) => {
     set({ loadingList: true, error: undefined });
     try {
       const { sessions } = await api.listSessions(projectId);
+      const sorted = [...sessions].sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
       set((s) => ({
-        byProject: { ...s.byProject, [projectId]: sessions },
+        byProject: { ...s.byProject, [projectId]: sorted },
         loadingList: false,
       }));
     } catch (err) {
@@ -394,6 +467,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         return {
           byProject: { ...s.byProject, [projectId]: [unified, ...existing] },
           activeSessionId: summary.sessionId,
+          pendingRenameSessionId: summary.sessionId,
         };
       });
       localStorage.setItem(ACTIVE_SESSION_KEY, summary.sessionId);
@@ -477,6 +551,12 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       delete next[sessionId];
       return { pendingDraftBySession: next };
     }),
+
+  consumePendingRename: () => {
+    const id = get().pendingRenameSessionId;
+    if (id !== undefined) set({ pendingRenameSessionId: undefined });
+    return id;
+  },
 
   requestScrollToMessage: (sessionId, messageIndex) =>
     set((s) => ({
@@ -713,9 +793,15 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     }
   },
   clearBanner: (sessionId) => {
-    set((s) => ({
-      bannerBySession: { ...s.bannerBySession, [sessionId]: undefined },
-    }));
+    set((s) => {
+      const current = s.bannerBySession[sessionId];
+      return {
+        bannerBySession: { ...s.bannerBySession, [sessionId]: undefined },
+        dismissedErrorBySession: current !== undefined
+          ? { ...s.dismissedErrorBySession, [sessionId]: current }
+          : s.dismissedErrorBySession,
+      };
+    });
   },
 }));
 
@@ -786,6 +872,7 @@ function applyEvent(
     // Refetch authoritative messages, then clear streaming state. Order
     // matters — the messages array must be in place before the renderer
     // drops the streamingText bubble or we'd see a momentary gap.
+    const projectId = findProjectIdForSession(get(), sessionId);
     void api
       .getMessages(sessionId)
       .then(({ messages }) => {
@@ -800,20 +887,48 @@ function applyEvent(
           // error banner set moments earlier by compaction_end or
           // message_end — those carry the more useful detail for
           // context-overflow / provider-rejection failures.
+          //
+          // If the error matches a previously dismissed error (recorded
+          // by clearBanner or a model switch), suppress it — the
+          // server's live.session.errorMessage may be a stale residue
+          // from a prior agent round that used a different model.
           const existingBanner = s.bannerBySession[sessionId];
-          const nextBanner = errorBanner ?? existingBanner;
+          const dismissed = s.dismissedErrorBySession[sessionId];
+          const nextBanner =
+            errorBanner !== undefined && errorBanner === dismissed
+              ? undefined
+              : errorBanner ?? existingBanner;
+          // Clear the dismissed flag when this agent_end carries no
+          // error — the problem (if any) has been resolved.
+          const nextDismissed =
+            errorBanner === undefined
+              ? undefined
+              : s.dismissedErrorBySession[sessionId];
           return {
             messagesBySession: { ...s.messagesBySession, [sessionId]: messages },
             streamingBySession: { ...s.streamingBySession, [sessionId]: false },
             streamingTextBySession: { ...s.streamingTextBySession, [sessionId]: "" },
             activeToolBySession: { ...s.activeToolBySession, [sessionId]: undefined },
             bannerBySession: { ...s.bannerBySession, [sessionId]: nextBanner },
+            dismissedErrorBySession: { ...s.dismissedErrorBySession, [sessionId]: nextDismissed },
             agentEndCountBySession: {
               ...s.agentEndCountBySession,
               [sessionId]: (s.agentEndCountBySession[sessionId] ?? 0) + 1,
             },
           };
         });
+        // Refresh session list so isLive / lastActivityAt etc. sync
+        // from server — without this the sidebar spinner may stay
+        // stuck or the session metadata goes stale.
+        if (projectId !== undefined) void get().loadSessionsForProject(projectId);
+        // Post-agent snapshot: capture the AI's result on disk after this turn.
+        // Fire-and-forget is safe here — the snapshot is a bonus record that
+        // doesn't need to block the UI from re-enabling.
+        if (projectId !== undefined) {
+          const lastMsg = messages[messages.length - 1];
+          const label = typeof lastMsg?.content === "string" ? lastMsg.content.slice(0, 60) : "post-agent";
+          void useSnapshotStore.getState().snapAfterAgent(projectId, label, sessionId);
+        }
       })
       .catch(() => {
         // If the refetch fails, at least flip streaming off so the
@@ -840,6 +955,9 @@ function applyEvent(
             [sessionId]: (s.agentEndCountBySession[sessionId] ?? 0) + 1,
           },
         }));
+        // Still try to refresh the list on failure — the session likely
+        // ended even if we couldn't pull fresh messages.
+        if (projectId !== undefined) void get().loadSessionsForProject(projectId);
       });
     return;
   }
@@ -1340,5 +1458,9 @@ if (import.meta.hot) {
     }
     globalThis.__piForgeSessionCrossTabRegistered = false;
     globalThis.__piForgeSessionCrossTabCleanup = undefined;
+    if (stalePollTimer !== undefined) {
+      clearInterval(stalePollTimer);
+      stalePollTimer = undefined;
+    }
   });
 }

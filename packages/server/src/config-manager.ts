@@ -580,7 +580,7 @@ export class SkillNotFoundError extends Error {
  * - `scope: "global"` (the default; back-compat with the original
  *   one-arg form) writes to pi's `settings.skills` — the canonical
  *   global enable/disable list.
- * - `scope: "project"` writes to the pi-forge-private overrides
+ * - `scope: "project"` writes to the Huiyu-Pi-private overrides
  *   file at `${FORGE_DATA_DIR}/skills-overrides.json` for the
  *   given `projectId`. Tri-state: `enabled` / `disabled` /
  *   (passing `enabled: undefined` clears the override = inherit
@@ -826,7 +826,7 @@ export class PromptNotFoundError extends Error {
 /**
  * Toggle a prompt's enabled state at either the global scope (writes
  * pi's `settings.prompts` patterns) or the project scope (writes
- * pi-forge-private prompt-overrides.json). Mirrors `setSkillEnabled`
+ * Huiyu-Pi-private prompt-overrides.json). Mirrors `setSkillEnabled`
  * end-to-end — same tri-state semantics for project scope, same
  * pattern-rewrite for global scope.
  */

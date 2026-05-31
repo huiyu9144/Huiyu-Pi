@@ -207,7 +207,7 @@ export const mcpRoutes: FastifyPluginAsync = async (fastify) => {
     {
       schema: {
         description:
-          "List the GLOBAL MCP server registry (pi-forge-owned at " +
+          "List the GLOBAL MCP server registry (Huiyu Pi-owned at " +
           "${FORGE_DATA_DIR}/mcp.json). Header / env values are redacted " +
           "with the same '***REDACTED***' sentinel pattern as models.json. " +
           "Pass ?projectId=<id> to also include the project-scoped " +
@@ -449,7 +449,7 @@ export const mcpRoutes: FastifyPluginAsync = async (fastify) => {
         description:
           "Grant this project permission to declare stdio (subprocess- " +
           "spawning) MCP servers in its `.mcp.json`. Required before " +
-          "pi-forge will spawn any stdio entry from a project's config " +
+          "Huiyu Pi will spawn any stdio entry from a project's config " +
           "file — otherwise the entries appear in status with " +
           "state='trust_required' and produce no tools. Granting trust " +
           "immediately retries connection for every gated stdio entry " +

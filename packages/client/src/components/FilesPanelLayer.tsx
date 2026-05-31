@@ -172,7 +172,7 @@ export const FilesPanelLayer = memo(function FilesPanelLayer({
           filesWidthRef.current = next;
         }}
         onDragEnd={(finalSize) => {
-          localStorage.setItem("pi-forge/files-width", String(finalSize));
+          localStorage.setItem("huiyu-pi/files-width", String(finalSize));
           setFilesWidth(finalSize);
         }}
         direction={-1}

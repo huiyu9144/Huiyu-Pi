@@ -147,9 +147,9 @@ services:
   pi-forge:
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.pi-forge.rule=Host(`pi-forge.local`)"
-      - "traefik.http.routers.pi-forge.entrypoints=web"
-      - "traefik.http.services.pi-forge.loadbalancer.server.port=3000"
+      - "traefik.http.routers.huiyu-pi.rule=Host(`huiyu-pi.local`)"
+      - "traefik.http.routers.huiyu-pi.entrypoints=web"
+      - "traefik.http.services.huiyu-pi.loadbalancer.server.port=3000"
 ```
 
 In Traefik's static config, lift
@@ -232,7 +232,7 @@ services:
     volumes:
       - /srv/alice/workspace:/workspace
       - /srv/alice/.pi/agent:/home/pi/.pi/agent
-      - /srv/alice/.pi-forge:/home/pi/.pi-forge
+      - /srv/alice/.huiyu-pi:/home/pi/.huiyu-pi
     environment:
       - UI_PASSWORD=${ALICE_PASSWORD}
       - JWT_SECRET=${ALICE_JWT_SECRET}
@@ -245,7 +245,7 @@ services:
     volumes:
       - /srv/bob/workspace:/workspace
       - /srv/bob/.pi/agent:/home/pi/.pi/agent
-      - /srv/bob/.pi-forge:/home/pi/.pi-forge
+      - /srv/bob/.huiyu-pi:/home/pi/.huiyu-pi
     environment:
       - UI_PASSWORD=${BOB_PASSWORD}
       - JWT_SECRET=${BOB_JWT_SECRET}
@@ -255,10 +255,10 @@ services:
 Then route each via the proxy:
 
 ```caddy
-alice.pi-forge.local {
+alice.huiyu-pi.local {
     reverse_proxy localhost:3001 { flush_interval -1; transport http { read_timeout 30m } }
 }
-bob.pi-forge.local {
+bob.huiyu-pi.local {
     reverse_proxy localhost:3002 { flush_interval -1; transport http { read_timeout 30m } }
 }
 ```

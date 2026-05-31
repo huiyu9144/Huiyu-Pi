@@ -33,7 +33,7 @@ import { scrubbedEnv } from "../pty-manager.js";
  *
  * Security posture: BashOperations is overridden to inject our
  * `scrubbedEnv()` — an allowlist-based filter that only passes
- * known-harmless system vars (PATH, HOME, TERM, locales, …). pi-forge
+ * known-harmless system vars (PATH, HOME, TERM, locales, …). Huiyu Pi
  * secrets, provider keys, cloud credentials, and any other host-env
  * vars are dropped unless the operator opts them back in via
  * `TERMINAL_PASSTHROUGH_ENV`. Matches the integrated terminal's
@@ -51,7 +51,7 @@ interface ExecBody {
 /**
  * Build a BashOperations that delegates to local spawn, but with our
  * scrubbed env. createLocalBashOperations from the SDK would inherit
- * `process.env` verbatim, leaking secrets the pi-forge process
+ * `process.env` verbatim, leaking secrets the Huiyu Pi process
  * carries (JWT_SECRET, API_KEY, etc.) — see
  * pty-manager.TERMINAL_ENV_ALLOWLIST for the full set of allowed
  * passthrough vars and rationale.
@@ -142,7 +142,7 @@ export const execRoutes: FastifyPluginAsync = async (fastify) => {
           "`excludeFromContext: true` (the `!!` prefix) the result " +
           "is recorded but kept out of the next turn's LLM input. " +
           "Output is captured whole — no streaming for v1. The " +
-          "spawned shell inherits a scrubbed env (no pi-forge / " +
+          "spawned shell inherits a scrubbed env (no Huiyu Pi / " +
           "provider secrets), same posture as the integrated " +
           "terminal.",
         tags: ["sessions"],

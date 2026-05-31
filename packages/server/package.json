@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc && node -e \"require('node:fs').cpSync('src/conversion-worker.mjs','dist/conversion-worker.mjs')\"",
+    "build": "tsc && node -e \"require('fs').copyFileSync('src/conversion-worker.mjs','dist/conversion-worker.mjs')\"",
     "check": "tsc --noEmit"
   },
   "dependencies": {

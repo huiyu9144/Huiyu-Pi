@@ -17,6 +17,7 @@ import {
   GitBranch,
   Image as ImageIcon,
   ListChecks,
+  Mic,
   Paperclip,
   RotateCcw,
   Square,
@@ -26,6 +27,7 @@ import { api, ApiError, type ProvidersListing } from "../lib/api-client";
 import { useIsMobile } from "../lib/use-is-mobile";
 import { EMPTY_MESSAGES, useSessionStore, type AgentMessageLike } from "../store/session-store";
 import { useActiveProject } from "../store/project-store";
+import { useSnapshotStore } from "../store/snapshot-store";
 import { useUiConfigStore } from "../store/ui-config-store";
 import { useUiStore } from "../store/ui-store";
 import { useComposerStore } from "../store/composer-store";
@@ -163,7 +165,7 @@ interface Props {
   sessionId: string;
 }
 
-const MODEL_KEY_PREFIX = "pi-forge/model/";
+const MODEL_KEY_PREFIX = "huiyu-pi/model/";
 
 interface ModelOption {
   value: string; // "<provider>:<modelId>"
@@ -253,7 +255,7 @@ export function ChatInput({ sessionId }: Props) {
   const reloadMessages = useSessionStore((s) => s.reloadMessages);
   const abortSession = useSessionStore((s) => s.abortSession);
 
-  const DRAFT_KEY_PREFIX = "pi-forge/draft/";
+  const DRAFT_KEY_PREFIX = "huiyu-pi/draft/";
 
 const [text, setText] = useState(() => {
   try {
@@ -334,7 +336,7 @@ useEffect(() => {
    * switch). Clamp on read so a stale absurd value gets corrected
    * silently. Bounds: min 60 px (~2 rows), max 60 % viewport.
    */
-  const HEIGHT_KEY = "pi-forge:chat-input-height";
+  const HEIGHT_KEY = "huiyu-pi:chat-input-height";
   const heightBounds = (): { min: number; max: number } => ({
     min: 60,
     max: Math.floor(window.innerHeight * 0.6),
@@ -737,6 +739,229 @@ useEffect(() => {
   // because it has the drag-resize handle for the same purpose.
   const [autoHeight, setAutoHeight] = useState<number | undefined>(undefined);
 
+  // Voice input (Web Speech API)
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<{ start: () => void; stop: () => void } | null>(null);
+  const keepListeningRef = useRef(false);
+  const speechBaseRef = useRef("");
+  const speechLangRef = useRef("zh-CN");
+  const lastFinalTimeRef = useRef(0);
+  const lastSpeechTimeRef = useRef(0);
+  const lastInterimRef = useRef("");
+  const speechSupported = typeof window !== "undefined" && ("SpeechRecognition" in window || "webkitSpeechRecognition" in window);
+
+  // Auto-detect speech recognition language from browser language.
+  function detectSpeechLang(): string {
+    const lang = navigator.language;
+    if (lang.startsWith("zh")) return "zh-CN";
+    if (lang.startsWith("ja")) return "ja-JP";
+    if (lang.startsWith("ko")) return "ko-KR";
+    return "en-US";
+  }
+
+  function endsWithPunctuation(t: string, lang: string): boolean {
+    const s = t.trimEnd();
+    if (lang.startsWith("zh")) return /[。，？！：；、）\]"']+$/.test(s);
+    return /[.,?!:;)\"']+$/.test(s);
+  }
+
+  function autoPunctuate(t: string, lang: string): string {
+    if (t.trim().length === 0) return t;
+    if (endsWithPunctuation(t, lang)) return t;
+    return lang.startsWith("zh") ? t + "\u3002" : t + ".";
+  }
+
+  function looksLikeSentenceEnd(text: string): boolean {
+    return /[的了呢吧啊哦嗯呀嘛哈呀啦]$/.test(text.trimEnd());
+  }
+
+  // Post-process transcript: replace spoken punctuation words with symbols.
+  function cleanTranscript(text: string, lang: string): string {
+    if (lang.startsWith("zh")) {
+      return text
+        .replace(/逗号/g, "，")
+        .replace(/句号/g, "。")
+        .replace(/问号/g, "？")
+        .replace(/感叹号/g, "！")
+        .replace(/冒号/g, "：")
+        .replace(/分号/g, "；")
+        .replace(/顿号/g, "、")
+        .replace(/空格/g, " ")
+        .replace(/换行/g, "\n")
+        .replace(/左括号/g, "（")
+        .replace(/右括号/g, "）")
+        .replace(/左引号/g, "“")
+        .replace(/右引号/g, "”")
+        .replace(/comma/g, "，")
+        .replace(/period/g, "。")
+        .replace(/question mark/g, "？");
+    }
+    return text
+      .replace(/\bcomma\b/g, ",")
+      .replace(/\bperiod\b/g, ".")
+      .replace(/\bquestion mark\b/g, "?")
+      .replace(/\bexclamation mark\b/g, "!")
+      .replace(/\bcolon\b/g, ":")
+      .replace(/\bsemicolon\b/g, ";")
+      .replace(/\bspace\b/g, " ")
+      .replace(/\bnew line\b/g, "\n");
+  }
+
+  const startListening = (): void => {
+    const SpeechRecognition =
+      (window as unknown as Record<string, unknown>).SpeechRecognition as unknown
+      ?? (window as unknown as Record<string, unknown>).webkitSpeechRecognition as unknown;
+    if (SpeechRecognition === undefined) return;
+    const recognition = new (SpeechRecognition as new () => Record<string, unknown>)() as {
+      lang: string;
+      continuous: boolean;
+      interimResults: boolean;
+      maxAlternatives: number;
+      onresult: ((e: { results: SpeechRecognitionResultList; resultIndex: number }) => void) | null;
+      onend: (() => void) | null;
+      onerror: ((e: { error: string }) => void) | null;
+      start: () => void;
+      stop: () => void;
+    };
+
+    const lang = detectSpeechLang();
+    speechLangRef.current = lang;
+    recognition.lang = lang;
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
+
+    speechBaseRef.current = text;
+    keepListeningRef.current = true;
+    lastFinalTimeRef.current = 0;
+    lastSpeechTimeRef.current = 0;
+    lastInterimRef.current = "";
+
+    function updateDisplay(): void {
+      const fullDisplay = speechBaseRef.current + lastInterimRef.current;
+      if (fullDisplay.length > 0) setText(fullDisplay);
+    }
+
+    recognition.onresult = (e: { results: SpeechRecognitionResultList; resultIndex: number }): void => {
+      if (!keepListeningRef.current) return;
+      let finalText = "";
+      const results = e.results as unknown as ArrayLike<{ isFinal: boolean; 0: { transcript: string } | undefined }>;
+      const now = Date.now();
+
+      for (let i = e.resultIndex; i < results.length; i++) {
+        const r = results[i];
+        if (r === undefined) continue;
+        if (r.isFinal) {
+          let chunk = r[0]?.transcript ?? "";
+          if (chunk.trim().length > 0) {
+            chunk = cleanTranscript(chunk, lang);
+            const processed = autoPunctuate(chunk, lang);
+            const base = speechBaseRef.current;
+            if (base.includes(chunk + "\uff0c") || base.startsWith(chunk + "\u3002") || base.endsWith(chunk + "\u3002") || base.endsWith(processed)) continue;
+            const gap = lastFinalTimeRef.current > 0 ? now - lastFinalTimeRef.current : 0;
+            if (gap > 1200 && base.trim().length > 0 && !endsWithPunctuation(base, lang)) {
+              if (chunk.length > 20 || looksLikeSentenceEnd(chunk)) {
+                speechBaseRef.current = autoPunctuate(base, lang);
+              } else {
+                speechBaseRef.current = base + "\uff0c";
+              }
+            }
+            finalText += processed;
+            lastFinalTimeRef.current = now;
+          }
+        }
+      }
+
+      if (finalText.length > 0) {
+        speechBaseRef.current = speechBaseRef.current + finalText;
+        lastInterimRef.current = "";
+        lastSpeechTimeRef.current = now;
+      } else {
+        let allInterim = "";
+        for (let i = 0; i < results.length; i++) {
+          const r = results[i];
+          if (r === undefined) continue;
+          if (!r.isFinal && r[0]?.transcript) {
+            allInterim += r[0].transcript;
+          }
+        }
+        const baseStripped = speechBaseRef.current.replace(/[，。？！：；、]+/g, "");
+        if (allInterim.startsWith(baseStripped)) {
+          allInterim = allInterim.slice(baseStripped.length);
+        }
+        if (allInterim !== lastInterimRef.current) {
+          lastInterimRef.current = allInterim;
+          lastSpeechTimeRef.current = now;
+        }
+      }
+
+      updateDisplay();
+    };
+    recognition.onend = (): void => {
+      if (keepListeningRef.current) {
+        try { recognition.start(); } catch { /* already started */ }
+      } else {
+        setIsListening(false);
+      }
+    };
+    recognition.onerror = (e: { error: string }): void => {
+      if (e.error === "no-speech") return;
+      keepListeningRef.current = false;
+      setIsListening(false);
+    };
+
+    recognitionRef.current = recognition;
+    setIsListening(true);
+    recognition.start();
+  };
+
+  const stopListening = (): void => {
+    keepListeningRef.current = false;
+    recognitionRef.current?.stop();
+    recognitionRef.current = null;
+    setIsListening(false);
+  };
+
+  const toggleListening = (): void => {
+    if (isListening) stopListening();
+    else startListening();
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      keepListeningRef.current = false;
+      recognitionRef.current?.stop();
+      recognitionRef.current = null;
+    };
+  }, []);
+
+  // Independent interval: inserts comma after 800ms silence.
+  // Commits the full text + comma to speechBaseRef.
+  useEffect(() => {
+    if (!isListening) return;
+    const interval = setInterval(() => {
+      const gap = Date.now() - lastSpeechTimeRef.current;
+      if (gap < 800) return;
+      const displayed = speechBaseRef.current + lastInterimRef.current;
+      if (displayed.trim().length === 0) return;
+      if (displayed.endsWith("\uff0c") || displayed.endsWith(" ")) return;
+      if (endsWithPunctuation(displayed.trimEnd(), speechLangRef.current)) {
+        const trimmed = displayed.trimEnd();
+        if (trimmed.endsWith("\u3002") && !trimmed.endsWith("\uff0c")) {
+          speechBaseRef.current = trimmed.slice(0, -1) + "\uff0c";
+          lastInterimRef.current = "";
+          setText(speechBaseRef.current);
+        }
+        return;
+      }
+      speechBaseRef.current = displayed + "\uff0c";
+      lastInterimRef.current = "";
+      setText(speechBaseRef.current);
+    }, 200);
+    return () => clearInterval(interval);
+  }, [isListening]);
+
   // Per-file size + count limits mirror the server's. Validating
   // client-side gives instant feedback; the server still re-checks.
   // The 20 MB cap is the only upper bound — it exists for memory
@@ -1046,14 +1271,27 @@ useEffect(() => {
     if (provider === undefined || modelId.length === 0) return;
     // Capture the sessionId at call time so a slow setModel for session
     // A that resolves AFTER the user has switched to session B doesn't
-    // surface its error toast on B (the wrong session). The .catch
-    // gates setModelError on the captured id still being active.
+    // surface its error toast on B (the wrong session). Retry on
+    // session_not_found to handle the race where the server hasn't
+    // finished initializing a newly-created session yet.
     const callSessionId = sessionId;
-    void api.setModel(callSessionId, provider, modelId).catch((err: unknown) => {
-      if (callSessionId !== sessionId) return;
-      const code = err instanceof ApiError ? err.code : (err as Error).message;
-      setModelError(`set model failed: ${code}`);
-    });
+    void (async () => {
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          await api.setModel(callSessionId, provider, modelId);
+          return;
+        } catch (err) {
+          if (callSessionId !== sessionId) return;
+          const code = err instanceof ApiError ? err.code : (err as Error).message;
+          if (code === "session_not_found" && attempt < 2) {
+            await new Promise((r) => setTimeout(r, 500));
+            continue;
+          }
+          setModelError(`set model failed: ${code}`);
+          return;
+        }
+      }
+    })();
   }, [sessionId]);
 
   // Consume any pending input draft set by the session-tree's
@@ -1106,6 +1344,10 @@ useEffect(() => {
       await api.setModel(sessionId, provider, modelId);
       localStorage.setItem(storageKey, value);
       setModelError(undefined);
+      // User intentionally switched models — clear any stale agent
+      // error banner from the previous model so it doesn't persist
+      // across a model change.
+      useSessionStore.getState().clearBanner(sessionId);
       // The SDK's setModel calls setThinkingLevel internally to clamp
       // the active level against the new model's capabilities (e.g.
       // picking a non-reasoning model after running on "high" forces
@@ -1246,6 +1488,10 @@ useEffect(() => {
           clearAttachments();
           setAttachmentError("Attachments aren't sent with `!` exec. Cleared.");
         }
+        // Snapshot before bash exec so file changes can be restored later
+        if (project !== undefined) {
+          await useSnapshotStore.getState().snapBeforeAgent(project.id, "! " + command.slice(0, 56), sessionId);
+        }
         await api.exec(sessionId, command, { excludeFromContext });
         // The acting tab refetches via session-store's user_bash_result
         // handler too, but we trigger one directly so it lands without
@@ -1266,8 +1512,18 @@ useEffect(() => {
           clearAttachments();
           setAttachmentError("Attachments aren't sent on steer (mid-turn). Cleared.");
         }
+        // Snapshot before steer so file changes to this point can be restored
+        if (project !== undefined) {
+          await useSnapshotStore.getState().snapBeforeAgent(project.id, value.slice(0, 60) || "pre-steer", sessionId);
+        }
         await sendSteer(sessionId, value);
       } else {
+        // Create snapshot BEFORE sending prompt, so it captures the true pre-agent state.
+        // Fire-and-forget (void) would race with the agent and may record post-modification files.
+        if (project !== undefined) {
+          const label = value.slice(0, 60) || "pre-message";
+          await useSnapshotStore.getState().snapBeforeAgent(project.id, label, sessionId);
+        }
         await sendPrompt(sessionId, value, attachments.length > 0 ? attachments : undefined);
       }
       setText("");
@@ -1789,6 +2045,19 @@ useEffect(() => {
             >
               {bangMode === "local" ? "bash · local" : "bash · context"}
             </span>
+          )}
+          {speechSupported && (
+            <button
+              onClick={toggleListening}
+              className={`absolute bottom-2 right-12 z-10 flex h-8 w-8 items-center justify-center rounded-md transition-colors ${
+                isListening
+                  ? "bg-red-500/20 text-red-400 ring-1 ring-red-500/40 animate-pulse"
+                  : "text-neutral-500 hover:bg-neutral-800 hover:text-neutral-300"
+              }`}
+              title={isListening ? "Stop recording" : "Voice input"}
+            >
+              <Mic size={15} />
+            </button>
           )}
           {isStreaming ? (
             <button

@@ -26,7 +26,7 @@ import {
  *
  * State is in-memory only by deliberate choice (matches
  * `@aliou/pi-processes`): a server restart drops everything;
- * the OS may leak the actual children if pi-forge crashes mid-
+ * the OS may leak the actual children if Huiyu Pi crashes mid-
  * lifecycle, same as the plugin.
  */
 
@@ -100,7 +100,7 @@ class ProcessManagerRegistry {
 
     // Spawn under `/bin/sh -c` so the command can use shell
     // features (pipes, &&, env expansion). Scrubbed env matches
-    // the terminal + quick-actions posture: no pi-forge / provider
+    // the terminal + quick-actions posture: no Huiyu Pi / provider
     // secrets leak to the child.
     const child = spawn("/bin/sh", ["-c", command], {
       cwd,

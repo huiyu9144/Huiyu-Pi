@@ -14,7 +14,7 @@ live outside config.ts are debug-only (`DEBUG_FETCH`, `DEBUG_AGENT_EVENTS`,
 `pi-forge` command. The table in `packages/server/src/cli.ts` is the single
 source of truth for the env↔flag mapping. **Adding a new env var means adding
 one row to that table** so the flag surface stays in sync. The bin shim
-(`bin/pi-forge.mjs`) parses argv and writes the resolved values into
+(`bin/huiyu-pi.mjs`) parses argv and writes the resolved values into
 `process.env` BEFORE importing the server, so `config.ts` reads them as if
 they came from the environment.
 
@@ -63,10 +63,10 @@ route handlers).
 | `password-hash` | scrypt hash of the user's persisted password (mode 0600) | `auth.ts` (`persistPassword`) |
 
 `PI_CONFIG_DIR` defaults to `~/.pi/agent`; `FORGE_DATA_DIR` defaults
-to `~/.pi-forge`. The Docker compose setup mounts the host's
+to `~/.huiyu-pi`. The Docker compose setup mounts the host's
 `~/.pi/agent` into `/home/pi/.pi/agent` so the container inherits the
 host's provider config and API keys, and binds a SEPARATE host path
-into `/home/pi/.pi-forge` so the container has its own project
+into `/home/pi/.huiyu-pi` so the container has its own project
 list (host vs container projects don't bleed unless you point both
 mounts at the same host path on purpose).
 

@@ -521,7 +521,7 @@ export const configRoutes: FastifyPluginAsync = async (fastify) => {
         description:
           "Toggle a skill's enabled state. Default scope=`global` mutates " +
           "pi's `settings.skills` (canonical enable/disable list shared with " +
-          "the pi TUI). scope=`project` writes to the pi-forge-private " +
+          "the pi TUI). scope=`project` writes to the Huiyu-Pi-private " +
           "overrides file at `${FORGE_DATA_DIR}/skills-overrides.json` " +
           "for the project named in `?projectId=`. Project-scope overrides " +
           "follow tri-state semantics: `enabled` adds, `disabled` removes; " +
@@ -737,7 +737,7 @@ export const configRoutes: FastifyPluginAsync = async (fastify) => {
       schema: {
         description:
           "Toggle a prompt's enabled state. Default scope=`global` mutates " +
-          "pi's `settings.prompts`. scope=`project` writes to the pi-forge-" +
+          "pi's `settings.prompts`. scope=`project` writes to the Huiyu-Pi-" +
           "private overrides file at `${FORGE_DATA_DIR}/prompts-overrides.json` " +
           "for the project named in `?projectId=`. Same tri-state semantics " +
           "as `/config/skills/:name/enabled`. Prompt changes apply on the " +
@@ -849,7 +849,7 @@ export const configRoutes: FastifyPluginAsync = async (fastify) => {
   );
 
   // ---------------------- export / import ----------------------
-  // Two routes that round-trip the pi-forge's portable config
+  // Two routes that round-trip the Huiyu Pi's portable config
   // (mcp.json + settings.json + models.json + skills-overrides.json +
   // tool-overrides.json — see config-export.ts header for what's in
   // and what's out).
@@ -858,7 +858,7 @@ export const configRoutes: FastifyPluginAsync = async (fastify) => {
     {
       schema: {
         description:
-          "Stream a `.tar.gz` of the portable pi-forge config: " +
+          "Stream a `.tar.gz` of the portable Huiyu Pi config: " +
           "`mcp.json`, `settings.json`, `models.json`, " +
           "`skills-overrides.json`, and `tool-overrides.json`. Excludes " +
           "`auth.json` (provider keys / OAuth tokens), `projects.json` " +
@@ -884,7 +884,7 @@ export const configRoutes: FastifyPluginAsync = async (fastify) => {
         const ts = new Date().toISOString().replace(/[:.]/g, "-");
         reply
           .header("Content-Type", "application/gzip")
-          .header("Content-Disposition", `attachment; filename="pi-forge-config-${ts}.tar.gz"`)
+          .header("Content-Disposition", `attachment; filename="huiyu-pi-config-${ts}.tar.gz"`)
           .header("X-Pi-Forge-Files", files.join(","));
         return reply.send(stream);
       } catch (err) {
@@ -1010,7 +1010,7 @@ export const configRoutes: FastifyPluginAsync = async (fastify) => {
         const ts = new Date().toISOString().replace(/[:.]/g, "-");
         reply
           .header("Content-Type", "application/gzip")
-          .header("Content-Disposition", `attachment; filename="pi-forge-skills-${ts}.tar.gz"`)
+          .header("Content-Disposition", `attachment; filename="huiyu-pi-skills-${ts}.tar.gz"`)
           .header("X-Pi-Forge-File-Count", String(fileCount));
         return reply.send(stream);
       } catch (err) {
@@ -1635,17 +1635,17 @@ const BUILTIN_TOOL_DESCRIPTIONS: Record<string, string> = {
   ls: "List directory entries.",
   ask_user_question:
     "Surface a structured multi-choice questionnaire in the browser when the agent " +
-    "needs to clarify ambiguous instructions. Implemented in pi-forge (contract-" +
+    "needs to clarify ambiguous instructions. Implemented in Huiyu Pi (contract-" +
     "compatible with @juicesharp/rpiv-ask-user-question).",
   todo:
     "Manage a session-scoped task list with status (pending / in_progress / completed " +
     "/ deleted), descriptions, and blockedBy dependencies. State survives reload and " +
-    "compaction via branch replay. Implemented in pi-forge (contract-compatible with " +
+    "compaction via branch replay. Implemented in Huiyu Pi (contract-compatible with " +
     "@juicesharp/rpiv-todo).",
   process:
     "Manage background processes the agent spawns (dev servers, watchers, builds). " +
     "Separate from bash: lifecycle tracked, stdout/stderr captured to log files, " +
     "regex log-watches and exit-alert flags trigger agent notifications. State is " +
-    "in-memory per session; killed on session dispose. Implemented in pi-forge " +
+    "in-memory per session; killed on session dispose. Implemented in Huiyu Pi " +
     "(contract-compatible with @aliou/pi-processes).",
 };

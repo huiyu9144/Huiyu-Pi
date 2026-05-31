@@ -11,7 +11,7 @@ export function isStandalone(): boolean {
   return window.matchMedia?.("(display-mode: standalone)").matches ?? false;
 }
 
-export const DISMISS_KEY = "pi-forge/install-prompt-dismissed";
+export const DISMISS_KEY = "huiyu-pi/install-prompt-dismissed";
 
 function isDismissed(): boolean {
   try {

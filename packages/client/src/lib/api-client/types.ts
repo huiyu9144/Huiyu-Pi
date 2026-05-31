@@ -11,7 +11,7 @@
  * to clear `isAuthenticated` and surface the login screen. Exported so the
  * SSE reader uses the same constant — keeps the wire-name in one place.
  */
-export const UNAUTHORIZED_EVENT = "pi-forge:unauthorized";
+export const UNAUTHORIZED_EVENT = "huiyu-pi:unauthorized";
 
 export class ApiError extends Error {
   readonly status: number;
@@ -781,3 +781,54 @@ export interface RequestOpts {
  * api-client boundary so we never `as T` server responses without checking.
  */
 export type Validator<T> = (value: unknown, status: number) => T;
+
+// ---------------- snapshots ----------------
+
+export type SnapshotTrigger = "manual" | "pre-agent" | "pre-restore";
+
+export interface SnapshotMeta {
+  id: string;
+  projectId: string;
+  label: string;
+  createdAt: string;
+  trigger: SnapshotTrigger;
+  sessionId?: string;
+  totalFiles: number;
+  totalSize: number;
+}
+
+export interface SnapshotFileEntry {
+  hash: string;
+  size: number;
+  encoding: "utf-8" | "binary";
+  skipped?: boolean;
+}
+
+export interface SnapshotDetail extends SnapshotMeta {
+  files: Record<string, SnapshotFileEntry>;
+}
+
+export interface SnapshotStorageInfo {
+  totalSnapshots: number;
+  totalSizeBytes: number;
+}
+
+export interface SnapshotDeltaEntry {
+  path: string;
+  status: "added" | "modified" | "deleted";
+  snapshotSize: number;
+  currentSize: number;
+}
+
+export interface SnapshotDelta {
+  snapshotId: string;
+  snapshotLabel: string;
+  entries: SnapshotDeltaEntry[];
+  summary: { added: number; modified: number; deleted: number };
+}
+
+export interface SessionDelta {
+  targetId: string;
+  entries: SnapshotDeltaEntry[];
+  summary: { added: number; modified: number; deleted: number };
+}

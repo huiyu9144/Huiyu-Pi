@@ -1,6 +1,6 @@
 /**
  * Surface pi PACKAGE contributions (extension-registered tools +
- * skills) to the pi-forge layer.
+ * skills) to the Huiyu Pi layer.
  *
  * Background: pi keeps two separate concepts. **Packages** are the
  * install unit (npm or git, persisted in `settings.json#packages[]`,

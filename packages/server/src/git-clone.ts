@@ -23,7 +23,7 @@
  *     access to the spawned process (`ps`). Multi-tenant deploys would
  *     need to use `GIT_ASKPASS` or `credential.helper` instead.
  *   - The token is held in process memory for the lifetime of one
- *     clone. We don't log it. We don't write it to any pi-forge
+ *     clone. We don't log it. We don't write it to any Huiyu Pi
  *     file.
  *   - If the clone fails partway, the URL with the embedded token may
  *     be in git's internal state (e.g. a partial `.git/config` if

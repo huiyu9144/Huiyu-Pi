@@ -187,7 +187,7 @@ export async function createProject(name: string, path: string): Promise<Project
   const lexicalPath = resolve(path);
   // Realpath both sides before the inside-workspace check. The lexical
   // check alone accepts a symlink under WORKSPACE_PATH that points
-  // OUTSIDE the realpath bound — e.g. `~/.pi-forge/workspace/external
+  // OUTSIDE the realpath bound — e.g. `~/.huiyu-pi/workspace/external
   // -> /etc` — and registers `/external` (the symlink target) as a
   // legitimate project root. Subsequent file-manager ops would then
   // realpath-bound to the symlink target, NOT to WORKSPACE_PATH.

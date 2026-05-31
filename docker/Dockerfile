@@ -90,7 +90,7 @@ FROM node-python-base AS runtime
 # PUID/PGID build args let the user match the container's `pi` user to
 # their host UID/GID. Default 1000 is the common Linux interactive UID.
 # Without this, the system-allocated UID won't match the host owner of
-# the bind-mounted /workspace + ~/.pi-forge dirs, and the container
+# the bind-mounted /workspace + ~/.huiyu-pi dirs, and the container
 # can't write to them. Override at build time:
 #   docker compose build --build-arg PUID=$(id -u) --build-arg PGID=$(id -g)
 ARG PUID=1000
@@ -167,8 +167,8 @@ COPY --from=builder --chown=pi:pi /app/packages/client/dist ./packages/client/di
 # Workspace + pi config + pi-forge data dirs are mounted at runtime;
 # create them so non-root `pi` can read them on first start even if the
 # host bind is currently empty.
-RUN mkdir -p /workspace /home/pi/.pi/agent /home/pi/.pi-forge /home/pi/.local \
- && chown -R pi:pi /workspace /home/pi/.pi /home/pi/.pi-forge /home/pi/.local
+RUN mkdir -p /workspace /home/pi/.pi/agent /home/pi/.huiyu-pi /home/pi/.local \
+ && chown -R pi:pi /workspace /home/pi/.pi /home/pi/.huiyu-pi /home/pi/.local
 
 USER pi
 
@@ -190,7 +190,7 @@ ENV NODE_ENV=production \
     PATH=/home/pi/.local/bin:/app/node_modules/.bin:$PATH \
     WORKSPACE_PATH=/workspace \
     PI_CONFIG_DIR=/home/pi/.pi/agent \
-    FORGE_DATA_DIR=/home/pi/.pi-forge \
+    FORGE_DATA_DIR=/home/pi/.huiyu-pi \
     PYTHONUSERBASE=/home/pi/.local \
     SHELL=/bin/bash \
     TERM=xterm-256color
