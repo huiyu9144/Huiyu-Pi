@@ -54,7 +54,21 @@ export default defineConfig({
         "icons/icon-maskable-512.png",
         "offline.html",
       ],
-      // 留空 manifest 会让 VitePWA 读取 public/manifest.webmanifest（已存在）。
+      manifest: {
+        name: "Huiyu Pi",
+        short_name: "Huiyu Pi",
+        description: "Self-hosted browser workbench for the pi coding agent",
+        theme_color: "#0a0a0a",
+        background_color: "#0a0a0a",
+        display: "standalone",
+        start_url: "/",
+        scope: "/",
+        icons: [
+          { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+          { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+          { src: "/icons/icon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+        ],
+      },
       workbox: {
         // SSE 端点排除在缓存外 —— 缓存流式响应会直接断流。
         // 其它 `/api/v1/*` 全部 NetworkOnly，动态数据永不命中缓存。
