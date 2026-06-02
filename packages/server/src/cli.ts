@@ -104,6 +104,42 @@ export interface ParsedCli {
 }
 
 export function parseCliArgs(raw: string[]): ParsedCli {
+  const pairs: { envVar: string; value: string | undefined }[] = [];
+  let helpRequested = false;
+  let versionRequested = false;
+
+  // Intercept --no-<flag> for boolean flags. Node's parseArgs only
+  // recognises bare --flag (true), so --no-<flag> must be handled
+  // before it reaches parseArgs.
+  const noPrefixFlags = new Map<string, string>();
+  for (const [long, flag] of Object.entries(FLAGS)) {
+    if (flag.type === "boolean") {
+      noPrefixFlags.set(`--no-${long}`, flag.envVar);
+    }
+  }
+
+  const passToParse: string[] = [];
+  let i = 0;
+  while (i < raw.length) {
+    const arg = raw[i]!;
+    if (noPrefixFlags.has(arg)) {
+      pairs.push({ envVar: noPrefixFlags.get(arg)!, value: "false" });
+      i++;
+    } else if (arg === "--help" || arg === "-h") {
+      helpRequested = true;
+      i++;
+    } else if (arg === "--version") {
+      versionRequested = true;
+      i++;
+    } else {
+      passToParse.push(arg);
+      i++;
+    }
+  }
+
+  // All --no-<flag> for known boolean flags are already intercepted.
+  // Unknown --no-<x> args go to parseArgs which will reject them.
+  const interceptedEnvVars = new Set(pairs.map((p) => p.envVar));
   const options: ParseArgsConfig["options"] = {};
   for (const [long, flag] of Object.entries(FLAGS)) {
     const entry: { type: "string" | "boolean"; short?: string; default?: string | boolean } = {
@@ -117,34 +153,25 @@ export function parseCliArgs(raw: string[]): ParsedCli {
   options.version = { type: "boolean" };
 
   const parsed = nodeParseArgs({
-    args: raw,
+    args: passToParse,
     options,
     allowPositionals: false,
   });
 
-  const helpRequested = parsed.values.help === true || raw.includes("--help");
-  const versionRequested = parsed.values.version === true || raw.includes("--version");
+  if (parsed.values.help === true) helpRequested = true;
+  if (parsed.values.version === true) versionRequested = true;
 
-  const pairs: { envVar: string; value: string | undefined }[] = [];
   for (const [long, flag] of Object.entries(FLAGS)) {
+    if (interceptedEnvVars.has(flag.envVar)) continue;
     const cliValue = parsed.values[long];
-    if (cliValue === undefined) {
-      // Flag not provided on CLI — leave whatever's already in process.env
+    if (cliValue === undefined || cliValue === false) {
+      if (flag.type === "boolean" && cliValue === undefined) {
+        pairs.push({ envVar: flag.envVar, value: "true" });
+      }
       continue;
     }
-    // `parseArgs` returns "string | string[] | undefined" for string type.
-    // We never use `multiple: true`, so string[] doesn't happen here
-    // (and if it somehow did, the cast preserves it as the env value).
-    const stringValue = Array.isArray(cliValue)
-      ? cliValue.join(",")
-      : (cliValue as string | undefined);
-    if (stringValue === undefined && flag.type === "boolean") {
-      // Boolean flag passed without value: --serve-client → true.
-      // parseArgs already set it to the default (true).
-      pairs.push({ envVar: flag.envVar, value: "true" });
-    } else if (stringValue !== undefined) {
-      pairs.push({ envVar: flag.envVar, value: stringValue });
-    }
+    const stringValue = String(Array.isArray(cliValue) ? cliValue.join(",") : cliValue);
+    pairs.push({ envVar: flag.envVar, value: stringValue });
   }
 
   return { helpRequested, versionRequested, pairs };
