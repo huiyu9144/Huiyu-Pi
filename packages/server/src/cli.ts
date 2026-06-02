@@ -108,38 +108,57 @@ export function parseCliArgs(raw: string[]): ParsedCli {
   let helpRequested = false;
   let versionRequested = false;
 
-  // Intercept --no-<flag> for boolean flags. Node's parseArgs only
-  // recognises bare --flag (true), so --no-<flag> must be handled
-  // before it reaches parseArgs.
-  const noPrefixFlags = new Map<string, string>();
+  const flagLookup = new Map<string, CliFlag>();
   for (const [long, flag] of Object.entries(FLAGS)) {
-    if (flag.type === "boolean") {
-      noPrefixFlags.set(`--no-${long}`, flag.envVar);
-    }
+    flagLookup.set(long, flag);
   }
 
   const passToParse: string[] = [];
   let i = 0;
   while (i < raw.length) {
     const arg = raw[i]!;
-    if (noPrefixFlags.has(arg)) {
-      pairs.push({ envVar: noPrefixFlags.get(arg)!, value: "false" });
-      i++;
-    } else if (arg === "--help" || arg === "-h") {
+    if (arg === "--help" || arg === "-h") {
       helpRequested = true;
       i++;
     } else if (arg === "--version") {
       versionRequested = true;
       i++;
+    } else if (arg.startsWith("--no-")) {
+      const long = arg.slice(5);
+      const flag = flagLookup.get(long);
+      if (flag) {
+        pairs.push({ envVar: flag.envVar, value: "false" });
+        i++;
+      } else {
+        passToParse.push(arg);
+        i++;
+      }
+    } else if (arg.startsWith("--")) {
+      const eqIdx = arg.indexOf("=");
+      const long = eqIdx === -1 ? arg.slice(2) : arg.slice(2, eqIdx);
+      const flag = flagLookup.get(long);
+      if (flag) {
+        let val: string;
+        if (eqIdx !== -1) {
+          val = arg.slice(eqIdx + 1);
+        } else if (flag.type === "string" && i + 1 < raw.length) {
+          i++;
+          val = raw[i]!;
+        } else {
+          val = "true";
+        }
+        pairs.push({ envVar: flag.envVar, value: val });
+        i++;
+      } else {
+        passToParse.push(arg);
+        i++;
+      }
     } else {
       passToParse.push(arg);
       i++;
     }
   }
 
-  // All --no-<flag> for known boolean flags are already intercepted.
-  // Unknown --no-<x> args go to parseArgs which will reject them.
-  const interceptedEnvVars = new Set(pairs.map((p) => p.envVar));
   const options: ParseArgsConfig["options"] = {};
   for (const [long, flag] of Object.entries(FLAGS)) {
     const entry: { type: "string" | "boolean"; short?: string; default?: string | boolean } = {
@@ -152,28 +171,11 @@ export function parseCliArgs(raw: string[]): ParsedCli {
   options.help = { type: "boolean", short: "h" };
   options.version = { type: "boolean" };
 
-  const parsed = nodeParseArgs({
+  nodeParseArgs({
     args: passToParse,
     options,
     allowPositionals: false,
   });
-
-  if (parsed.values.help === true) helpRequested = true;
-  if (parsed.values.version === true) versionRequested = true;
-
-  for (const [long, flag] of Object.entries(FLAGS)) {
-    if (interceptedEnvVars.has(flag.envVar)) continue;
-    const cliValue = parsed.values[long];
-    if (cliValue === undefined) {
-      if (flag.type === "boolean" && flag.default === undefined) {
-        pairs.push({ envVar: flag.envVar, value: "true" });
-      }
-      continue;
-    }
-    if (cliValue === flag.default) continue;
-    const stringValue = String(Array.isArray(cliValue) ? cliValue.join(",") : cliValue);
-    pairs.push({ envVar: flag.envVar, value: stringValue });
-  }
 
   return { helpRequested, versionRequested, pairs };
 }
