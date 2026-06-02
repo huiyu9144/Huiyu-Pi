@@ -164,12 +164,13 @@ export function parseCliArgs(raw: string[]): ParsedCli {
   for (const [long, flag] of Object.entries(FLAGS)) {
     if (interceptedEnvVars.has(flag.envVar)) continue;
     const cliValue = parsed.values[long];
-    if (cliValue === undefined || cliValue === false) {
-      if (flag.type === "boolean" && cliValue === undefined) {
+    if (cliValue === undefined) {
+      if (flag.type === "boolean" && flag.default === undefined) {
         pairs.push({ envVar: flag.envVar, value: "true" });
       }
       continue;
     }
+    if (cliValue === flag.default) continue;
     const stringValue = String(Array.isArray(cliValue) ? cliValue.join(",") : cliValue);
     pairs.push({ envVar: flag.envVar, value: stringValue });
   }
