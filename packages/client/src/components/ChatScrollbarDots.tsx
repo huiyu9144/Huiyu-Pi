@@ -12,10 +12,11 @@ interface DotInfo {
   top: string;
   line1: string;
   line2: string;
+  line3: string;
   seq: number;
 }
 
-function splitPreview(msg: AgentMessageLike): { line1: string; line2: string } {
+function splitPreview(msg: AgentMessageLike): { line1: string; line2: string; line3: string } {
   const raw =
     typeof msg.content === "string"
       ? msg.content
@@ -29,16 +30,27 @@ function splitPreview(msg: AgentMessageLike): { line1: string; line2: string } {
     .replace(/<[^>]*>/g, "")
     .replace(/\s+/g, " ")
     .trim();
-  if (text.length === 0) return { line1: "Message", line2: "" };
-  const cut = Math.min(text.length, 60);
-  const breakAt = text.lastIndexOf(" ", cut);
-  const end = breakAt > 20 ? breakAt : cut;
-  const l1 = text.slice(0, end);
-  const l2 = text.slice(end).trim();
-  return { line1: l1, line2: l2.length > 60 ? l2.slice(0, 60) + "…" : l2 };
+  if (text.length === 0) return { line1: "Message", line2: "", line3: "" };
+  const MAX_LINE = 60;
+  const breakAt = (s: string, max: number) => {
+    if (s.length <= max) return s.length;
+    const idx = s.lastIndexOf(" ", max);
+    return idx > max * 0.3 ? idx : max;
+  };
+  const e1 = breakAt(text, MAX_LINE);
+  const l1 = text.slice(0, e1);
+  const r1 = text.slice(e1).trim();
+  if (r1.length === 0) return { line1: l1, line2: "", line3: "" };
+  const e2 = breakAt(r1, MAX_LINE);
+  const l2 = r1.slice(0, e2);
+  const r2 = r1.slice(e2).trim();
+  if (r2.length === 0) return { line1: l1, line2: l2, line3: "" };
+  const l3 = r2.length > MAX_LINE ? r2.slice(0, MAX_LINE) + "…" : r2;
+  return { line1: l1, line2: l2, line3: l3 };
 }
 
-const PROXIMITY_PX = 120;
+const PROXIMITY_PX = 10;
+const STARTUP_DELAY_MS = 600;
 
 export function ChatScrollbarDots({ messages, onScrollToMessage, onScrollToBottom }: Props) {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
@@ -46,6 +58,7 @@ export function ChatScrollbarDots({ messages, onScrollToMessage, onScrollToBotto
   const [isVisible, setIsVisible] = useState(false);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const trackRef = useRef<HTMLDivElement>(null);
+  const startupRef = useRef(true);
 
   const userDots = useMemo<DotInfo[]>(() => {
     const userMsgs: { msg: AgentMessageLike; idx: number }[] = [];
@@ -55,25 +68,40 @@ export function ChatScrollbarDots({ messages, onScrollToMessage, onScrollToBotto
     if (userMsgs.length === 0) return [];
     const total = messages.length;
     return userMsgs.map(({ msg, idx }, seqIdx) => {
-      const { line1, line2 } = splitPreview(msg);
+      const { line1, line2, line3 } = splitPreview(msg);
       return {
         index: idx,
         top: `${((idx + 1) / (total + 1)) * 100}%`,
         line1,
         line2,
+        line3,
         seq: seqIdx + 1,
       };
     });
   }, [messages]);
 
   useEffect(() => {
+    const timer = setTimeout(() => {
+      startupRef.current = false;
+    }, STARTUP_DELAY_MS);
+    return () => {
+      clearTimeout(timer);
+      if (hideTimerRef.current !== null) clearTimeout(hideTimerRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
     const track = trackRef.current;
     if (track === null) return;
     const handleMouseMove = (e: MouseEvent) => {
+      if (startupRef.current) return;
       const rect = track.getBoundingClientRect();
       const relY = e.clientY - rect.top;
       setMouseY(relY);
-      const isNear = relY >= -PROXIMITY_PX && relY <= rect.height + PROXIMITY_PX;
+      const dx = Math.max(rect.left - e.clientX, 0, e.clientX - rect.right);
+      const dy = Math.max(rect.top - e.clientY, 0, e.clientY - rect.bottom);
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const isNear = dist <= PROXIMITY_PX;
       if (isNear) {
         setIsVisible(true);
         if (hideTimerRef.current !== null) {
@@ -90,11 +118,9 @@ export function ChatScrollbarDots({ messages, onScrollToMessage, onScrollToBotto
         }
       }
     };
-    const parent = track.parentElement;
-    if (parent === null) return;
-    parent.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mousemove", handleMouseMove);
     return () => {
-      parent.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mousemove", handleMouseMove);
       if (hideTimerRef.current !== null) clearTimeout(hideTimerRef.current);
     };
   }, []);
@@ -144,7 +170,7 @@ export function ChatScrollbarDots({ messages, onScrollToMessage, onScrollToBotto
       ))}
       <div
         className="scrollbar-dot scrollbar-dot-bottom"
-        style={{ bottom: "66px" }}
+        style={{ bottom: "0px" }}
         onMouseEnter={() => setHoveredIdx(-1)}
         onMouseLeave={handleDotLeave}
         onClick={handleBottomClick}
@@ -154,16 +180,19 @@ export function ChatScrollbarDots({ messages, onScrollToMessage, onScrollToBotto
         <div
           className="scrollbar-dots-tooltip"
           style={{
-            left: "20px",
+            left: "220px",
             top: `${tooltipTopPx}px`,
           }}
         >
           <div className="scrollbar-dots-tooltip-line1">
-            <span className="scrollbar-dots-tooltip-seq">#{hoveredDot.seq}</span>
+            <span className="scrollbar-dots-tooltip-seq">{hoveredDot.seq}</span>
             {hoveredDot.line1}
           </div>
           {hoveredDot.line2.length > 0 && (
             <div className="scrollbar-dots-tooltip-line2">{hoveredDot.line2}</div>
+          )}
+          {hoveredDot.line3.length > 0 && (
+            <div className="scrollbar-dots-tooltip-line3">{hoveredDot.line3}</div>
           )}
         </div>
       )}

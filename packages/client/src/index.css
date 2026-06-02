@@ -726,7 +726,7 @@ header.border-b {
   box-shadow: 0 0 10px 2px rgba(20, 23, 31, 0.5);
 }
 .scrollbar-dot-bottom {
-  background: #22c55e;
+  background: #15803d;
   border-radius: 50%;
   width: 8px;
   height: 8px;
@@ -737,21 +737,19 @@ header.border-b {
 .scrollbar-dot-bottom:hover,
 .scrollbar-dot-bottom.scrollbar-dot-active {
   transform: none;
-  box-shadow: 0 0 8px 2px rgba(34, 197, 94, 0.4);
+  box-shadow: 0 0 8px 2px rgba(21, 128, 61, 0.4);
 }
 .scrollbar-dots-tooltip {
   position: fixed;
-  max-width: 320px;
+  max-width: 420px;
   min-width: 140px;
   padding: 10px 14px;
   border-radius: 10px;
   border: 0.5px solid #1c202b;
   background: #14171f;
   color: #e2e8f0;
-  font-size: 12px;
-  line-height: 1.45;
-  white-space: nowrap;
-  overflow: hidden;
+  font-size: 13px;
+  line-height: 1.5;
   pointer-events: none;
   z-index: 50;
   transform: translateY(-50%);
@@ -761,23 +759,18 @@ header.border-b {
   color: #60a5fa;
   font-weight: 600;
   margin-right: 6px;
-  font-size: 11px;
-}
-.scrollbar-dots-tooltip-line1 {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-weight: 500;
-  color: #e2e8f0;
   font-size: 13px;
 }
-.scrollbar-dots-tooltip-line2 {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.scrollbar-dots-tooltip-line1,
+.scrollbar-dots-tooltip-line2,
+.scrollbar-dots-tooltip-line3 {
+  color: #e2e8f0;
+  font-size: 13px;
+  font-weight: 500;
+}
+.scrollbar-dots-tooltip-line2,
+.scrollbar-dots-tooltip-line3 {
   margin-top: 2px;
-  color: #94a3b8;
-  font-size: 12px;
 }
 [data-theme="light"] .scrollbar-dot {
   background: #3b82f6;
@@ -800,11 +793,10 @@ header.border-b {
 [data-theme="light"] .scrollbar-dots-tooltip-seq {
   color: #14171f;
 }
-[data-theme="light"] .scrollbar-dots-tooltip-line1 {
+[data-theme="light"] .scrollbar-dots-tooltip-line1,
+[data-theme="light"] .scrollbar-dots-tooltip-line2,
+[data-theme="light"] .scrollbar-dots-tooltip-line3 {
   color: #222222;
-}
-[data-theme="light"] .scrollbar-dots-tooltip-line2 {
-  color: #555555;
 }
 
 /* -------- Custom scrollbar: for right panel, session list, etc. -------- */
