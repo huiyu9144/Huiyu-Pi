@@ -25,7 +25,7 @@
   ~80 tokens system prompt · ~0.3s first token · 4 basic tools · 100% local
 </p>
 
-<p align="center" style="max-width:800px;margin:0 auto;color:#94a3b8;font-size:14px;line-height:1.7;">
+<p align="center" style="max-width:800px;margin:0 auto;color:#64748b;font-size:12px;line-height:1.6;">
   Huiyu Pi webUI, A local open-source Agent tool that lets you <b style="color:#00d4aa;">build your own Harness system</b> from scratch.
   Built on Pi and pi-forge, compared to IDE tools like Codex and Claude Code,
   <b style="color:#00d4aa;">context is reduced to nearly 0 with massive speed improvements</b>.
@@ -34,19 +34,19 @@
 
 <table>
   <tr>
-    <td width="50%"><img src="https://raw.githubusercontent.com/huiyu9144/Huiyu-Pi/main/docs/images/ScreenShot_2026-06-02_161947_814.jpg" alt="Huiyu Pi Screenshot" width="100%"></td>
-    <td width="50%"><img src="https://raw.githubusercontent.com/huiyu9144/Huiyu-Pi/main/docs/images/demo.gif" alt="Huiyu Pi Demo" width="100%"></td>
+    <td width="50%"><img src="docs/images/ScreenShot_2026-06-02_161947_814.jpg" alt="Huiyu Pi Screenshot" width="100%"></td>
+    <td width="50%"><img src="docs/images/demo.gif" alt="Huiyu Pi Demo" width="100%"></td>
   </tr>
 </table>
 
 <table>
   <tr>
-    <td width="50%"><img src="https://github.com/huiyu9144/Huiyu-Pi/releases/download/assets/screenshot-session.jpg" alt="Session Management"></td>
-    <td width="50%"><img src="https://github.com/huiyu9144/Huiyu-Pi/releases/download/assets/screenshot-terminal.jpg" alt="Integrated Terminal"></td>
+    <td width="50%"><img src="docs/images/screenshot-session.jpg" alt="Session Management"></td>
+    <td width="50%"><img src="docs/images/screenshot-terminal.jpg" alt="Integrated Terminal"></td>
   </tr>
   <tr>
-    <td width="50%"><img src="https://github.com/huiyu9144/Huiyu-Pi/releases/download/assets/screenshot-files.png" alt="File Browser + Editor"></td>
-    <td width="50%"><img src="https://github.com/huiyu9144/Huiyu-Pi/releases/download/assets/screenshot-git.jpg" alt="Git Integration"></td>
+    <td width="50%"><img src="docs/images/screenshot-files.png" alt="File Browser + Editor"></td>
+    <td width="50%"><img src="docs/images/screenshot-git.jpg" alt="Git Integration"></td>
   </tr>
 </table>
 
