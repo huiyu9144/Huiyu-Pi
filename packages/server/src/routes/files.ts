@@ -462,31 +462,19 @@ export const fileRoutes: FastifyPluginAsync = async (fastify) => {
         return result;
       } catch (err) {
         const rawPath = req.query.path;
-        // Fallback 1: if rawPath is a fully-qualified absolute path (Unix
-        // /... or Windows C:\...), try reading it as-is. The default
-        // handling strips leading / and joins with the project root, which
-        // doubles the path on Unix when the caller passes an explicit
-        // absolute path like /tmp/foo/escape.
         if (err instanceof NotFoundError && isAbsolute(rawPath)) {
           try {
             return await readFile(rawPath);
           } catch (fallbackErr) {
-            if (fallbackErr instanceof NotFoundError) throw err;
-            throw fallbackErr;
+            return mapError(reply, fallbackErr instanceof NotFoundError ? err : fallbackErr);
           }
         }
-        // Fallback 2: if the path looked project-relative (starts with /)
-        // and both the project-relative and filesystem-absolute lookups
-        // failed, try resolving from the workspace root. This handles
-        // cases where the AI mentions a file like /promotion-plan.md that
-        // lives under a different project within the same workspace.
         if (err instanceof NotFoundError && rawPath.startsWith("/")) {
           const workspaceFallback = join(config.workspacePath, rawPath.replace(/^[/\\]+/, ""));
           try {
             return await readFile(workspaceFallback);
           } catch (fallbackErr) {
-            if (fallbackErr instanceof NotFoundError) throw err;
-            throw fallbackErr;
+            return mapError(reply, fallbackErr instanceof NotFoundError ? err : fallbackErr);
           }
         }
         return mapError(reply, err);
