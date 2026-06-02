@@ -13,6 +13,7 @@ export default tseslint.config(
       "**/.vite/**",
       "**/dev-dist/**",
       "packages/client/public/**",
+      "docs/**",
       // Local dev WORKSPACE_PATH default ($repo/workspace) is gitignored
       // already; mirror it here so a project the user has cloned inside
       // their dev workspace doesn't get picked up by the typed lint
