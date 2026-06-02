@@ -91,7 +91,7 @@ export function ChatScrollbarDots({ messages, onScrollToMessage }: Props) {
         <div
           className="scrollbar-dots-tooltip"
           style={{
-            right: "16px",
+            left: "24px",
             top: tooltipPos.y,
           }}
         >
