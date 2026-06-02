@@ -209,7 +209,7 @@ export function ChatView({ sessionId }: Props) {
     if (root === null) return;
     const node = root.querySelector(`[data-message-index="${index}"]`);
     if (node === null) return;
-    node.scrollIntoView({ block: "center", behavior: "smooth" });
+    node.scrollIntoView({ block: "center", behavior: "instant" });
     isFollowingBottomRef.current = false;
   }, []);
 
