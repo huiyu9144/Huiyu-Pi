@@ -145,7 +145,7 @@ export function ChatScrollbarDots({ messages, onScrollToMessage, onScrollToBotto
       ))}
       <div
         className="scrollbar-dot scrollbar-dot-bottom"
-        style={{ bottom: "4px" }}
+        style={{ bottom: "16px" }}
         onMouseEnter={() => setHoveredIdx(-1)}
         onMouseLeave={handleDotLeave}
         onClick={handleBottomClick}
