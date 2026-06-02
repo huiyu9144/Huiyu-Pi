@@ -242,7 +242,7 @@ export function ChatView({ sessionId }: Props) {
         <div
           ref={scrollRef}
           onScroll={onScroll}
-          className="chat-scroll-container relative flex-1 overflow-y-auto px-6 py-4"
+          className="chat-scroll-container flex-1 overflow-y-auto px-6 py-4"
           style={{ scrollbarGutter: "stable" }}
         >
           {messages.length === 0 && streamingText.length === 0 && !isStreaming && (
@@ -478,8 +478,8 @@ export function ChatView({ sessionId }: Props) {
               <QuickActionRunCard key={run.runId} run={run} />
             ))}
           </div>
-          <ChatScrollbarDots messages={messages} onScrollToMessage={handleDotScroll} />
         </div>
+        <ChatScrollbarDots messages={messages} onScrollToMessage={handleDotScroll} />
       </div>
       {treeOpen && project !== undefined && (
         <SessionTreePanel
