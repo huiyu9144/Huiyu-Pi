@@ -213,6 +213,13 @@ export function ChatView({ sessionId }: Props) {
     isFollowingBottomRef.current = false;
   }, []);
 
+  const handleDotScrollToBottom = useCallback(() => {
+    const root = scrollRef.current;
+    if (root === null) return;
+    root.scrollTop = root.scrollHeight;
+    isFollowingBottomRef.current = true;
+  }, []);
+
   return (
     <ChatDiffViewContext.Provider
       value={{ viewType: chatViewType, setViewType: setAndPersistChatViewType }}
@@ -479,7 +486,11 @@ export function ChatView({ sessionId }: Props) {
             ))}
           </div>
         </div>
-        <ChatScrollbarDots messages={messages} onScrollToMessage={handleDotScroll} />
+        <ChatScrollbarDots
+          messages={messages}
+          onScrollToMessage={handleDotScroll}
+          onScrollToBottom={handleDotScrollToBottom}
+        />
       </div>
       {treeOpen && project !== undefined && (
         <SessionTreePanel

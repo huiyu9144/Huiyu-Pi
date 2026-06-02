@@ -1,9 +1,10 @@
-import { useMemo, useRef, useState, useCallback } from "react";
+import { useMemo, useRef, useState, useCallback, useEffect } from "react";
 import type { AgentMessageLike } from "../store/session-store";
 
 interface Props {
   messages: AgentMessageLike[];
   onScrollToMessage: (index: number) => void;
+  onScrollToBottom: () => void;
 }
 
 interface DotInfo {
@@ -36,10 +37,14 @@ function splitPreview(msg: AgentMessageLike): { line1: string; line2: string } {
   return { line1: l1, line2: l2.length > 60 ? l2.slice(0, 60) + "…" : l2 };
 }
 
-export function ChatScrollbarDots({ messages, onScrollToMessage }: Props) {
+const PROXIMITY_PX = 20;
+
+export function ChatScrollbarDots({ messages, onScrollToMessage, onScrollToBottom }: Props) {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
-  const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+  const [mouseY, setMouseY] = useState<number | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
 
   const userDots = useMemo<DotInfo[]>(() => {
     const userMsgs: { msg: AgentMessageLike; idx: number }[] = [];
@@ -59,21 +64,45 @@ export function ChatScrollbarDots({ messages, onScrollToMessage }: Props) {
     });
   }, [messages]);
 
-  const handleMouseEnter = useCallback((dot: DotInfo, e: React.MouseEvent) => {
-    if (hideTimerRef.current !== null) {
-      clearTimeout(hideTimerRef.current);
-      hideTimerRef.current = null;
-    }
+  useEffect(() => {
+    const track = trackRef.current;
+    if (track === null) return;
+    const handleMouseMove = (e: MouseEvent) => {
+      const rect = track.getBoundingClientRect();
+      const relY = e.clientY - rect.top;
+      setMouseY(relY);
+      const isNear = relY >= -PROXIMITY_PX && relY <= rect.height + PROXIMITY_PX;
+      if (isNear) {
+        setIsVisible(true);
+        if (hideTimerRef.current !== null) {
+          clearTimeout(hideTimerRef.current);
+          hideTimerRef.current = null;
+        }
+      } else {
+        if (hideTimerRef.current === null) {
+          hideTimerRef.current = setTimeout(() => {
+            setIsVisible(false);
+            setHoveredIdx(null);
+            hideTimerRef.current = null;
+          }, 200);
+        }
+      }
+    };
+    const parent = track.parentElement;
+    if (parent === null) return;
+    parent.addEventListener("mousemove", handleMouseMove);
+    return () => {
+      parent.removeEventListener("mousemove", handleMouseMove);
+      if (hideTimerRef.current !== null) clearTimeout(hideTimerRef.current);
+    };
+  }, []);
+
+  const handleDotEnter = useCallback((dot: DotInfo) => {
     setHoveredIdx(dot.index);
-    setTooltipPos({ x: e.clientX, y: e.clientY });
   }, []);
 
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    setTooltipPos({ x: e.clientX, y: e.clientY });
-  }, []);
-
-  const handleMouseLeave = useCallback(() => {
-    hideTimerRef.current = setTimeout(() => setHoveredIdx(null), 80);
+  const handleDotLeave = useCallback(() => {
+    setHoveredIdx(null);
   }, []);
 
   const handleClick = useCallback(
@@ -84,29 +113,50 @@ export function ChatScrollbarDots({ messages, onScrollToMessage }: Props) {
     [onScrollToMessage],
   );
 
+  const handleBottomClick = useCallback(() => {
+    onScrollToBottom();
+    setHoveredIdx(null);
+  }, [onScrollToBottom]);
+
   if (userDots.length === 0) return null;
 
   const hoveredDot = hoveredIdx !== null ? userDots.find((d) => d.index === hoveredIdx) : undefined;
 
+  const activeDotTop = hoveredIdx !== null ? userDots.find((d) => d.index === hoveredIdx) : null;
+
+  const tooltipTopPx =
+    activeDotTop !== null && activeDotTop !== undefined && mouseY !== null ? mouseY : 0;
+
   return (
-    <div className="scrollbar-dots-track" aria-hidden="true">
+    <div
+      ref={trackRef}
+      className={`scrollbar-dots-track ${isVisible ? "scrollbar-dots-visible" : ""}`}
+      aria-hidden="true"
+    >
       {userDots.map((dot) => (
         <div
           key={dot.index}
           className={`scrollbar-dot ${hoveredIdx === dot.index ? "scrollbar-dot-active" : ""}`}
           style={{ top: dot.top }}
-          onMouseEnter={(e) => handleMouseEnter(dot, e)}
-          onMouseMove={handleMouseMove}
-          onMouseLeave={handleMouseLeave}
+          onMouseEnter={() => handleDotEnter(dot)}
+          onMouseLeave={handleDotLeave}
           onClick={() => handleClick(dot)}
         />
       ))}
+      <div
+        className="scrollbar-dot scrollbar-dot-bottom"
+        style={{ bottom: "4px" }}
+        onMouseEnter={() => setHoveredIdx(-1)}
+        onMouseLeave={handleDotLeave}
+        onClick={handleBottomClick}
+        title="Scroll to bottom"
+      />
       {hoveredDot !== undefined && (
         <div
           className="scrollbar-dots-tooltip"
           style={{
-            left: "22px",
-            top: tooltipPos.y,
+            left: "16px",
+            top: `${tooltipTopPx}px`,
           }}
         >
           <div className="scrollbar-dots-tooltip-line1">{hoveredDot.line1}</div>
