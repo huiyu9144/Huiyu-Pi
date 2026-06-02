@@ -25,6 +25,9 @@
 #             (e.g. `--skip docker,session`). Repeatable.
 #   --only <name>[,<name>...]
 #             Mirror of --skip; if set, ONLY these tests run.
+#   --timeout <seconds>
+#             Per-test timeout (default: 120). Kill a test that
+#             hangs longer than this.
 #
 # Env vars worth knowing about:
 #   PI_TEST_LIVE_PROMPT=1  Several scripts (test-session, test-sse,
@@ -44,6 +47,7 @@ REPO_ROOT="$(git rev-parse --show-toplevel)"
 cd "$REPO_ROOT"
 
 CI_MODE=0
+TEST_TIMEOUT=120
 declare -a SKIP_LIST=()
 declare -a ONLY_LIST=()
 
@@ -73,6 +77,11 @@ while [ $# -gt 0 ]; do
       [ $# -ge 2 ] || { echo "error: --only requires an argument" >&2; exit 2; }
       IFS=',' read -r -a tokens <<< "$2"
       ONLY_LIST+=("${tokens[@]}")
+      shift 2
+      ;;
+    --timeout)
+      [ $# -ge 2 ] || { echo "error: --timeout requires an argument" >&2; exit 2; }
+      TEST_TIMEOUT="$2"
       shift 2
       ;;
     -h|--help)
@@ -145,7 +154,7 @@ if [ "${#SELECTED[@]}" -eq 0 ]; then
   exit 2
 fi
 
-echo "[test-runner] running ${#SELECTED[@]} test(s):"
+echo "[test-runner] running ${#SELECTED[@]} test(s) (timeout: ${TEST_TIMEOUT}s each):"
 for f in "${SELECTED[@]}"; do
   echo "  - $f"
 done
@@ -160,7 +169,7 @@ for f in "${SELECTED[@]}"; do
   echo "▶ $f"
   echo "═══════════════════════════════════════════════════════════════════"
   test_start=$(date +%s)
-  if npx tsx "$f"; then
+  if timeout "${TEST_TIMEOUT}" npx tsx "$f"; then
     test_end=$(date +%s)
     elapsed=$((test_end - test_start))
     PASSED+=("$f (${elapsed}s)")
