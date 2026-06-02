@@ -73,7 +73,9 @@ COPY packages/server/package.json packages/server/
 COPY packages/client/package.json packages/client/
 
 # `npm ci --workspaces` honours the root lockfile across all packages.
-RUN npm ci --workspaces --include-workspace-root
+# --ignore-scripts skips the postinstall hook (fix-pty-perms.mjs) which
+# needs source files that haven't been copied yet.
+RUN npm ci --workspaces --include-workspace-root --ignore-scripts
 
 # Now bring in the source and build.
 COPY . .
