@@ -15,7 +15,9 @@
  *   - POST /files/mkdir creates a directory; second call → 409 (target_exists)
  *   - DELETE /files/delete on a non-empty dir → 409 (directory_not_empty)
  *   - DELETE /files/delete on an empty dir → 204
- *   - Path traversal: GET /files/read?path=../../etc/passwd → 403
+ *   - Path traversal: GET /files/read?path=../../etc/passwd → 404 (not found);
+ *     read deliberately allows outside-project paths — see
+ *     verifyPathReadable in file-manager.ts.
  *   - Outside-project write → 403
  *   - Reading a binary file returns binary:true with empty content
  *   - 5 MB cap enforced (synthesised oversized file → 413)
@@ -333,13 +335,16 @@ async function main(): Promise<void> {
     }
 
     // ---- path traversal (read) ----
+    // readFile deliberately does not enforce root containment (local
+    // single-user software — the user can read any path via terminal).
+    // A non-existent path returns 404.
     {
       const qs = new URLSearchParams({
         projectId,
         path: join(projectPath, "..", "..", "etc", "passwd"),
       }).toString();
       const r = await jget(`${base}/api/v1/files/read?${qs}`, auth);
-      assert("read with traversal → 403", r.status === 403);
+      assert("read with traversal → 404", r.status === 404);
     }
 
     // ---- write outside project root → 403 ----
@@ -376,11 +381,12 @@ async function main(): Promise<void> {
       assert("binary file: content empty", body.content === "");
     }
 
-    // ---- symlink-out-of-root rejection ----
+    // ---- symlink-out-of-root: read allowed, write rejected ----
     // Plant a symlink inside the project that points OUT of the
-    // project root. The lexical path-check would say "inside" (the
-    // symlink itself is inside), so without realpath resolution this
-    // would let an attacker read /etc/passwd via /<project>/escape.
+    // project root. readFile deliberately does not enforce root
+    // containment (local single-user software), so reading through
+    // the symlink succeeds (200). writeFile still blocks paths
+    // outside the project root (403).
     {
       // For the symlink primitive itself we use the un-realpath'd
       // projectPath so node fs writes through to the actual path on
@@ -393,7 +399,7 @@ async function main(): Promise<void> {
       await symlink(outside, escapeLink);
       const qs = new URLSearchParams({ projectId, path: escapeLinkCanonical }).toString();
       const r = await jget(`${base}/api/v1/files/read?${qs}`, auth);
-      assert("read through symlink-out-of-root → 403", r.status === 403);
+      assert("read through symlink-out-of-root → 200", r.status === 200);
       // Same for a write target that resolves through the escape link.
       const w = await jsend(
         "PUT",
