@@ -470,8 +470,9 @@ export const fileRoutes: FastifyPluginAsync = async (fastify) => {
         if (err instanceof NotFoundError && isAbsolute(rawPath)) {
           try {
             return await readFile(rawPath);
-          } catch {
-            // fall through
+          } catch (fallbackErr) {
+            if (fallbackErr instanceof NotFoundError) throw err;
+            throw fallbackErr;
           }
         }
         // Fallback 2: if the path looked project-relative (starts with /)
@@ -483,8 +484,9 @@ export const fileRoutes: FastifyPluginAsync = async (fastify) => {
           const workspaceFallback = join(config.workspacePath, rawPath.replace(/^[/\\]+/, ""));
           try {
             return await readFile(workspaceFallback);
-          } catch {
-            // fall through to the original error
+          } catch (fallbackErr) {
+            if (fallbackErr instanceof NotFoundError) throw err;
+            throw fallbackErr;
           }
         }
         return mapError(reply, err);
