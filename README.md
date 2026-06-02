@@ -329,3 +329,7 @@ Built on top of two open-source projects:
 [MIT](LICENSE) — see the upstream projects for their licenses:
 - [pi-forge](https://github.com/Devin-Marks/pi-forge)
 - [pi](https://github.com/earendil-works/pi)
+
+Copyright (c) 2026 Huiyu Pi contributors
+Copyright (c) 2026 Devin Marks and pi-forge contributors
+Copyright (c) 2026 earendil-works and pi contributors

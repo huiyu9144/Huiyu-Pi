@@ -54,6 +54,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-06-02
+
+### ✨ New Features
+
+- **Redesigned README**: Completely rewritten with concise marketing copy (EN/CN), badge-style stats, before/after comparison table, "Why ~80 Tokens?" and "Why Choose Huiyu Pi?" sections
+- **Added compare-v2.html**: Interactive animated comparison page with contextual before/after animations
+- **Promo GIF generation pipeline**: 10 animated bar-chart GIFs (30fps) for social media promotion
+- **Project picker UX overhaul**: Empty-state redesign, double-click behavior, auto-close improvements
+- **File browser enhancements**: Refresh-triggering in file search, New File option in create menu
+- **Diff viewer improvements**: TurnDiffPanel sticky header, ProjectPicker modal streamlining
+- **Cross-platform scripts**: Enhanced start.bat, start.sh, start-lan.bat, start-lan.sh for Windows/macOS/Linux
+
+### 🎨 UI Improvements
+
+- Updated FileBrowserPanel, ProjectPicker, TurnDiffPanel UI components
+- compare-v2.html: brand names anonymized (Codex → Main AI Tools)
+- Fixed icon/logo path resolution for local serving
+
+### 🔧 Changes
+
+- Simplified brand identity in comparison page (anonymized competitor names)
+- Reduced images/ from .gitignore for README asset delivery
+- Replaced broken release-asset image URLs with relative paths
+- Screenshot + demo GIF stacked vertically in README for visual preview
+- Prerequisites merged into Installation section
+
+### 🐛 Bug Fixes
+
+- Fixed broken logo icon path in compare-v2.html (absolute → relative)
+- Fixed ChatView placeholder not working in empty sessions
+- Fixed broken image URLs in README (switched from release assets to relative paths)
+
 ## [1.2.0] - 2025-05-31
 
 ### ✨ New Features
