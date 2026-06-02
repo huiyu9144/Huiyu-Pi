@@ -76,16 +76,33 @@ console.log("FLAGS export");
 // ─────────────────────────────────────────────────────────────────────────────
 // 1. every declared flag round-trips to its env var
 // ─────────────────────────────────────────────────────────────────────────────
-console.log("\nflag round-trip");
+console.log("\nflag round-trip (string flags)");
 {
   const argv: string[] = [];
   const expected = new Map<string, string>();
   for (const [name, flag] of Object.entries(FLAGS)) {
+    if (flag.type !== "string") continue;
     argv.push(`--${name}`, `value-for-${name}`);
     expected.set(flag.envVar, `value-for-${name}`);
   }
   const { parsed, error } = tryParse(argv);
-  assert("no parse errors when every flag is set", error === null, error ?? "");
+  assert("no parse errors when all string flags are set", error === null, error ?? "");
+  for (const [envKey, want] of expected) {
+    assert(`${envKey} → ${want}`, envFor(parsed, envKey) === want);
+  }
+}
+
+console.log("\nflag round-trip (boolean flags)");
+{
+  const argv: string[] = [];
+  const expected = new Map<string, string>();
+  for (const [name, flag] of Object.entries(FLAGS)) {
+    if (flag.type !== "boolean") continue;
+    argv.push(`--${name}`);
+    expected.set(flag.envVar, "true");
+  }
+  const { parsed, error } = tryParse(argv);
+  assert("no parse errors when all boolean flags are set bare", error === null, error ?? "");
   for (const [envKey, want] of expected) {
     assert(`${envKey} → ${want}`, envFor(parsed, envKey) === want);
   }

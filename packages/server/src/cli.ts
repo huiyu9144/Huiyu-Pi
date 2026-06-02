@@ -8,7 +8,7 @@ interface CliFlag {
   envVar: string;
 }
 
-const FLAGS: Record<string, CliFlag> = {
+export const FLAGS: Record<string, CliFlag> = {
   port: {
     short: "p",
     type: "string",
