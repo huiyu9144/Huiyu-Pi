@@ -167,25 +167,27 @@ export const FilesPanelLayer = memo(function FilesPanelLayer({
 
   return (
     <>
-      <ResizableDivider
-        getStartSize={() => filesWidthRef.current}
-        onResize={(next) => {
-          if (filesPanelRef.current) {
-            filesPanelRef.current.style.width = `${next}px`;
-          }
-          filesWidthRef.current = next;
-        }}
-        onDragEnd={(finalSize) => {
-          localStorage.setItem("huiyu-pi/files-width", String(finalSize));
-          setFilesWidth(finalSize);
-        }}
-        direction={-1}
-        minSize={MIN_FILES_WIDTH}
-        maxSize={Math.max(
-          MIN_FILES_WIDTH,
-          windowWidth - MIN_CHAT_WIDTH - 240 - (editorVisible ? MIN_EDITOR_WIDTH : 0),
-        )}
-      />
+      {filesOpen && (
+        <ResizableDivider
+          getStartSize={() => filesWidthRef.current}
+          onResize={(next) => {
+            if (filesPanelRef.current) {
+              filesPanelRef.current.style.width = `${next}px`;
+            }
+            filesWidthRef.current = next;
+          }}
+          onDragEnd={(finalSize) => {
+            localStorage.setItem("huiyu-pi/files-width", String(finalSize));
+            setFilesWidth(finalSize);
+          }}
+          direction={-1}
+          minSize={MIN_FILES_WIDTH}
+          maxSize={Math.max(
+            MIN_FILES_WIDTH,
+            windowWidth - MIN_CHAT_WIDTH - 240 - (editorVisible ? MIN_EDITOR_WIDTH : 0),
+          )}
+        />
+      )}
       <div
         ref={filesPanelRef}
         className="group flex shrink-0 flex-col border-l-[0.5px] border-r-[0.5px] border-neutral-800 light:border-r-neutral-200 bg-neutral-900"
