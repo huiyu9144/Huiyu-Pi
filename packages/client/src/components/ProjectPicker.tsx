@@ -22,7 +22,7 @@ interface Props {
  * cost of retyping it is the most common UX regret in pickers like
  * this.
  */
-type Mode = "create" | "clone";
+type Mode = "quick" | "create" | "clone";
 type Step = "name" | "browse";
 
 export function ProjectPicker({ onClose, required = false }: Props) {
@@ -32,7 +32,7 @@ export function ProjectPicker({ onClose, required = false }: Props) {
   const loadProjects = useProjectStore((s) => s.load);
   const setActiveProject = useProjectStore((s) => s.setActive);
 
-  const [mode, setMode] = useState<Mode>("create");
+  const [mode, setMode] = useState<Mode>("quick");
   const [step, setStep] = useState<Step>("name");
   const [name, setName] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -44,6 +44,8 @@ export function ProjectPicker({ onClose, required = false }: Props) {
   const [loadingBrowse, setLoadingBrowse] = useState(false);
   const [newFolderInput, setNewFolderInput] = useState("");
   const [showNewFolder, setShowNewFolder] = useState(false);
+
+  const pathSep = workspaceRoot.includes("\\") ? "\\" : "/";
 
   useEffect(() => {
     if (mode !== "create" || step !== "browse") return;
@@ -86,8 +88,25 @@ export function ProjectPicker({ onClose, required = false }: Props) {
       return;
     }
     if (workspaceRoot.length === 0) {
-      // ui-config hasn't loaded yet (rare — load fires in App).
-      // Surface the error rather than silently doing nothing.
+      setError("workspace_not_loaded");
+      return;
+    }
+    setSubmitting(true);
+    setError(undefined);
+    try {
+      const { path: created } = await api.mkdir(workspaceRoot, trimmed);
+      await create(trimmed, created);
+      onClose();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.code : (err as Error).message);
+      setSubmitting(false);
+    }
+  };
+
+  const onQuickCreate = async (): Promise<void> => {
+    const trimmed = name.trim();
+    if (trimmed.length === 0) return;
+    if (workspaceRoot.length === 0) {
       setError("workspace_not_loaded");
       return;
     }
@@ -148,9 +167,11 @@ export function ProjectPicker({ onClose, required = false }: Props) {
           <h2 className="text-lg font-semibold tracking-tight">
             {mode === "clone"
               ? "Clone repository"
-              : step === "name"
+              : mode === "quick"
                 ? "New project"
-                : `Pick a folder for "${name.trim()}"`}
+                : step === "name"
+                  ? "New project"
+                  : `Pick a folder for "${name.trim()}"`}
           </h2>
           {!required && (
             <button
@@ -164,6 +185,9 @@ export function ProjectPicker({ onClose, required = false }: Props) {
 
         {step === "name" && (
           <div className="mb-3 flex gap-1 border-b border-neutral-800">
+            <ModeTab active={mode === "quick"} onClick={() => setMode("quick")}>
+              Quick create
+            </ModeTab>
             <ModeTab active={mode === "create"} onClick={() => setMode("create")}>
               Create / pick folder
             </ModeTab>
@@ -171,6 +195,42 @@ export function ProjectPicker({ onClose, required = false }: Props) {
               Clone repository
             </ModeTab>
           </div>
+        )}
+
+        {step === "name" && mode === "quick" && (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              void onQuickCreate();
+            }}
+            className="space-y-4"
+          >
+            <p className="text-xs text-neutral-400">
+              Projects will be created as subfolders here
+            </p>
+            {workspaceRoot.length > 0 && (
+              <div className="flex items-center gap-2 px-1 py-0.5 font-mono text-sm text-neutral-300">
+                <span className="text-base">📁</span>
+                <span>{workspaceRoot}{pathSep}</span>
+              </div>
+            )}
+            <label className="block space-y-1.5">
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                autoFocus
+                placeholder="Project name"
+                className="w-full rounded-md border border-neutral-700 bg-neutral-950 px-3 py-2 text-sm outline-none focus:border-neutral-500"
+              />
+            </label>
+            <button
+              type="submit"
+              disabled={name.trim().length === 0 || submitting}
+              className="w-full rounded-md bg-neutral-100 px-3 py-2 text-sm font-medium text-neutral-900 disabled:opacity-50"
+            >
+              {submitting ? "Creating…" : "Create project"}
+            </button>
+          </form>
         )}
 
         {step === "name" && mode === "create" && (

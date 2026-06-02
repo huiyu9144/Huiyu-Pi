@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
-import { Columns2, FileDiff, RefreshCw, Rows2 } from "lucide-react";
+import { Columns2, ExternalLink, FileDiff, FolderOpen, RefreshCw, Rows2 } from "lucide-react";
 import { api, ApiError, type TurnDiffEntry } from "../lib/api-client";
 import { useSessionStore } from "../store/session-store";
+import { useActiveProject } from "../store/project-store";
+import { useFileStore } from "../store/file-store";
+import { useUiStore } from "../store/ui-store";
 import { DiffBlock } from "./DiffBlock";
 
 type ViewType = "unified" | "split";
@@ -34,6 +37,9 @@ function readPersistedViewType(): ViewType {
  */
 export function TurnDiffPanel() {
   const activeSessionId = useSessionStore((s) => s.activeSessionId);
+  const project = useActiveProject();
+  const openFile = useFileStore((s) => s.openFile);
+  const openEditorPane = useUiStore((s) => s.openEditorPane);
 
   const [entries, setEntries] = useState<TurnDiffEntry[]>([]);
   // Gets stuck on a "Loading…" splash if the very first refresh
@@ -176,6 +182,31 @@ export function TurnDiffPanel() {
                     +{entry.additions}
                   </span>
                   <span className="text-red-400 light:text-red-700">−{entry.deletions}</span>
+                  {project !== undefined && (
+                    <>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const absPath = `${project.path}/${entry.file.replaceAll("\\", "/")}`;
+                          void openFile(project.id, absPath).then(() => openEditorPane());
+                        }}
+                        className="rounded p-0.5 text-neutral-500 hover:bg-neutral-800 hover:text-neutral-200"
+                        title="Open file in editor"
+                      >
+                        <ExternalLink size={11} />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          void api.filesOpenInExplorer(project.id, entry.file);
+                        }}
+                        className="rounded p-0.5 text-neutral-500 hover:bg-neutral-800 hover:text-neutral-200"
+                        title="Open containing folder"
+                      >
+                        <FolderOpen size={11} />
+                      </button>
+                    </>
+                  )}
                 </span>
               </div>
               {open && <DiffBlock diff={entry.diff} viewType={viewType} />}

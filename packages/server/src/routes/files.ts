@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync, FastifyReply } from "fastify";
 import { execSync } from "child_process";
-import { isAbsolute, join } from "node:path";
+import { dirname, isAbsolute, join } from "node:path";
 import {
   ChecksumMismatchError,
   DirectoryNotEmptyError,
@@ -1002,7 +1002,8 @@ export const fileRoutes: FastifyPluginAsync = async (fastify) => {
           : join(project.path, req.body.path);
         const resolved = await verifyPathSafe(revealAbsPath, project.path);
         if (process.platform === "win32") {
-          execSync(`explorer.exe /select,"${resolved.replace(/\//g, "\\")}"`, { timeout: 5000 });
+          const dir = dirname(resolved.replace(/\//g, "\\"));
+          execSync(`explorer.exe "${dir}"`, { timeout: 5000, windowsHide: false });
         } else if (process.platform === "darwin") {
           execSync(`open -R "${resolved}"`, { timeout: 5000 });
         } else {

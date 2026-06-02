@@ -67,7 +67,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     set({ error: undefined });
     try {
       const project = await api.createProject(name, path);
-      set((s) => ({ projects: [...s.projects, project], activeProjectId: project.id }));
+      set((s) => ({ projects: [project, ...s.projects], activeProjectId: project.id }));
       localStorage.setItem(ACTIVE_KEY, project.id);
       return project;
     } catch (err) {

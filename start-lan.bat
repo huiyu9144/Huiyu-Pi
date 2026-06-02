@@ -20,7 +20,7 @@ echo ========================================
 echo.
 
 if not exist "node_modules\" (
-    echo [1/3] First run - installing dependencies...
+    echo [1/4] First run - installing dependencies...
     call npm install
     if errorlevel 1 (
         echo.
@@ -28,21 +28,21 @@ if not exist "node_modules\" (
         pause
         exit /b 1
     )
-    echo [1/3] Done.
+    echo [1/4] Done.
 ) else (
-    echo [1/3] Dependencies already installed, skip.
+    echo [1/4] Dependencies already installed, skip.
 )
 
 echo.
-echo [2/3] Checking desktop shortcut...
+echo [2/4] Checking desktop shortcut...
 call :create_shortcut
 
 echo.
-echo [3/3] Cleaning up stale processes...
+echo [3/4] Cleaning up stale processes...
 call :cleanup_ports
 
 echo.
-echo [3/3] Starting server...
+echo [4/4] Starting server...
 echo.
 
 set HOST=0.0.0.0

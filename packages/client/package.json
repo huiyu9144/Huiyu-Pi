@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:restart": "node -e \"try{require('child_process').execSync('netstat -ano|findstr :9145',{encoding:'utf8'}).split('\\n').forEach(l=>{var m=l.match(/\\s+(\\d+)\\s*$/);if(m)try{process.kill(+m[1],'SIGTERM')}catch(e){}})}catch(e){}\" & npm run dev",
+    "dev:restart": "node -e \"const{execSync:c}=require('child_process'),p=9145;try{if(process.platform==='win32'){execSync('netstat -ano|findstr :'+p,{encoding:'utf8'}).split('\\n').forEach(l=>{const m=l.match(/\\s+(\\d+)\\s*$/);if(m)try{process.kill(+m[1],'SIGTERM')}catch(e){}})}else{execSync('lsof -ti tcp:'+p,{encoding:'utf8'}).trim().split('\\n').forEach(id=>{if(id)try{process.kill(+id,'SIGKILL')}catch(e){}})}}catch(e){}\" & vite",
     "build": "tsc && vite build",
     "check": "tsc --noEmit"
   },

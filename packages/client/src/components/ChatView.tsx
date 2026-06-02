@@ -983,6 +983,17 @@ function TurnDiffFooter({ sessionId }: { sessionId: string }) {
   );
 }
 
+function shouldSuppressCodexProviderError(
+  message: AgentMessageLike,
+  errorMessage: string,
+): boolean {
+  const provider = (message as { provider?: unknown }).provider;
+  return (
+    provider === "openai-codex" &&
+    /provider_transport_failure|websocket.*1006|1006.*websocket/i.test(errorMessage)
+  );
+}
+
 function AssistantMessageBubble({
   message,
   content,
@@ -1010,7 +1021,8 @@ function AssistantMessageBubble({
   const stopReason = (message as { stopReason?: unknown }).stopReason;
   const errorMessage = (message as { errorMessage?: unknown }).errorMessage;
   const inlineError =
-    stopReason === "error" && typeof errorMessage === "string" && errorMessage.length > 0
+    stopReason === "error" && typeof errorMessage === "string" && errorMessage.length > 0 &&
+    !shouldSuppressCodexProviderError(message, errorMessage)
       ? errorMessage
       : undefined;
   // Determine if the agent has finished its turn. When the session is

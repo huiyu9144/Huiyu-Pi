@@ -25,13 +25,12 @@
   ~80 tokens 系统提示 &middot; ~0.3s 首字响应 &middot; 7 个基础工具 &middot; 100% 本地部署
 </p>
 
-<p align="center">
-  <img src="https://github.com/huiyu9144/Huiyu-Pi/releases/download/assets/before-after-hd.jpg" alt="Before vs After" width="100%">
-</p>
-
----
-
-## 界面展示
+<table>
+  <tr>
+    <td width="50%"><img src="docs/images/ScreenShot_2026-06-02_161947_814.jpg" alt="Huiyu Pi 截图" width="100%"></td>
+    <td width="50%"><img src="docs/images/demo.gif" alt="Huiyu Pi 演示" width="100%"></td>
+  </tr>
+</table>
 
 <table>
   <tr>
@@ -39,16 +38,8 @@
     <td width="50%"><img src="https://github.com/huiyu9144/Huiyu-Pi/releases/download/assets/screenshot-terminal.jpg" alt="集成终端"></td>
   </tr>
   <tr>
-    <td align="center"><b>会话管理</b></td>
-    <td align="center"><b>集成终端</b></td>
-  </tr>
-  <tr>
     <td width="50%"><img src="https://github.com/huiyu9144/Huiyu-Pi/releases/download/assets/screenshot-files.png" alt="文件浏览器 + 编辑器"></td>
     <td width="50%"><img src="https://github.com/huiyu9144/Huiyu-Pi/releases/download/assets/screenshot-git.jpg" alt="Git 集成"></td>
-  </tr>
-  <tr>
-    <td align="center"><b>文件浏览器 + 编辑器</b></td>
-    <td align="center"><b>Git 集成</b></td>
   </tr>
 </table>
 

@@ -11,8 +11,10 @@ import {
   ChevronDown,
   ChevronRight,
   Download,
+  ExternalLink,
   FilePlus2,
   Folder,
+  FolderOpen,
   FolderPlus,
   Loader2,
   Pencil,
@@ -105,14 +107,10 @@ export function FileBrowserPanel() {
   // hook ordering stays stable across renders (rules-of-hooks).
   const [selectedPaths, setSelectedPaths] = useState<Set<string>>(new Set());
 
-  // Load the file tree when this panel mounts or the active
-  // project changes. No auto-refresh on agent_end — the user
-  // clicks the refresh button (or re-opens the tab) when they
-  // want to see updated files.
   useEffect(() => {
-    if (project === undefined) return;
-    void loadTree(project.id);
-  }, [project?.id]);
+    if (project !== undefined) void loadTree(project.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [project?.id, loadTree]);
 
   if (project === undefined) {
     return (
@@ -388,6 +386,10 @@ export function FileBrowserPanel() {
     }
   };
 
+  const openInExplorer = (relPath: string): void => {
+    void api.filesOpenInExplorer(project.id, relPath);
+  };
+
   const onUploadInputChange = async (e: ChangeEvent<HTMLInputElement>): Promise<void> => {
     // Snapshot the FileList into a real array BEFORE we reset
     // input.value — the reset empties the FileList in-place, so any
@@ -405,10 +407,7 @@ export function FileBrowserPanel() {
   return (
     <div className="flex h-full flex-col text-xs text-neutral-300">
       <div className="flex items-center justify-between border-b border-neutral-800 px-3 py-2">
-        <span
-          className="flex items-center gap-1.5 truncate font-medium text-neutral-200"
-          title={project.path}
-        >
+        <span className="flex items-center gap-1.5 truncate font-medium text-neutral-200" title={project.path}>
           <Folder size={12} className="shrink-0" />
           {project.name}
         </span>
@@ -537,6 +536,7 @@ export function FileBrowserPanel() {
             }
             onUpload={(absPath) => onPickUpload(absPath)}
             onDownload={(absPath) => void downloadEntry(absPath)}
+            onOpenInExplorer={(relPath) => openInExplorer(relPath)}
             dropTarget={dropTarget}
             onDropTargetChange={setDropTarget}
             onDrop={(e, dir) => void handleDrop(e, dir)}
@@ -828,6 +828,8 @@ interface TreeProps {
   selectedPaths: Set<string>;
   /** Toggle one path in the selection set. */
   onToggleSelect: (absPath: string) => void;
+  /** Open the containing folder in the OS file manager. */
+  onOpenInExplorer: (relPath: string) => void;
 }
 
 function Tree(props: TreeProps) {
@@ -1008,6 +1010,30 @@ function Tree(props: TreeProps) {
                   title="Upload into this folder"
                 >
                   <Upload size={11} />
+                </button>
+              </>
+            )}
+            {!isDir && (
+              <>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    props.onOpen(node);
+                  }}
+                  className="rounded p-0.5 text-neutral-400"
+                  title="Open file in editor"
+                >
+                  <ExternalLink size={11} />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    props.onOpenInExplorer(node.path);
+                  }}
+                  className="rounded p-0.5 text-neutral-400"
+                  title="Open containing folder"
+                >
+                  <FolderOpen size={11} />
                 </button>
               </>
             )}

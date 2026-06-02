@@ -25,13 +25,12 @@
   ~80 tokens system prompt &middot; ~0.3s first token &middot; 7 basic tools &middot; 100% local
 </p>
 
-<p align="center">
-  <img src="https://github.com/huiyu9144/Huiyu-Pi/releases/download/assets/before-after-hd.jpg" alt="Before vs After" width="100%">
-</p>
-
----
-
-## Screenshots
+<table>
+  <tr>
+    <td width="50%"><img src="docs/images/ScreenShot_2026-06-02_161947_814.jpg" alt="Huiyu Pi Screenshot" width="100%"></td>
+    <td width="50%"><img src="docs/images/demo.gif" alt="Huiyu Pi Demo" width="100%"></td>
+  </tr>
+</table>
 
 <table>
   <tr>
@@ -39,18 +38,31 @@
     <td width="50%"><img src="https://github.com/huiyu9144/Huiyu-Pi/releases/download/assets/screenshot-terminal.jpg" alt="Integrated Terminal"></td>
   </tr>
   <tr>
-    <td align="center"><b>Session Management</b></td>
-    <td align="center"><b>Integrated Terminal</b></td>
-  </tr>
-  <tr>
     <td width="50%"><img src="https://github.com/huiyu9144/Huiyu-Pi/releases/download/assets/screenshot-files.png" alt="File Browser + Editor"></td>
     <td width="50%"><img src="https://github.com/huiyu9144/Huiyu-Pi/releases/download/assets/screenshot-git.jpg" alt="Git Integration"></td>
   </tr>
-  <tr>
-    <td align="center"><b>File Browser + Editor</b></td>
-    <td align="center"><b>Git Integration</b></td>
-  </tr>
 </table>
+
+---
+
+## Prerequisites
+
+| Requirement | Why | How to install |
+|---|---|---|
+| **Node.js ≥ 20** | Runtime for server and build tools | [nodejs.org](https://nodejs.org/) — download LTS version |
+| **npm** (comes with Node) | Package manager | Included with Node.js |
+| **Build tools** (for terminal support) | node-pty is a native C++ module that needs compilation | See below |
+
+**Build tools by platform:**
+
+| Platform | Command |
+|---|---|
+| **Windows** | Install [Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) (select "C++ build tools") or run `npm install --global windows-build-tools` in an admin terminal |
+| **macOS** | `xcode-select --install` |
+| **Linux (Debian/Ubuntu)** | `sudo apt install build-essential` |
+| **Linux (Fedora)** | `sudo dnf groupinstall "Development Tools"` |
+
+> 💡 **No build tools?** The chat and file browser still work. Only the integrated terminal tab will fail to open.
 
 ---
 
@@ -60,9 +72,9 @@
 npx huiyu-pi
 ```
 
-Open `http://localhost:9144` in your browser, configure your API key in **Settings → Providers**, and go.
+Open `http://localhost:9144` in your browser, go to **Settings → Providers**, enter your API key, and start chatting.
 
-*Also available as global npm install, manual clone, or one-click scripts — see [Installation](#installation) below.*
+*Also available as global npm install, manual clone, or platform scripts — see [Installation](#installation) below.*
 
 ---
 
@@ -113,91 +125,153 @@ Dark and light themes controlled by CSS variables. Create your own skin without 
 
 ## Installation
 
-### One-click (no install)
+### Option A: npx (no install, runs once)
 
 ```bash
 npx huiyu-pi
 ```
 
-### Global install (faster subsequent launches)
+Downloads and runs the latest version. Subsequent `npx huiyu-pi` calls use the cached version. To force an update: `npx huiyu-pi@latest`.
+
+### Option B: Global install (faster subsequent launches)
 
 ```bash
 npm install -g huiyu-pi
-huiyu-pi
-
-# Override defaults via flags:
-huiyu-pi --port 4000 --workspace-path ~/Code
-huiyu-pi --api-key @/run/secrets/api-key --no-expose-docs
-huiyu-pi --help
+huiyu-pi                    # start server
+huiyu-pi --help             # show all flags
+huiyu-pi --port 4000        # custom port
+huiyu-pi --workspace-path ~/Code  # custom workspace
 ```
 
-By default Huiyu Pi listens on `http://localhost:9144`, reads provider config from `~/.pi/agent/` (shared with the host pi CLI if you have one), and stores its own state in `~/.huiyu-pi/`.
+To update: `npm update -g huiyu-pi`. To uninstall: `npm uninstall -g huiyu-pi`.
 
-### Manual (development)
+### Option C: Platform scripts (clone + run)
+
+Clone the repo, then run the start script for your platform:
+
+| Platform | Command |
+|---|---|
+| **Windows** | Double-click `start.bat`, or run in PowerShell: `.\start.bat` |
+| **macOS / Linux** | Open Terminal, `cd` into the repo, then `bash start.sh` |
+
+The start script handles everything: `npm install` → build server → build client → start. First run takes a few minutes; subsequent runs are fast.
+
+**LAN access** (share on your local network):
+
+| Platform | Command |
+|---|---|
+| **Windows** | `.\start-lan.bat` |
+| **macOS / Linux** | `bash start-lan.sh` |
+
+Or via flag: `huiyu-pi --host 0.0.0.0`
+
+> ⚠️ **Security:** Binding to `0.0.0.0` exposes the agent's shell and filesystem to **everyone on your network**. Only use on trusted private networks.
+
+### Option D: Manual (development)
 
 ```bash
 git clone https://github.com/huiyu9144/Huiyu-Pi.git
 cd Huiyu-Pi
-npm install
-npm run dev
+npm install          # install all dependencies (first time may take a few minutes)
+npm run dev          # start dev server with HMR (http://localhost:9145)
 ```
 
-### Platform one-click scripts
-Clone the repo, run `start.bat` (Windows) or `bash start.sh` (macOS/Linux).
-
-### LAN access
+For production builds:
 
 ```bash
-start-lan.bat          # Windows
-bash start-lan.sh      # macOS / Linux
+npm run build        # build server + client
+npm run start        # start production server on port 9144
 ```
-
-Or via environment variable / CLI flag:
-```bash
-HOST=0.0.0.0 huiyu-pi          # npm global install
-huiyu-pi --host 0.0.0.0        # CLI flag
-```
-
-> **Security note:** Binding to `0.0.0.0` exposes the agent's shell and filesystem to **everyone on your network**. Only enable on trusted private networks.
 
 ---
 
 ## API Key Setup
 
-**Option 1: Via Settings UI** (Recommended)
+Huiyu Pi manages provider API keys through the **Settings UI** and stores them in `~/.huiyu-pi/agent/auth.json`. Keys are never exposed to the browser — the server holds them in memory and proxies all LLM requests.
 
-Open `http://localhost:9144`, go to **Settings → Providers**, and enter your API key.
+### Via Settings UI (Recommended)
 
-**Option 2: Config file**
+1. Open `http://localhost:9144`
+2. Go to **Settings → Providers**
+3. Select your provider (Anthropic, OpenAI, DeepSeek, etc.)
+4. Paste your API key and save
+
+### Supported providers
+
+Anthropic Claude, OpenAI GPT/o1/o3, DeepSeek, Google Gemini, Mistral, Groq, xAI, OpenRouter, and any OpenAI-compatible endpoint (vLLM, LiteLLM, Ollama, etc.).
+
+### Custom OpenAI-compatible providers
+
+For self-hosted or third-party endpoints, create `~/.huiyu-pi/agent/models.json`:
 
 ```json
 {
-  "deepseek": {
-    "type": "api_key",
-    "key": "sk-your-api-key-here"
+  "custom-gateway": {
+    "protocol": "openai",
+    "url": "http://localhost:11434/v1",
+    "models": ["qwen2.5-coder-32b"]
   }
 }
 ```
 
-**Option 3: Environment variable**
+Then add the API key in **Settings → Providers → custom-gateway**.
 
-```bash
-export DEEPSEEK_API_KEY=sk-your-api-key
-```
-
-**Option 4: CLI flag**
+### CLI flag (for scripts / CI)
 
 ```bash
 huiyu-pi --api-key @/path/to/api-key.txt
 ```
 
-**Supported providers:** Anthropic, OpenAI, DeepSeek, Google, Mistral, Groq, xAI, OpenRouter, and more.
+The `@` prefix reads the key from a file. Useful for CI pipelines and Docker secrets.
+
+---
+
+## Configuration
+
+All settings can be controlled via CLI flags, environment variables, or config files. CLI flags take priority over env vars, which take priority over config files.
+
+### CLI flags
+
+| Flag | Description | Default |
+|---|---|---|
+| `--port` | Server port | `9144` |
+| `--host` | Bind address | `127.0.0.1` |
+| `--workspace-path` | Root directory for projects | `~/huiyu-pi-workspace` |
+| `--api-key` | Static API key (`@file` syntax supported) | — |
+| `--ui-password` | Browser login password | — |
+| `--jwt-secret` | JWT signing key (auto-generated if unset) | — |
+| `--log-level` | Log level: `fatal` `error` `warn` `info` `debug` `trace` | `info` |
+| `--no-expose-docs` | Hide Swagger UI from the browser | docs exposed |
+| `--help` | Show all flags | — |
+
+### Environment variables
+
+| Variable | Description |
+|---|---|
+| `PORT` | Server port |
+| `HOST` | Bind address (`0.0.0.0` for LAN) |
+| `WORKSPACE_PATH` | Root directory for projects |
+| `API_KEY` | Static API key |
+| `UI_PASSWORD` | Browser login password |
+| `JWT_SECRET` | JWT signing key |
+| `LOG_LEVEL` | Log level |
+| `EXPOSE_DOCS` | Set to `false` to hide Swagger UI |
+| `FORGE_DATA_DIR` | Override state directory (default `~/.huiyu-pi/`) |
+
+### Config files
+
+| File | Purpose |
+|---|---|
+| `~/.huiyu-pi/agent/auth.json` | Provider API keys (managed via Settings UI) |
+| `~/.huiyu-pi/agent/settings.json` | Agent settings (model, thinking level, etc.) |
+| `~/.huiyu-pi/agent/models.json` | Custom OpenAI-compatible providers |
+| `~/.huiyu-pi/mcp.json` | Global MCP server configuration |
 
 ---
 
 ## Customization
 
-The theme is controlled by CSS custom properties in `src/globals.css`:
+The theme is controlled by CSS custom properties in `packages/client/src/index.css`:
 
 ```css
 :root {
@@ -217,10 +291,10 @@ html[data-theme="light"] {
 
 | Layer | Technologies |
 |-------|-------------|
-| **Frontend** | React 19, TypeScript, Vite 6, Tailwind CSS v4, Zustand, CodeMirror 6 |
+| **Frontend** | React 19, TypeScript 6, Vite 8, Tailwind CSS v4, Zustand, CodeMirror 6 |
 | **Backend** | Fastify 5, WebSocket, SSE, JWT |
 | **Terminal** | xterm.js + node-pty |
-| **Infrastructure** | Docker, docker-compose, Kubernetes, GitHub Actions |
+| **Infrastructure** | GitHub Actions CI/CD |
 
 ---
 

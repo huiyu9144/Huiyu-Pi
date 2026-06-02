@@ -11,15 +11,15 @@ echo ""
 
 # ===== Step 1: Install dependencies =====
 if [ ! -d "node_modules" ]; then
-  echo "[1/1] First run - installing dependencies..."
+  echo "[1/4] First run - installing dependencies..."
   npm install
-  echo "[1/1] Done."
+  echo "[1/4] Done."
 else
-  echo "[1/1] Dependencies already installed, skip."
+  echo "[1/4] Dependencies already installed, skip."
 fi
 
 echo ""
-echo "[2/2] Starting server..."
+echo "[2/4] Starting server..."
 echo ""
 
 PORT=9144
@@ -31,6 +31,17 @@ else
   echo "[API] First run: building server..."
   npm run build -w packages/server
   echo "[API] Build done."
+fi
+
+# ===== Step 2b: Build client if needed =====
+# New users cloning the repo have no dist/ (gitignored). Without a
+# client build the server starts fine but serves a blank page.
+if [ -f "packages/client/dist/index.html" ]; then
+  echo "[Client] Using pre-built client (fast start)"
+else
+  echo "[Client] First run: building client..."
+  npm run build -w packages/client
+  echo "[Client] Build done."
 fi
 
 # ===== Step 3: Kill any lingering server on port 9144 =====

@@ -45,6 +45,7 @@
     "huiyu-pi": "bin/huiyu-pi.mjs"
   },
   "scripts": {
+    "postinstall": "node bin/fix-pty-perms.mjs",
     "build": "npm run build --workspaces --if-present",
     "dev": "concurrently \"cross-env PORT=9144 npm run dev -w packages/server\" \"cross-env PORT=9144 npm run dev -w packages/client\"",
     "dev:remote": "concurrently \"cross-env HOST=0.0.0.0 PORT=9144 npm run dev -w packages/server\" \"cross-env PORT=9144 npm run dev -w packages/client -- --host\"",
@@ -80,5 +81,8 @@
     "tsx": "^4.22.3",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.60.0"
+  },
+  "dependencies": {
+    "playwright": "^1.60.0"
   }
 }
