@@ -387,6 +387,7 @@ async function main(): Promise<void> {
     process.exit(1);
   }
   console.log("\n[test-mcp-stdio] PASS");
+  process.exit(0);
 }
 
 // Silence the unused mkdir import warning — we use mkdir-like setup in
