@@ -119,7 +119,7 @@ export const FilesPanelLayer = memo(function FilesPanelLayer({
       <div className="flex border-t border-neutral-800 bg-neutral-900 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
         {(minimal
           ? (["files", "search", "processes", "context"] as const)
-          : (["files", "search", "changes", "git", "processes", "context", "preview"] as const)
+          : (["preview", "files", "search", "changes", "git", "processes", "context"] as const)
         ).map((t) => (
           <button
             key={t}

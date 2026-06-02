@@ -253,7 +253,7 @@ export const useUiStore = create<UiState>((set, get) => ({
       "preview",
     ];
     if (raw !== null && valid.includes(raw)) return raw as RightPaneTab;
-    return "files";
+    return "preview";
   })(),
   setRightTab: (tab) => {
     try {
