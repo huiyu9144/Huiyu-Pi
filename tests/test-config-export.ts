@@ -226,7 +226,7 @@ async function main(): Promise<void> {
       );
       assert(
         "  Content-Disposition is attachment with timestamped filename",
-        (r.headers.get("content-disposition") ?? "").includes("pi-forge-config-"),
+        (r.headers.get("content-disposition") ?? "").includes("huiyu-pi-config-"),
         r.headers.get("content-disposition") ?? "(none)",
       );
       exportedBuf = r.buf;
