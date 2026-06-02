@@ -34,8 +34,10 @@
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/images/ScreenShot_2026-06-02_161947_814.jpg" alt="Huiyu Pi 截图" width="100%"></td>
-    <td width="50%"><img src="docs/images/demo.gif" alt="Huiyu Pi 演示" width="100%"></td>
+    <td width="100%"><img src="docs/images/ScreenShot_2026-06-02_161947_814.jpg" alt="Huiyu Pi 截图" width="100%"></td>
+  </tr>
+  <tr>
+    <td width="100%"><img src="docs/images/demo.gif" alt="Huiyu Pi 演示" width="100%"></td>
   </tr>
 </table>
 
