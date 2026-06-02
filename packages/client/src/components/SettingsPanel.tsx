@@ -1815,7 +1815,7 @@ function SystemPromptTab({ onError }: { onError: (msg: string | undefined) => vo
         setDraft("");
         return;
       }
-      let cancelled = false;
+      const cancelled = false;
       onError(undefined);
       void (async () => {
         try {
@@ -1831,7 +1831,9 @@ function SystemPromptTab({ onError }: { onError: (msg: string | undefined) => vo
       })();
     }, 600);
 
-    return () => { clearTimeout(t); };
+    return () => {
+      clearTimeout(t);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project?.id]);
 

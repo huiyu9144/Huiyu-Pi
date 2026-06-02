@@ -1,9 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { randomUUID } from "node:crypto";
-import {
-  registerGlobalClient,
-  unregisterGlobalClient,
-} from "../sse-bridge.js";
+import { registerGlobalClient, unregisterGlobalClient } from "../sse-bridge.js";
 
 const HEARTBEAT_LINE = `: heartbeat ${"_".repeat(2034)}\n\n`;
 

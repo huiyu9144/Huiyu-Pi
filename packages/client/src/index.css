@@ -755,6 +755,55 @@ header.border-b {
   -webkit-appearance: none;
 }
 
+/* -------- Chat input textarea scrollbar -------- */
+.chat-input-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #404040 transparent;
+}
+.chat-input-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.chat-input-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.chat-input-scrollbar::-webkit-scrollbar-thumb {
+  background: #404040;
+  border-radius: 3px;
+}
+.chat-input-scrollbar::-webkit-scrollbar-button {
+  background: transparent;
+  color: transparent;
+  height: 0;
+}
+.chat-input-scrollbar::-webkit-scrollbar-button:vertical:decrement,
+.chat-input-scrollbar::-webkit-scrollbar-button:vertical:increment {
+  background: transparent;
+  color: transparent;
+  -webkit-appearance: none;
+}
+
+[data-theme="light"] .chat-input-scrollbar {
+  scrollbar-color: #a3a3a3 transparent;
+}
+[data-theme="light"] .chat-input-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+[data-theme="light"] .chat-input-scrollbar::-webkit-scrollbar-thumb {
+  background: #a3a3a3;
+  border-radius: 3px;
+}
+[data-theme="light"] .chat-input-scrollbar::-webkit-scrollbar-button {
+  background: transparent;
+  color: transparent;
+  height: 0;
+}
+[data-theme="light"] .chat-input-scrollbar::-webkit-scrollbar-button:vertical:decrement,
+[data-theme="light"] .chat-input-scrollbar::-webkit-scrollbar-button:vertical:increment {
+  background: transparent;
+  color: transparent;
+  -webkit-appearance: none;
+}
+
 /* Light-theme user message bubble */
 [data-theme="light"] .message-bubble[data-message-role="user"] {
   background-color: #d4d4d4 !important;

@@ -12,12 +12,18 @@ const listeners = new Set<Listener>();
 
 export function onGlobalEvent(fn: Listener): () => void {
   listeners.add(fn);
-  return () => { listeners.delete(fn); };
+  return () => {
+    listeners.delete(fn);
+  };
 }
 
 export function emitGlobalEvent(event: AgentSessionEvent): void {
   if (listeners.size === 0) return;
   for (const fn of listeners) {
-    try { fn(event); } catch { /* drop */ }
+    try {
+      fn(event);
+    } catch {
+      /* drop */
+    }
   }
 }

@@ -113,7 +113,14 @@ export const useSnapshotStore = create<SnapshotState>((set, get) => ({
   },
 
   snapAfterAgent: async (projectId, label, sessionId, createdAt, changedFiles) => {
-    const snap = await get().createSnapshot(projectId, label, "post-agent", sessionId, createdAt, changedFiles);
+    const snap = await get().createSnapshot(
+      projectId,
+      label,
+      "post-agent",
+      sessionId,
+      createdAt,
+      changedFiles,
+    );
     return snap?.id;
   },
 

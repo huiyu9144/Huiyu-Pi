@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync, FastifyReply } from "fastify";
 import { execSync } from "child_process";
-import { dirname, isAbsolute, join } from "node:path";
+import { existsSync } from "node:fs";
+import { dirname, isAbsolute, join, resolve } from "node:path";
 import {
   ChecksumMismatchError,
   DirectoryNotEmptyError,
@@ -18,7 +19,6 @@ import {
   moveEntry,
   readFile,
   renameEntry,
-  verifyPathSafe,
   writeFile,
   writeFileBytes,
 } from "../file-manager.js";
@@ -186,6 +186,21 @@ function mapError(reply: FastifyReply, err: unknown): FastifyReply {
   }
   reply.log.error({ err }, "unmapped file-manager error");
   return reply.code(500).send({ error: "internal_error" });
+}
+
+/**
+ * Open the containing folder of a file in the OS file manager.
+ */
+function revealInExplorer(reply: FastifyReply, absPath: string): { ok: true } {
+  if (process.platform === "win32") {
+    const dir = dirname(absPath.replace(/\//g, "\\"));
+    execSync(`explorer.exe "${dir}"`, { timeout: 5000, windowsHide: false });
+  } else if (process.platform === "darwin") {
+    execSync(`open -R "${absPath}"`, { timeout: 5000 });
+  } else {
+    execSync(`xdg-open "${absPath}"`, { timeout: 5000 });
+  }
+  return { ok: true };
 }
 
 /**
@@ -443,9 +458,25 @@ export const fileRoutes: FastifyPluginAsync = async (fastify) => {
         const fileAbsPath = isAbsolute(normalizedPath)
           ? normalizedPath
           : join(project.path, normalizedPath);
-        const result = await readFile(fileAbsPath); // root is optional now, we don't need it for read
+        const result = await readFile(fileAbsPath);
         return result;
       } catch (err) {
+        // Fallback: if the path looked absolute (starts with /) and the
+        // project-relative lookup failed, try resolving from the workspace
+        // root. This handles cases where the AI mentions a file with a
+        // Unix-style absolute path that lives under a different project
+        // within the same workspace.
+        if (err instanceof NotFoundError) {
+          const rawPath = req.query.path;
+          if (rawPath.startsWith("/")) {
+            const workspacePath = join(config.workspacePath, rawPath.replace(/^[/\\]+/, ""));
+            try {
+              return await readFile(workspacePath);
+            } catch {
+              // fall through to the original error
+            }
+          }
+        }
         return mapError(reply, err);
       }
     },
@@ -997,19 +1028,25 @@ export const fileRoutes: FastifyPluginAsync = async (fastify) => {
       const project = await resolveProject(req.body.projectId, reply);
       if (project === undefined) return reply;
       try {
-        const revealAbsPath = isAbsolute(req.body.path)
-          ? req.body.path
-          : join(project.path, req.body.path);
-        const resolved = await verifyPathSafe(revealAbsPath, project.path);
-        if (process.platform === "win32") {
-          const dir = dirname(resolved.replace(/\//g, "\\"));
-          execSync(`explorer.exe "${dir}"`, { timeout: 5000, windowsHide: false });
-        } else if (process.platform === "darwin") {
-          execSync(`open -R "${resolved}"`, { timeout: 5000 });
+        let revealAbsPath: string;
+        if (isAbsolute(req.body.path)) {
+          revealAbsPath = req.body.path;
         } else {
-          execSync(`xdg-open "${resolved}"`, { timeout: 5000 });
+          revealAbsPath = join(project.path, req.body.path);
         }
-        return { ok: true };
+        const resolved = resolve(revealAbsPath);
+        if (resolved.includes("\0")) {
+          return reply.code(403).send({ error: "invalid_path" });
+        }
+        if (!existsSync(resolved) && req.body.path.startsWith("/")) {
+          const workspaceResolved = resolve(
+            join(config.workspacePath, req.body.path.replace(/^[/\\]+/, "")),
+          );
+          if (existsSync(workspaceResolved)) {
+            return revealInExplorer(reply, workspaceResolved);
+          }
+        }
+        return revealInExplorer(reply, resolved);
       } catch (err) {
         return mapError(reply, err);
       }

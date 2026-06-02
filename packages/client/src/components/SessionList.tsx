@@ -5,7 +5,15 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
 } from "react";
-import { AlertCircle, Check, ChevronDown, ChevronRight, Loader2, MessageCircle, X } from "lucide-react";
+import {
+  AlertCircle,
+  Check,
+  ChevronDown,
+  ChevronRight,
+  Loader2,
+  MessageCircle,
+  X,
+} from "lucide-react";
 import { EMPTY_SESSIONS, useSessionStore } from "../store/session-store";
 import { useProjectStore } from "../store/project-store";
 import { ConfirmDialog } from "./Modal";
@@ -269,7 +277,7 @@ export function SessionList({ projectId }: Props) {
           ProjectSidebar (the + button on hover). Avoids stacking
           a second action button per project. */}
       {sessions.length === 0 && (
-        <p className="ml-[42px] py-1 text-xs font-semibold italic text-[#545454] light:text-neutral-500">
+        <p className="ml-[42px] py-1 text-xs font-semibold italic text-[#616161] light:text-neutral-500">
           No sessions yet.
         </p>
       )}
@@ -456,7 +464,7 @@ function SessionRow(props: SessionRowProps) {
           ? "border-blue-400 bg-blue-500/15 font-semibold text-neutral-100 hover:bg-blue-500/25"
           : isActive
             ? "border-transparent bg-neutral-800 font-semibold text-neutral-100"
-            : "border-transparent font-semibold text-[#545454] light:text-neutral-500 hover:bg-neutral-900 hover:text-neutral-100"
+            : "border-transparent font-semibold text-[#616161] light:text-neutral-500 hover:bg-neutral-900 hover:text-neutral-100"
       }`}
     >
       {/* Chevron column. Only parents with children get an interactive
@@ -466,7 +474,7 @@ function SessionRow(props: SessionRowProps) {
         <button
           data-chevron
           onClick={() => onToggleExpanded(s.sessionId, isExpanded)}
-          className="inline-flex h-4 w-4 shrink-0 items-center justify-center text-[#545454] light:text-neutral-500 hover:text-neutral-200"
+          className="inline-flex h-4 w-4 shrink-0 items-center justify-center text-[#616161] light:text-neutral-500 hover:text-neutral-200"
           title={`${childCount} sub-agent session${childCount === 1 ? "" : "s"}`}
           aria-label={isExpanded ? "Collapse sub-agents" : "Expand sub-agents"}
         >
@@ -521,7 +529,7 @@ function SessionRow(props: SessionRowProps) {
           ) : (
             <MessageCircle
               size={10}
-              className={`shrink-0 ${isSelected || isActive ? "text-neutral-100" : "text-[#545454]"}`}
+              className={`shrink-0 ${isSelected || isActive ? "text-neutral-100" : "text-[#616161]"}`}
             />
           )}
           {isChild && (
@@ -553,7 +561,7 @@ function SessionRow(props: SessionRowProps) {
             // visually identical from a layout standpoint.
             isArmedForDelete
               ? "inline-flex h-6 items-center rounded border border-red-500 px-1.5 text-[11px] font-medium uppercase leading-none tracking-wide text-red-300 hover:bg-red-500/10 light:border-red-600 light:text-red-700 light:hover:bg-red-100"
-              : "inline-flex h-6 w-6 items-center justify-center rounded text-[#545454] light:text-neutral-500 opacity-0 hover:text-neutral-100 group-hover:opacity-100 transition-opacity"
+              : "inline-flex h-6 w-6 items-center justify-center rounded text-[#616161] light:text-neutral-500 opacity-0 hover:text-neutral-100 group-hover:opacity-100 transition-opacity"
           }
           title={
             isArmedForDelete

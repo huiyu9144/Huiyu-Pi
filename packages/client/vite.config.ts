@@ -66,7 +66,12 @@ export default defineConfig({
         icons: [
           { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
           { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
-          { src: "/icons/icon-maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+          {
+            src: "/icons/icon-maskable-512.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "maskable",
+          },
         ],
       },
       workbox: {
@@ -128,8 +133,19 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id: string) {
-          if (id.includes("node_modules/react") || id.includes("node_modules/zustand")) return "vendor";
-          if (id.includes("node_modules/lucide-react") || id.includes("node_modules/react-markdown") || id.includes("node_modules/katex") || id.includes("node_modules/rehype-katex") || id.includes("node_modules/remark-gfm") || id.includes("node_modules/remark-math") || id.includes("node_modules/refractor") || id.includes("node_modules/prism-react-renderer")) return "ui";
+          if (id.includes("node_modules/react") || id.includes("node_modules/zustand"))
+            return "vendor";
+          if (
+            id.includes("node_modules/lucide-react") ||
+            id.includes("node_modules/react-markdown") ||
+            id.includes("node_modules/katex") ||
+            id.includes("node_modules/rehype-katex") ||
+            id.includes("node_modules/remark-gfm") ||
+            id.includes("node_modules/remark-math") ||
+            id.includes("node_modules/refractor") ||
+            id.includes("node_modules/prism-react-renderer")
+          )
+            return "ui";
           if (id.includes("node_modules/react-diff-view")) return "diff";
           if (id.includes("node_modules/@xterm")) return "terminal";
           if (id.includes("node_modules/codemirror")) return "codemirror";

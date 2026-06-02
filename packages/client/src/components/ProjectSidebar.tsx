@@ -165,7 +165,7 @@ export function ProjectSidebar({ className = "" }: ProjectSidebarProps = {}) {
     >
       <div className="custom-scrollbar flex-1 overflow-y-auto pt-1">
         {projects.length === 0 && (
-          <p className="px-3 py-4 text-sm font-semibold text-[#545454] light:text-neutral-500">
+          <p className="px-3 py-4 text-sm font-semibold text-[#616161] light:text-neutral-500">
             No projects yet.
           </p>
         )}
@@ -198,7 +198,7 @@ export function ProjectSidebar({ className = "" }: ProjectSidebarProps = {}) {
                     ? "ring-1 ring-cyan-500/70"
                     : isActive
                       ? "text-neutral-100"
-                      : "text-[#545454] light:text-neutral-500"
+                      : "text-[#616161] light:text-neutral-500"
                 }`}
                 draggable={renamingId !== p.id}
                 onDragStart={(e) => {
@@ -233,7 +233,7 @@ export function ProjectSidebar({ className = "" }: ProjectSidebarProps = {}) {
                       setRenamingId(p.id);
                       setRenameValue(p.name);
                     }}
-                    className="flex min-w-0 flex-1 items-center gap-1.5 text-left text-xs font-semibold text-[#545454] light:text-neutral-500 transition-colors hover:text-neutral-100"
+                    className="flex min-w-0 flex-1 items-center gap-1.5 text-left text-xs font-semibold text-[#616161] light:text-neutral-500 transition-colors hover:text-neutral-100"
                     title={`${p.name} — ${p.path}`}
                   >
                     <Folder size={12} className="shrink-0" />
@@ -244,9 +244,15 @@ export function ProjectSidebar({ className = "" }: ProjectSidebarProps = {}) {
                   onClick={() => void handleNewSession(p.id)}
                   disabled={creatingProjectId !== undefined}
                   className="inline-flex p-1 text-neutral-400 opacity-0 group-hover:opacity-100 hover:text-white light:hover:text-neutral-950 transition-opacity disabled:opacity-70 disabled:hover:text-neutral-400"
-                  title={creatingProjectId === p.id ? "Creating session…" : "New session in this project"}
+                  title={
+                    creatingProjectId === p.id ? "Creating session…" : "New session in this project"
+                  }
                 >
-                  {creatingProjectId === p.id ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
+                  {creatingProjectId === p.id ? (
+                    <Loader2 size={14} className="animate-spin text-[#738da5]" />
+                  ) : (
+                    <Plus size={14} />
+                  )}
                 </button>
                 <button
                   onClick={() => handleDelete(p.id, p.name)}

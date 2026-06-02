@@ -36,7 +36,6 @@ import { parseSubagentDetails, type SubagentResult } from "../lib/subagent-parse
 import { useUiStore } from "../store/ui-store";
 import { useSnapshotStore } from "../store/snapshot-store";
 import type { SnapshotDetail } from "../lib/api-client";
-import { api } from "../lib/api-client";
 import { ConfirmDialog } from "./Modal";
 
 /**
@@ -1021,7 +1020,9 @@ function AssistantMessageBubble({
   const stopReason = (message as { stopReason?: unknown }).stopReason;
   const errorMessage = (message as { errorMessage?: unknown }).errorMessage;
   const inlineError =
-    stopReason === "error" && typeof errorMessage === "string" && errorMessage.length > 0 &&
+    stopReason === "error" &&
+    typeof errorMessage === "string" &&
+    errorMessage.length > 0 &&
     !shouldSuppressCodexProviderError(message, errorMessage)
       ? errorMessage
       : undefined;
@@ -1130,7 +1131,13 @@ function AssistantRenderSegmentView({
 
   if (!segment.batchable && toolEntry !== undefined) {
     return (
-      <div className="space-y-2 rounded-lg bg-[#121212] border border-[#1a1a1a] py-2" style={{ backgroundColor: "var(--pi-toolcall-bg)", borderColor: "var(--pi-toolcall-border)" }}>
+      <div
+        className="space-y-2 rounded-lg bg-[#121212] border border-[#1a1a1a] py-2"
+        style={{
+          backgroundColor: "var(--pi-toolcall-bg)",
+          borderColor: "var(--pi-toolcall-border)",
+        }}
+      >
         {segment.entries.map((entry, index) =>
           entry.kind === "thinking" ? (
             <AssistantBlock key={`thinking-${index}`} block={entry.block} flat />
@@ -1352,7 +1359,10 @@ function ToolCallBatchCard({ entries }: { entries: ToolBatchEntry[] }) {
     })
     .slice(0, 3);
   return (
-    <details className="group rounded-lg bg-[#121212] border border-[#1a1a1a] text-xs" style={{ backgroundColor: "var(--pi-toolcall-bg)", borderColor: "var(--pi-toolcall-border)" }}>
+    <details
+      className="group rounded-lg bg-[#121212] border border-[#1a1a1a] text-xs"
+      style={{ backgroundColor: "var(--pi-toolcall-bg)", borderColor: "var(--pi-toolcall-border)" }}
+    >
       <summary className="flex cursor-pointer flex-col gap-2 pl-4 pr-3 py-2 text-neutral-300 sm:flex-row sm:items-center sm:justify-between">
         <span className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
           <ChevronRight
@@ -2322,7 +2332,9 @@ function RestoreSnapshotButton({ msgIndex, sessionId }: { msgIndex: number; sess
           <div className="overflow-hidden rounded-lg border border-neutral-700/60 bg-neutral-900/95 shadow-xl backdrop-blur-sm light:border-neutral-300 light:bg-white/95 light:shadow-lg">
             <div className="flex items-center gap-2 border-b border-neutral-700/30 px-3 py-2.5 light:border-neutral-200">
               <History size={12} className="text-neutral-400 light:text-neutral-500" />
-              <span className="text-xs font-medium text-neutral-200 light:text-neutral-800">Session Restore Preview</span>
+              <span className="text-xs font-medium text-neutral-200 light:text-neutral-800">
+                Session Restore Preview
+              </span>
             </div>
             {loading ? (
               <div className="flex items-center justify-center gap-2 px-3 py-8 text-xs text-neutral-500">
@@ -2337,19 +2349,22 @@ function RestoreSnapshotButton({ msgIndex, sessionId }: { msgIndex: number; sess
                       Snapshot is empty
                     </div>
                   ) : (
-                    Object.keys(delta.files).sort().slice(0, 50).map((path) => (
-                      <div
-                        key={path}
-                        className="flex items-center gap-2.5 px-3 py-2 transition-colors hover:bg-neutral-800/60 light:hover:bg-neutral-50"
-                      >
-                        <span
-                          className="min-w-0 flex-1 truncate font-mono text-[11px] text-neutral-300 light:text-neutral-700"
-                          title={path}
+                    Object.keys(delta.files)
+                      .sort()
+                      .slice(0, 50)
+                      .map((path) => (
+                        <div
+                          key={path}
+                          className="flex items-center gap-2.5 px-3 py-2 transition-colors hover:bg-neutral-800/60 light:hover:bg-neutral-50"
                         >
-                          {path}
-                        </span>
-                      </div>
-                    ))
+                          <span
+                            className="min-w-0 flex-1 truncate font-mono text-[11px] text-neutral-300 light:text-neutral-700"
+                            title={path}
+                          >
+                            {path}
+                          </span>
+                        </div>
+                      ))
                   )}
                   {Object.keys(delta.files).length > 50 && (
                     <div className="border-t border-neutral-700/30 px-3 py-1.5 text-[10px] text-neutral-500 light:border-neutral-200 light:text-neutral-400">

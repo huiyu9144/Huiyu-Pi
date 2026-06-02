@@ -54,7 +54,7 @@ const FILE_REF_PREFIX = "forge-preview:";
 const FILE_PATH_RE = /📄\s+(?:[^\s:：]*(?:：|:)\s*)?((?:[A-Za-z]:[\\/]|\/)[^\s`<>]+\.\w+)/g;
 
 const BARE_PATH_RE =
-  /((?:[A-Za-z]:[\\/]|[~/])[^\s`<>|"]+?\.(?:html?|mdx?|md|markdown|mdown|htm|txt|json|ya?ml|toml|xml|csv|tsv|log|css|scss|less|jsx?|tsx?|vue|svelte|py|java|go|rs|rb|php|cs|swift|kt|c|cpp|cc|h|sh|bash|zsh|ps1|bat|cmd|sql|gradle|cmake|mk|dockerfile|svg|graphql|proto))\b/g;
+  /((?:[A-Za-z]:[\\/]|~)[^\s`<>|"]+?\.(?:html?|mdx?|md|markdown|mdown|htm|txt|json|ya?ml|toml|xml|csv|tsv|log|css|scss|less|jsx?|tsx?|vue|svelte|py|java|go|rs|rb|php|cs|swift|kt|c|cpp|cc|h|sh|bash|zsh|ps1|bat|cmd|sql|gradle|cmake|mk|dockerfile|svg|graphql|proto))\b/g;
 
 function normalizePath(p: string): string {
   return p.replace(/\\/g, "/");

@@ -25,9 +25,13 @@ import {
 } from "lucide-react";
 import { api, ApiError, type ProvidersListing } from "../lib/api-client";
 import { useIsMobile } from "../lib/use-is-mobile";
-import { EMPTY_MESSAGES, useSessionStore, getSessionAbortSignal, type AgentMessageLike } from "../store/session-store";
+import {
+  EMPTY_MESSAGES,
+  useSessionStore,
+  getSessionAbortSignal,
+  type AgentMessageLike,
+} from "../store/session-store";
 import { useActiveProject } from "../store/project-store";
-import { useSnapshotStore } from "../store/snapshot-store";
 import { useUiConfigStore } from "../store/ui-config-store";
 import { useUiStore } from "../store/ui-store";
 import { useComposerStore } from "../store/composer-store";
@@ -1289,7 +1293,9 @@ export function ChatInput({ sessionId }: Props) {
             });
           }
         })
-        .catch(() => {});
+        .catch(() => {
+          /* intentionally empty */
+        });
     }
     if (stored !== "") {
       const [provider, ...rest] = stored.split(":");
@@ -1651,6 +1657,20 @@ export function ChatInput({ sessionId }: Props) {
     // with no working escape. The slash-palette and @-completion
     // popover Enter paths above are unaffected — they still pick the
     // highlighted suggestion regardless of viewport.
+    if (e.key === "Enter" && e.altKey) {
+      e.preventDefault();
+      const ta = textareaRef.current;
+      if (ta) {
+        const start = ta.selectionStart;
+        const end = ta.selectionEnd;
+        const next = text.slice(0, start) + "\n" + text.slice(end);
+        setText(next);
+        requestAnimationFrame(() => {
+          ta.selectionStart = ta.selectionEnd = start + 1;
+        });
+      }
+      return;
+    }
     if (e.key === "Enter" && !e.shiftKey && !isMobile) {
       e.preventDefault();
       void submit();
@@ -1895,7 +1915,10 @@ export function ChatInput({ sessionId }: Props) {
   }, [text, isMobile]);
 
   return (
-    <div className="bg-neutral-950 overflow-y-hidden px-6" style={{ scrollbarGutter: "stable" }}>
+    <div
+      className="bg-neutral-950 overflow-y-hidden px-6"
+      style={{ scrollbarGutter: "stable", scrollbarWidth: "thin" }}
+    >
       {/*
         Drag handle that lives where the composer's top border used to
         be. Plain visual: a 1-px hairline matching the rest of the
@@ -2030,7 +2053,7 @@ export function ChatInput({ sessionId }: Props) {
                   ? { height: `${textareaHeight}px` }
                   : undefined
             }
-            className={`block w-full resize-none rounded-md border-[0.5px] border-neutral-800 bg-neutral-900 px-3 py-2 pr-12 pb-10 text-sm text-neutral-100 outline-none ${"min-h-11 md:min-h-0 "}${
+            className={`block w-full resize-none rounded-md border-[0.5px] border-neutral-800 bg-neutral-900 px-3 py-2 pr-12 pb-10 text-sm text-neutral-100 outline-none chat-input-scrollbar ${"min-h-11 md:min-h-0 "}${
               bangMode === "local"
                 ? "border-amber-500 focus:border-amber-400"
                 : bangMode === "context"
@@ -2574,9 +2597,7 @@ function ModelPicker({
                 {value === "" && <span className="text-emerald-400">●</span>}
               </button>
               {providers === undefined ? (
-                <p className="px-3 py-2 text-xs italic text-neutral-500">
-                  Loading models…
-                </p>
+                <p className="px-3 py-2 text-xs italic text-neutral-500">Loading models…</p>
               ) : filtered.length === 0 ? (
                 <p className="px-3 py-2 text-xs italic text-neutral-500">
                   No models match. Add an API key in Settings → Providers.

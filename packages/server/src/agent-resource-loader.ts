@@ -48,7 +48,7 @@
  * ("never print env vars") — the latter generalizes badly and gets argued
  * away by smart-enough sessions.
  */
-import { dirname, join } from "node:path";
+import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   DefaultResourceLoader,

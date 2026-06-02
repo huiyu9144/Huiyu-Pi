@@ -187,7 +187,7 @@ export function TurnDiffPanel() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          const absPath = `${project.path}/${entry.file.replaceAll("\\", "/")}`;
+                          const absPath = entry.file.replaceAll("\\", "/");
                           void openFile(project.id, absPath).then(() => openEditorPane());
                         }}
                         className="rounded p-0.5 text-neutral-500 hover:bg-neutral-800 hover:text-neutral-200"

@@ -312,20 +312,21 @@ export async function createSnapshot(
   const warnings: string[] = [];
   const allFiles = flattenTree(tree).filter((f) => f.type === "file");
 
-  const changedSet = changedFiles !== undefined && changedFiles.length > 0
-    ? new Set(
-        changedFiles.map((p) => {
-          if (isAbsolute(p)) {
-            try {
-              return relative(projectPath, p).replaceAll("\\", "/");
-            } catch {
-              return p;
+  const changedSet =
+    changedFiles !== undefined && changedFiles.length > 0
+      ? new Set(
+          changedFiles.map((p) => {
+            if (isAbsolute(p)) {
+              try {
+                return relative(projectPath, p).replaceAll("\\", "/");
+              } catch {
+                return p;
+              }
             }
-          }
-          return p;
-        }),
-      )
-    : null;
+            return p;
+          }),
+        )
+      : null;
 
   // Phase 1: stat all files in parallel, collect metadata
   interface FileMeta {
@@ -363,9 +364,18 @@ export async function createSnapshot(
       if (changedSet.has(file.path)) {
         const absPath = resolve(projectPath, file.path);
         let fileStat;
-        try { fileStat = await stat(absPath); } catch { continue; }
+        try {
+          fileStat = await stat(absPath);
+        } catch {
+          continue;
+        }
         if (fileStat.size > SKIP_FILE_BYTES) {
-          manifest.files[file.path] = { hash: "", size: fileStat.size, encoding: "binary", skipped: true };
+          manifest.files[file.path] = {
+            hash: "",
+            size: fileStat.size,
+            encoding: "binary",
+            skipped: true,
+          };
           warnings.push(`跳过大文件: ${file.path} (${(fileStat.size / 1024 / 1024).toFixed(1)}MB)`);
           continue;
         }

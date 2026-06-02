@@ -1554,11 +1554,11 @@ function safeParseJson(text: string): { ok: true; value: unknown } | { ok: false
  */
 const MAX_CONCURRENT = 3;
 let activeCount = 0;
-const pendingQueue: Array<{
+const pendingQueue: {
   resolve: () => void;
   reject: (err: unknown) => void;
   signal?: AbortSignal;
-}> = [];
+}[] = [];
 
 function acquireSlot(signal?: AbortSignal): Promise<void> {
   if (activeCount < MAX_CONCURRENT) {
@@ -1809,7 +1809,11 @@ export const api = {
       body: { projectId },
     }),
   getSession: (id: string, signal?: AbortSignal) =>
-    request(`/api/v1/sessions/${encodeURIComponent(id)}`, vSessionSummary, signal !== undefined ? { signal } : {}),
+    request(
+      `/api/v1/sessions/${encodeURIComponent(id)}`,
+      vSessionSummary,
+      signal !== undefined ? { signal } : {},
+    ),
   getMessages: (id: string) =>
     request(`/api/v1/sessions/${encodeURIComponent(id)}/messages`, (v, s) => {
       if (!isObject(v) || !Array.isArray(v.messages)) {
@@ -1872,7 +1876,11 @@ export const api = {
       body: { entryId },
     }),
   getTurnDiff: (id: string, signal?: AbortSignal) =>
-    request(`/api/v1/sessions/${encodeURIComponent(id)}/turn-diff`, vTurnDiff, signal !== undefined ? { signal } : {}),
+    request(
+      `/api/v1/sessions/${encodeURIComponent(id)}/turn-diff`,
+      vTurnDiff,
+      signal !== undefined ? { signal } : {},
+    ),
 
   // ---------------- prompt + control ----------------
   prompt: (
@@ -2009,7 +2017,9 @@ export const api = {
       return data;
     });
   },
-  clearProvidersCache: () => { providersCache = null; },
+  clearProvidersCache: () => {
+    providersCache = null;
+  },
   getSettings: () => request("/api/v1/config/settings", vSettings),
   updateSettings: (patch: Record<string, unknown>) =>
     request("/api/v1/config/settings", vSettings, { method: "PUT", body: patch }),
@@ -2120,11 +2130,19 @@ export const api = {
 
   // ---------------- todo ----------------
   listTodos: (sessionId: string, signal?: AbortSignal) =>
-    request(`/api/v1/sessions/${encodeURIComponent(sessionId)}/todos`, vTodoList, signal !== undefined ? { signal } : {}),
+    request(
+      `/api/v1/sessions/${encodeURIComponent(sessionId)}/todos`,
+      vTodoList,
+      signal !== undefined ? { signal } : {},
+    ),
 
   // ---------------- processes ----------------
   listProcesses: (sessionId: string, signal?: AbortSignal) =>
-    request(`/api/v1/sessions/${encodeURIComponent(sessionId)}/processes`, vProcessesList, signal !== undefined ? { signal } : {}),
+    request(
+      `/api/v1/sessions/${encodeURIComponent(sessionId)}/processes`,
+      vProcessesList,
+      signal !== undefined ? { signal } : {},
+    ),
   getProcessOutput: (sessionId: string, processId: string, tail?: number) => {
     const qs = tail !== undefined ? `?tail=${tail}` : "";
     return request(
@@ -2204,7 +2222,11 @@ export const api = {
    */
   orchestrationConfig: () => request("/api/v1/orchestration/config", vOrchestrationConfig),
   getSessionLink: (sessionId: string, signal?: AbortSignal) =>
-    request(`/api/v1/orchestration/sessions/${encodeURIComponent(sessionId)}`, vSessionLink, signal !== undefined ? { signal } : {}),
+    request(
+      `/api/v1/orchestration/sessions/${encodeURIComponent(sessionId)}`,
+      vSessionLink,
+      signal !== undefined ? { signal } : {},
+    ),
   enableSupervisor: (sessionId: string) =>
     request(
       `/api/v1/orchestration/sessions/${encodeURIComponent(sessionId)}/enable`,
@@ -2222,7 +2244,11 @@ export const api = {
       signal !== undefined ? { signal } : {},
     ),
   listSupervisorInbox: (sessionId: string, signal?: AbortSignal) =>
-    request(`/api/v1/orchestration/sessions/${encodeURIComponent(sessionId)}/inbox`, vInboxList, signal !== undefined ? { signal } : {}),
+    request(
+      `/api/v1/orchestration/sessions/${encodeURIComponent(sessionId)}/inbox`,
+      vInboxList,
+      signal !== undefined ? { signal } : {},
+    ),
   clearSupervisorInbox: (sessionId: string) =>
     request(`/api/v1/orchestration/sessions/${encodeURIComponent(sessionId)}/inbox/clear`, vVoid, {
       method: "POST",
@@ -3052,7 +3078,13 @@ export const api = {
       },
       {
         method: "POST",
-        body: { label: label ?? "Manual snapshot", trigger: trigger ?? "manual", sessionId, createdAt, changedFiles },
+        body: {
+          label: label ?? "Manual snapshot",
+          trigger: trigger ?? "manual",
+          sessionId,
+          createdAt,
+          changedFiles,
+        },
       },
     ),
   listSnapshots: (projectId: string) =>

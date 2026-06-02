@@ -225,7 +225,9 @@ function connectGlobalEvents(): void {
         scheduleListRefetch(event.projectId);
       }
     },
-    onClose: () => { globalEventsController = undefined; },
+    onClose: () => {
+      globalEventsController = undefined;
+    },
   });
 }
 
@@ -737,7 +739,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       return { activeSessionId: sessionId, unacknowledgedEnds: ue };
     });
     if (sessionId !== undefined && sessionId !== prev) {
-      Promise.resolve().then(() => {
+      void Promise.resolve().then(() => {
         if (get().activeSessionId !== sessionId) return;
         get().openStream(sessionId);
       });
@@ -1039,8 +1041,7 @@ function applyEvent(
     // timestamp. This becomes post-agent.createdAt so the snapshot's
     // createdAt reflects "agent finished" rather than the delayed moment
     // createSnapshot happens to finish running on disk.
-    const agentEndTime =
-      typeof event.agentEndTime === "string" ? event.agentEndTime : undefined;
+    const agentEndTime = typeof event.agentEndTime === "string" ? event.agentEndTime : undefined;
     // Cancel the pending RAF — the post-end refetch supersedes any
     // unflushed deltas.
     const raf = pendingRaf.get(sessionId);
@@ -1140,7 +1141,13 @@ function applyEvent(
           const files = get().changedFilesBySession[sessionId];
           void useSnapshotStore
             .getState()
-            .snapAfterAgent(projectId, label, sessionId, agentEndTime, files?.length ? files : undefined);
+            .snapAfterAgent(
+              projectId,
+              label,
+              sessionId,
+              agentEndTime,
+              files?.length ? files : undefined,
+            );
         }
       })
       .catch(() => {

@@ -494,7 +494,9 @@ export const promptRoutes: FastifyPluginAsync = async (fastify) => {
         // this, a subsequent SSE reconnect (page refresh) reads the
         // stale flag from snapshot and the client shows "Thinking..."
         // despite the agent having already finished.
-        live.session.abort().catch(() => {});
+        live.session.abort().catch(() => {
+          /* intentionally empty */
+        });
         for (const client of live.clients) {
           try {
             client.send({

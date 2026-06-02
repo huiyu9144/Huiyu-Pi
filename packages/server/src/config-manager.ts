@@ -396,7 +396,10 @@ export function clearProvidersListingCache(): void {
 
 export async function liveProvidersListing(): Promise<ProvidersListing> {
   const now = Date.now();
-  if (providersListingCache !== null && now - providersListingCache.ts < PROVIDERS_LISTING_CACHE_TTL) {
+  if (
+    providersListingCache !== null &&
+    now - providersListingCache.ts < PROVIDERS_LISTING_CACHE_TTL
+  ) {
     return providersListingCache.data;
   }
   const store = authStorage();

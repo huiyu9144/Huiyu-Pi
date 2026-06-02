@@ -205,13 +205,14 @@ export function ProjectPicker({ onClose, required = false }: Props) {
             }}
             className="space-y-4"
           >
-            <p className="text-xs text-neutral-400">
-              Projects will be created as subfolders here
-            </p>
+            <p className="text-xs text-neutral-400">Projects will be created as subfolders here</p>
             {workspaceRoot.length > 0 && (
               <div className="flex items-center gap-2 px-1 py-0.5 font-mono text-sm text-neutral-300">
                 <span className="text-base">📁</span>
-                <span>{workspaceRoot}{pathSep}</span>
+                <span>
+                  {workspaceRoot}
+                  {pathSep}
+                </span>
               </div>
             )}
             <label className="block space-y-1.5">

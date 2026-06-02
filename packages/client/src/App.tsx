@@ -56,7 +56,7 @@ const DEFAULT_EDITOR_WIDTH = 960;
 const DEFAULT_TERMINAL_HEIGHT = 280;
 const DEFAULT_TODO_PANEL_HEIGHT = 200;
 const MIN_EDITOR_WIDTH = 320;
-const MIN_CHAT_WIDTH = 320;
+const MIN_CHAT_WIDTH = 640;
 const MIN_TERMINAL_HEIGHT = 140;
 
 function readPersistedWidth(key: string, fallback: number): number {
@@ -263,7 +263,6 @@ export function App() {
   const isStreaming = useSessionStore((s) =>
     activeSessionId !== undefined ? (s.streamingBySession[activeSessionId] ?? false) : false,
   );
-  const loadFileTree = useFileStore((s) => s.loadTree);
   const restoreTabs = useFileStore((s) => s.restoreTabs);
   const refreshOpenFiles = useFileStore((s) => s.refreshOpenFiles);
   // After every agent turn, reconcile the open editor tabs against
