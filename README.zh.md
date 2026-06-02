@@ -22,13 +22,20 @@
 
 <p align="center">
   <b>AI 编程助手，极简到极致。</b><br>
-  ~80 tokens 系统提示 &middot; ~0.3s 首字响应 &middot; 7 个基础工具 &middot; 100% 本地部署
+  ~80 tokens 系统提示 · ~0.3s 首字响应 · 4 个基础工具 · 100% 本地部署
+</p>
+
+<p align="center" style="max-width:800px;margin:0 auto;color:#94a3b8;font-size:14px;line-height:1.7;">
+  Huiyu Pi webUI，一个本地开源的 Agent 工具，让你从零 <b style="color:#00d4aa;">搭建自己的 Harness 系统</b>。
+  基于 Pi 和 pi-forge 构建，相比传统 IDE 工具，
+  <b style="color:#00d4aa;">上下文减少到接近于 0，速度大幅提升</b>。
+  不受平台限制，从零搭建更干净。
 </p>
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/images/ScreenShot_2026-06-02_161947_814.jpg" alt="Huiyu Pi 截图" width="100%"></td>
-    <td width="50%"><img src="docs/images/demo.gif" alt="Huiyu Pi 演示" width="100%"></td>
+    <td width="50%"><img src="https://raw.githubusercontent.com/huiyu9144/Huiyu-Pi/main/docs/images/ScreenShot_2026-06-02_161947_814.jpg" alt="Huiyu Pi 截图" width="100%"></td>
+    <td width="50%"><img src="https://raw.githubusercontent.com/huiyu9144/Huiyu-Pi/main/docs/images/demo.gif" alt="Huiyu Pi 演示" width="100%"></td>
   </tr>
 </table>
 

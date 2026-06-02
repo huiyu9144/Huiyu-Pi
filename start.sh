@@ -19,7 +19,7 @@ else
 fi
 
 echo ""
-echo "[2/4] Starting server..."
+echo "[2/4] Building if needed..."
 echo ""
 
 PORT=9144
@@ -45,6 +45,7 @@ else
 fi
 
 # ===== Step 3: Kill any lingering server on port 9144 =====
+echo "[3/4] Starting server..."
 lsof -ti tcp:9144 2>/dev/null | xargs kill -9 2>/dev/null || true
 
 # ===== Step 4: Start API server in background =====
@@ -70,7 +71,7 @@ done
 
 echo ""
 echo "========================================"
-echo "  Server ready!"
+echo "  [4/4] Server ready!"
 echo "  Opening http://localhost:9144 ..."
 echo "========================================"
 echo ""
