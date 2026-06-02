@@ -31,6 +31,29 @@
 
 ---
 
+## Screenshots
+
+<table>
+  <tr>
+    <td width="50%"><img src="https://github.com/huiyu9144/Huiyu-Pi/releases/download/assets/screenshot-session.jpg" alt="Session Management"></td>
+    <td width="50%"><img src="https://github.com/huiyu9144/Huiyu-Pi/releases/download/assets/screenshot-terminal.jpg" alt="Integrated Terminal"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Session Management</b></td>
+    <td align="center"><b>Integrated Terminal</b></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="https://github.com/huiyu9144/Huiyu-Pi/releases/download/assets/screenshot-files.png" alt="File Browser + Editor"></td>
+    <td width="50%"><img src="https://github.com/huiyu9144/Huiyu-Pi/releases/download/assets/screenshot-git.jpg" alt="Git Integration"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>File Browser + Editor</b></td>
+    <td align="center"><b>Git Integration</b></td>
+  </tr>
+</table>
+
+---
+
 ## Quick Start
 
 ```bash
@@ -85,29 +108,6 @@ Responsive design works on iOS/Android. Install as a PWA for a native-like exper
 
 ### 🎨 Fully Customizable Theme
 Dark and light themes controlled by CSS variables. Create your own skin without rebuilding.
-
----
-
-## Screenshots
-
-<table>
-  <tr>
-    <td width="50%"><img src="https://github.com/huiyu9144/Huiyu-Pi/releases/download/assets/screenshot-session.jpg" alt="Session Management"></td>
-    <td width="50%"><img src="https://github.com/huiyu9144/Huiyu-Pi/releases/download/assets/screenshot-terminal.jpg" alt="Integrated Terminal"></td>
-  </tr>
-  <tr>
-    <td align="center"><b>Session Management</b></td>
-    <td align="center"><b>Integrated Terminal</b></td>
-  </tr>
-  <tr>
-    <td width="50%"><img src="https://github.com/huiyu9144/Huiyu-Pi/releases/download/assets/screenshot-files.png" alt="File Browser + Editor"></td>
-    <td width="50%"><img src="https://github.com/huiyu9144/Huiyu-Pi/releases/download/assets/screenshot-git.jpg" alt="Git Integration"></td>
-  </tr>
-  <tr>
-    <td align="center"><b>File Browser + Editor</b></td>
-    <td align="center"><b>Git Integration</b></td>
-  </tr>
-</table>
 
 ---
 

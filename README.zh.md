@@ -26,8 +26,31 @@
 </p>
 
 <p align="center">
-  <img src="https://github.com/huiyu9144/Huiyu-Pi/releases/download/assets/before-after-hd.jpg" alt="使用前后对比" width="100%">
+  <img src="https://github.com/huiyu9144/Huiyu-Pi/releases/download/assets/before-after-hd.jpg" alt="Before vs After" width="100%">
 </p>
+
+---
+
+## 界面展示
+
+<table>
+  <tr>
+    <td width="50%"><img src="https://github.com/huiyu9144/Huiyu-Pi/releases/download/assets/screenshot-session.jpg" alt="会话管理"></td>
+    <td width="50%"><img src="https://github.com/huiyu9144/Huiyu-Pi/releases/download/assets/screenshot-terminal.jpg" alt="集成终端"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>会话管理</b></td>
+    <td align="center"><b>集成终端</b></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="https://github.com/huiyu9144/Huiyu-Pi/releases/download/assets/screenshot-files.png" alt="文件浏览器 + 编辑器"></td>
+    <td width="50%"><img src="https://github.com/huiyu9144/Huiyu-Pi/releases/download/assets/screenshot-git.jpg" alt="Git 集成"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>文件浏览器 + 编辑器</b></td>
+    <td align="center"><b>Git 集成</b></td>
+  </tr>
+</table>
 
 ---
 
@@ -49,7 +72,7 @@ npx huiyu-pi
 
 Huiyu Pi 走相反的路线：去掉一切非必要的东西。7 个基础工具。干净的工作台。没有包袱。
 
-| | 传统工具 | Huiyu Pi |
+| | 传统AI coding agent工具 | Huiyu Pi |
 |---|---|---|
 | 系统提示开销 | 15K–28K tokens | **~80 tokens** |
 | 首字响应时间 | 2–10 秒 | **~0.3 秒** |
@@ -85,29 +108,6 @@ Huiyu Pi 走相反的路线：去掉一切非必要的东西。7 个基础工具
 
 ### 🎨 完全可定制主题
 通过 CSS 变量控制深色和浅色主题。无需重新构建即可创建自己的皮肤。
-
----
-
-## 界面展示
-
-<table>
-  <tr>
-    <td width="50%"><img src="https://github.com/huiyu9144/Huiyu-Pi/releases/download/assets/screenshot-session.jpg" alt="会话管理"></td>
-    <td width="50%"><img src="https://github.com/huiyu9144/Huiyu-Pi/releases/download/assets/screenshot-terminal.jpg" alt="集成终端"></td>
-  </tr>
-  <tr>
-    <td align="center"><b>会话管理</b></td>
-    <td align="center"><b>集成终端</b></td>
-  </tr>
-  <tr>
-    <td width="50%"><img src="https://github.com/huiyu9144/Huiyu-Pi/releases/download/assets/screenshot-files.png" alt="文件浏览器 + 编辑器"></td>
-    <td width="50%"><img src="https://github.com/huiyu9144/Huiyu-Pi/releases/download/assets/screenshot-git.jpg" alt="Git 集成"></td>
-  </tr>
-  <tr>
-    <td align="center"><b>文件浏览器 + 编辑器</b></td>
-    <td align="center"><b>Git 集成</b></td>
-  </tr>
-</table>
 
 ---
 
