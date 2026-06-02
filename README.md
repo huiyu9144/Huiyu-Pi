@@ -355,6 +355,10 @@ Built on top of two open-source projects:
 - [**pi-forge**](https://github.com/Devin-Marks/pi-forge) by [Devin Marks](https://github.com/Devin-Marks) and contributors
 - [**pi**](https://github.com/earendil-works/pi) by [earendil-works](https://github.com/earendil-works) and contributors
 
+## Author
+
+Follow the author on X (Twitter): [@huiyu91444](https://x.com/huiyu91444)
+
 ## License
 
 [MIT](LICENSE) — see the upstream projects for their licenses:

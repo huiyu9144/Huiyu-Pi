@@ -344,6 +344,10 @@ html[data-theme="light"] {
 - [**pi-forge**](https://github.com/Devin-Marks/pi-forge) 由 [Devin Marks](https://github.com/Devin-Marks) 和贡献者们开发
 - [**pi**](https://github.com/earendil-works/pi) 由 [earendil-works](https://github.com/earendil-works) 和贡献者们开发
 
+## 作者
+
+关注作者的 X (Twitter)：[@huiyu91444](https://x.com/huiyu91444)
+
 ## 许可证
 
 [MIT](LICENSE) — 上游项目的许可证：
