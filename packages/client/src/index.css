@@ -1,9 +1,13 @@
 @import "tailwindcss";
 
 @theme {
+  --font-sans:
+    ui-sans-serif, system-ui, "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC",
+    "Source Han Sans SC", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   --font-mono:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Noto Sans Mono CJK SC",
-    "Source Han Mono SC", "DengXian", "Liberation Mono", "Courier New", monospace;
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC",
+    "Liberation Mono", "Courier New", monospace;
 }
 
 /* Custom Tailwind variant: `light:` applies when the active theme is
@@ -145,8 +149,8 @@
   --diff-background-color: transparent;
   --diff-text-color: #e5e5e5;
   --diff-font-family:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Noto Sans Mono CJK SC",
-    "Source Han Mono SC", "DengXian", "Liberation Mono", monospace;
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", "Liberation Mono", monospace;
   --diff-selection-background-color: #525252;
   --diff-gutter-insert-background-color: #14532d;
   --diff-gutter-insert-text-color: #86efac;
