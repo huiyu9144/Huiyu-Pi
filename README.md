@@ -190,17 +190,22 @@ npm run start        # start production server on port 9144
 
 ### Option E: Docker (recommended for production)
 
+**Pull from registry** (no clone needed):
 ```bash
-# 1. Clone the repo
+docker run -d \
+  --name huiyu-pi \
+  -p 9144:9144 \
+  -v ~/.pi/agent:/home/pi/.pi/agent \
+  -v ~/.huiyu-pi:/home/pi/.huiyu-pi \
+  -v $(pwd)/workspace:/workspace \
+  ghcr.io/huiyu9144/huiyu-pi:latest
+```
+
+**Or build locally** (for customization):
+```bash
 git clone https://github.com/huiyu9144/Huiyu-Pi.git
-cd Huiyu-Pi
-
-# 2. Configure environment
-cp docker/.env.example docker/.env
-# Edit docker/.env to set UI_PASSWORD or API_KEY for auth
-
-# 3. Build and start
-cd docker
+cd Huiyu-Pi/docker
+cp .env.example .env
 docker compose up -d --build
 ```
 

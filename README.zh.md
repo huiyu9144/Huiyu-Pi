@@ -179,17 +179,22 @@ huiyu-pi --host 0.0.0.0        # CLI 参数
 
 ### Docker 部署（推荐生产环境使用）
 
+**从镜像仓库拉取**（无需克隆）：
 ```bash
-# 1. 克隆仓库
+docker run -d \
+  --name huiyu-pi \
+  -p 9144:9144 \
+  -v ~/.pi/agent:/home/pi/.pi/agent \
+  -v ~/.huiyu-pi:/home/pi/.huiyu-pi \
+  -v $(pwd)/workspace:/workspace \
+  ghcr.io/huiyu9144/huiyu-pi:latest
+```
+
+**或本地构建**（适合自定义）：
+```bash
 git clone https://github.com/huiyu9144/Huiyu-Pi.git
-cd Huiyu-Pi
-
-# 2. 配置环境变量
-cp docker/.env.example docker/.env
-# 编辑 docker/.env，设置 UI_PASSWORD 或 API_KEY
-
-# 3. 构建并启动
-cd docker
+cd Huiyu-Pi/docker
+cp .env.example .env
 docker compose up -d --build
 ```
 
