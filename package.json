@@ -1,6 +1,6 @@
 {
   "name": "huiyu-pi",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "private": true,
   "type": "module",
   "description": "Self-hosted browser workbench for the pi coding agent — a webui frontend for pi and the coding agent ecosystem",
