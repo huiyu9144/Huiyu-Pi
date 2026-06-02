@@ -921,11 +921,11 @@ export function App() {
         )}
       </div>
 
-      <div className="fixed bottom-0 left-0 z-50 w-64 border-r-[0.5px] border-t border-neutral-800 bg-neutral-900 px-2 pb-2 pt-1.5">
+      <div className="fixed bottom-0 left-0 z-50 w-64 border-r-[0.5px] border-t border-neutral-800 bg-neutral-900 px-2 pb-2 pt-1.5 coffee-panel">
         <div className="flex flex-col" onMouseEnter={onCoffeeEnter} onMouseLeave={onCoffeeLeave}>
           {coffeeHover && (
             <div className="mb-1" onMouseEnter={onCoffeeEnter} onMouseLeave={onCoffeeLeave}>
-              <div className="rounded-lg border border-neutral-700 bg-neutral-900 p-2.5">
+              <div className="rounded-lg border border-neutral-700 bg-neutral-900 p-2.5 coffee-popup">
                 <div className="mb-2.5 flex items-center justify-center gap-2.5">
                   <span
                     className={`cursor-pointer text-xs transition-colors ${
@@ -997,7 +997,7 @@ export function App() {
             </div>
           )}
           <span
-            className="inline-flex items-center gap-1.5 rounded-md border border-neutral-700 px-2.5 py-1.5 text-xs text-neutral-400"
+            className="inline-flex items-center gap-1.5 rounded-md border border-neutral-700 px-2.5 py-1.5 text-xs text-neutral-400 coffee-box"
             title="Buy me a coffee, cheers🍻"
           >
             <Coffee size={13} />

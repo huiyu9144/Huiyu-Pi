@@ -734,24 +734,24 @@ header.border-b {
 }
 
 [data-theme="light"] .custom-scrollbar:hover {
-  scrollbar-color: var(--color-neutral-700) #e0e0e0;
+  scrollbar-color: var(--color-neutral-700) #D4D4D4;
 }
 [data-theme="light"] .custom-scrollbar::-webkit-scrollbar-track {
-  background: #e0e0e0;
+  background: #D4D4D4;
 }
 [data-theme="light"] .custom-scrollbar::-webkit-scrollbar-thumb {
   background: var(--color-neutral-700);
   border-radius: 3px;
 }
 [data-theme="light"] .custom-scrollbar::-webkit-scrollbar-button {
-  background: #e0e0e0;
-  color: #e0e0e0;
+  background: #D4D4D4;
+  color: #D4D4D4;
   height: 0;
 }
 [data-theme="light"] .custom-scrollbar::-webkit-scrollbar-button:vertical:decrement,
 [data-theme="light"] .custom-scrollbar::-webkit-scrollbar-button:vertical:increment {
-  background: #e0e0e0;
-  color: #e0e0e0;
+  background: #D4D4D4;
+  color: #D4D4D4;
   -webkit-appearance: none;
 }
 
@@ -802,6 +802,20 @@ header.border-b {
   background: transparent;
   color: transparent;
   -webkit-appearance: none;
+}
+
+/* Buy me a coffee – light theme borders */
+[data-theme="light"] .coffee-panel {
+  border-color: transparent rgb(153, 153, 153) transparent transparent !important;
+}
+[data-theme="light"] .coffee-popup.border.border-neutral-700 {
+  border-color: transparent !important;
+}
+[data-theme="light"] .coffee-popup img.border.border-neutral-700 {
+  border-color: transparent !important;
+}
+[data-theme="light"] .coffee-box.border.border-neutral-700 {
+  border-color: #D4D4D4 !important;
 }
 
 /* Light-theme user message bubble */
