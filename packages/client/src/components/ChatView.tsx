@@ -1140,7 +1140,7 @@ function AssistantRenderSegmentView({
       >
         {segment.entries.map((entry, index) =>
           entry.kind === "thinking" ? (
-            <AssistantBlock key={`thinking-${index}`} block={entry.block} flat />
+            <AssistantBlock key={`thinking-${index}`} block={entry.block} />
           ) : (
             <ToolCallEntry key={`tool-${index}`} block={entry.block} result={entry.result} flat />
           ),
@@ -1399,7 +1399,7 @@ function ToolCallBatchCard({ entries }: { entries: ToolBatchEntry[] }) {
       <div className="space-y-2 border-t border-neutral-800/60 pr-3 py-2">
         {entries.map((entry, j) =>
           entry.kind === "thinking" ? (
-            <AssistantBlock key={j} block={entry.block} flat />
+            <AssistantBlock key={j} block={entry.block} />
           ) : (
             <ToolCallEntry key={j} block={entry.block} result={entry.result} flat />
           ),
@@ -1413,12 +1413,10 @@ function AssistantBlock({
   block,
   toolResultsById,
   showRaw = false,
-  flat = false,
 }: {
   block: Record<string, unknown>;
   toolResultsById?: Map<string, AgentMessageLike>;
   showRaw?: boolean;
-  flat?: boolean;
 }) {
   const type = block.type;
 

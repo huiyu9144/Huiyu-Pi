@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+@theme {
+  --font-mono:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Noto Sans Mono CJK SC",
+    "Source Han Mono SC", "DengXian", "Liberation Mono", "Courier New", monospace;
+}
+
 /* Custom Tailwind variant: `light:` applies when the active theme is
    the Light theme (data-theme="light" on <html>). The dark themes
    remap only the neutral scale via CSS vars (see the `[data-theme]`
@@ -139,7 +145,8 @@
   --diff-background-color: transparent;
   --diff-text-color: #e5e5e5;
   --diff-font-family:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Noto Sans Mono CJK SC",
+    "Source Han Mono SC", "DengXian", "Liberation Mono", monospace;
   --diff-selection-background-color: #525252;
   --diff-gutter-insert-background-color: #14532d;
   --diff-gutter-insert-text-color: #86efac;
@@ -734,24 +741,24 @@ header.border-b {
 }
 
 [data-theme="light"] .custom-scrollbar:hover {
-  scrollbar-color: var(--color-neutral-700) #D4D4D4;
+  scrollbar-color: var(--color-neutral-700) #d4d4d4;
 }
 [data-theme="light"] .custom-scrollbar::-webkit-scrollbar-track {
-  background: #D4D4D4;
+  background: #d4d4d4;
 }
 [data-theme="light"] .custom-scrollbar::-webkit-scrollbar-thumb {
   background: var(--color-neutral-700);
   border-radius: 3px;
 }
 [data-theme="light"] .custom-scrollbar::-webkit-scrollbar-button {
-  background: #D4D4D4;
-  color: #D4D4D4;
+  background: #d4d4d4;
+  color: #d4d4d4;
   height: 0;
 }
 [data-theme="light"] .custom-scrollbar::-webkit-scrollbar-button:vertical:decrement,
 [data-theme="light"] .custom-scrollbar::-webkit-scrollbar-button:vertical:increment {
-  background: #D4D4D4;
-  color: #D4D4D4;
+  background: #d4d4d4;
+  color: #d4d4d4;
   -webkit-appearance: none;
 }
 
@@ -815,7 +822,7 @@ header.border-b {
   border-color: transparent !important;
 }
 [data-theme="light"] .coffee-box.border.border-neutral-700 {
-  border-color: #D4D4D4 !important;
+  border-color: #d4d4d4 !important;
 }
 
 /* Light-theme user message bubble */

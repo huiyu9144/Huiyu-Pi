@@ -129,6 +129,7 @@ export function useGitStatus(projectId: string | undefined): {
         pollers.delete(projectId);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId]);
 
   useEffect(() => {

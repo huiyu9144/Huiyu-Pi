@@ -97,6 +97,7 @@ export function TurnDiffPanel() {
     setError(undefined);
     if (activeSessionId === undefined) return;
     void refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSessionId]);
 
   if (activeSessionId === undefined) {

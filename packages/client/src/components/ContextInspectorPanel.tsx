@@ -116,6 +116,7 @@ export function ContextInspectorPanel() {
   // fresh context data.
   useEffect(() => {
     void refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]);
 
   // Cancel any in-flight request on unmount.
