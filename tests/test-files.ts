@@ -337,14 +337,15 @@ async function main(): Promise<void> {
     // ---- path traversal (read) ----
     // readFile deliberately does not enforce root containment (local
     // single-user software — the user can read any path via terminal).
-    // A non-existent path returns 404.
+    // ../../etc/passwd resolves under the temp workspace dir and doesn't
+    // exist → 404, not 403 (which would indicate root containment).
     {
       const qs = new URLSearchParams({
         projectId,
         path: join(projectPath, "..", "..", "etc", "passwd"),
       }).toString();
       const r = await jget(`${base}/api/v1/files/read?${qs}`, auth);
-      assert("read with traversal → 404", r.status === 404);
+      assert("read with traversal → 404 (no root containment)", r.status === 404);
     }
 
     // ---- write outside project root → 403 ----
@@ -399,7 +400,10 @@ async function main(): Promise<void> {
       await symlink(outside, escapeLink);
       const qs = new URLSearchParams({ projectId, path: escapeLinkCanonical }).toString();
       const r = await jget(`${base}/api/v1/files/read?${qs}`, auth);
-      assert("read through symlink-out-of-root → 200", r.status === 200);
+      assert(
+        "read through symlink-out-of-root → 200 (fallback 1 resolves absolute path)",
+        r.status === 200,
+      );
       // Same for a write target that resolves through the escape link.
       const w = await jsend(
         "PUT",

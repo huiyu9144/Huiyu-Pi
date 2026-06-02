@@ -461,20 +461,30 @@ export const fileRoutes: FastifyPluginAsync = async (fastify) => {
         const result = await readFile(fileAbsPath);
         return result;
       } catch (err) {
-        // Fallback: if the path looked absolute (starts with /) and the
-        // project-relative lookup failed, try resolving from the workspace
-        // root. This handles cases where the AI mentions a file with a
-        // Unix-style absolute path that lives under a different project
-        // within the same workspace.
-        if (err instanceof NotFoundError) {
-          const rawPath = req.query.path;
-          if (rawPath.startsWith("/")) {
-            const workspacePath = join(config.workspacePath, rawPath.replace(/^[/\\]+/, ""));
-            try {
-              return await readFile(workspacePath);
-            } catch {
-              // fall through to the original error
-            }
+        const rawPath = req.query.path;
+        // Fallback 1: if rawPath is a fully-qualified absolute path (Unix
+        // /... or Windows C:\...), try reading it as-is. The default
+        // handling strips leading / and joins with the project root, which
+        // doubles the path on Unix when the caller passes an explicit
+        // absolute path like /tmp/foo/escape.
+        if (err instanceof NotFoundError && isAbsolute(rawPath)) {
+          try {
+            return await readFile(rawPath);
+          } catch {
+            // fall through
+          }
+        }
+        // Fallback 2: if the path looked project-relative (starts with /)
+        // and both the project-relative and filesystem-absolute lookups
+        // failed, try resolving from the workspace root. This handles
+        // cases where the AI mentions a file like /promotion-plan.md that
+        // lives under a different project within the same workspace.
+        if (err instanceof NotFoundError && rawPath.startsWith("/")) {
+          const workspaceFallback = join(config.workspacePath, rawPath.replace(/^[/\\]+/, ""));
+          try {
+            return await readFile(workspaceFallback);
+          } catch {
+            // fall through to the original error
           }
         }
         return mapError(reply, err);
