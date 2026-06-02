@@ -38,7 +38,7 @@ function splitPreview(msg: AgentMessageLike): { line1: string; line2: string } {
   return { line1: l1, line2: l2.length > 60 ? l2.slice(0, 60) + "…" : l2 };
 }
 
-const PROXIMITY_PX = 20;
+const PROXIMITY_PX = 120;
 
 export function ChatScrollbarDots({ messages, onScrollToMessage, onScrollToBottom }: Props) {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
