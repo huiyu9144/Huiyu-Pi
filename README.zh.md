@@ -181,40 +181,91 @@ huiyu-pi --host 0.0.0.0        # CLI 参数
 
 ## API 密钥配置
 
-**方式 1：通过设置界面**（推荐）
+Huiyu Pi 通过 **设置界面** 管理提供商 API 密钥，存储在 `~/.pi/agent/auth.json`（如果安装了 pi CLI 则共享配置）。密钥不会暴露给浏览器 — 服务器在内存中持有并通过代理转发所有 LLM 请求。
 
-打开 `http://localhost:9144`，进入 **设置 → 提供商**，输入你的 API 密钥。
+### 通过设置界面（推荐）
 
-**方式 2：配置文件**
+1. 打开 `http://localhost:9144`
+2. 进入 **设置 → 提供商**
+3. 选择你的提供商（Anthropic、OpenAI、DeepSeek 等）
+4. 粘贴 API 密钥并保存
+
+### 支持的提供商
+
+Anthropic Claude、OpenAI GPT/o1/o3、DeepSeek、Google Gemini、Mistral、Groq、xAI、OpenRouter，以及任何 OpenAI 兼容端点（vLLM、LiteLLM、Ollama 等）。
+
+### 自定义 OpenAI 兼容提供商
+
+对于自托管或第三方端点，在 `~/.pi/agent/models.json` 中创建配置：
 
 ```json
 {
-  "deepseek": {
-    "type": "api_key",
-    "key": "sk-your-api-key-here"
+  "custom-gateway": {
+    "protocol": "openai",
+    "url": "http://localhost:11434/v1",
+    "models": ["qwen2.5-coder-32b"]
   }
 }
 ```
 
-**方式 3：环境变量**
+然后在 **设置 → 提供商 → custom-gateway** 中添加 API 密钥。
 
-```bash
-export DEEPSEEK_API_KEY=sk-your-api-key
-```
-
-**方式 4：CLI 参数**
+### CLI 参数（适用于脚本 / CI）
 
 ```bash
 huiyu-pi --api-key @/path/to/api-key.txt
 ```
 
-**支持的提供商：** Anthropic、OpenAI、DeepSeek、Google、Mistral、Groq、xAI、OpenRouter 等 30+。
+`@` 前缀表示从文件读取密钥。适用于 CI 流水线和 Docker secrets。
+
+---
+
+## 配置
+
+所有设置可通过 CLI 参数、环境变量或配置文件控制。优先级：CLI 参数 > 环境变量 > 配置文件。
+
+### CLI 参数
+
+| 参数 | 说明 | 默认值 |
+|---|---|---|
+| `--port` | 服务器端口 | `9144` |
+| `--host` | 绑定地址 | `127.0.0.1` |
+| `--workspace-path` | 项目根目录 | `~/huiyu-pi-workspace` |
+| `--api-key` | 静态 API 密钥（支持 `@file` 语法） | — |
+| `--ui-password` | 浏览器登录密码 | — |
+| `--jwt-secret` | JWT 签名密钥（未设置时自动生成） | — |
+| `--log-level` | 日志级别：`fatal` `error` `warn` `info` `debug` `trace` | `info` |
+| `--no-expose-docs` | 隐藏浏览器中的 Swagger UI | 文档默认暴露 |
+| `--help` | 显示所有参数 | — |
+
+### 环境变量
+
+| 变量 | 说明 |
+|---|---|
+| `PORT` | 服务器端口 |
+| `HOST` | 绑定地址（`0.0.0.0` 用于局域网） |
+| `WORKSPACE_PATH` | 项目根目录 |
+| `API_KEY` | 静态 API 密钥 |
+| `UI_PASSWORD` | 浏览器登录密码 |
+| `JWT_SECRET` | JWT 签名密钥 |
+| `LOG_LEVEL` | 日志级别 |
+| `EXPOSE_DOCS` | 设为 `false` 隐藏 Swagger UI |
+| `FORGE_DATA_DIR` | 覆盖状态目录（默认 `~/.huiyu-pi/`） |
+
+### 配置文件
+
+| 文件 | 用途 |
+|---|---|
+| `~/.pi/agent/auth.json` | 提供商 API 密钥（通过设置界面管理） |
+| `~/.pi/agent/settings.json` | Agent 设置（模型、思考级别等） |
+| `~/.pi/agent/models.json` | 自定义 OpenAI 兼容提供商 |
+| `~/.huiyu-pi/mcp.json` | 全局 MCP 服务器配置 |
 
 ---
 
 ## 自定义主题
 
-主题通过 `src/globals.css` 中的 CSS 自定义属性控制：
+主题通过 `packages/client/src/index.css` 中的 CSS 自定义属性控制：
 
 ```css
 :root {
@@ -234,10 +285,10 @@ html[data-theme="light"] {
 
 | 层级 | 技术 |
 |------|------|
-| **前端** | React 19, TypeScript, Vite 6, Tailwind CSS v4, Zustand, CodeMirror 6 |
+| **前端** | React 19, TypeScript 6, Vite 8, Tailwind CSS v4, Zustand, CodeMirror 6 |
 | **后端** | Fastify 5, WebSocket, SSE, JWT |
 | **终端** | xterm.js + node-pty |
-| **基础设施** | Docker, docker-compose, Kubernetes, GitHub Actions |
+| **基础设施** | GitHub Actions CI/CD |
 
 ---
 

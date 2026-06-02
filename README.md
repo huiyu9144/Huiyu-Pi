@@ -192,7 +192,7 @@ npm run start        # start production server on port 9144
 
 ## API Key Setup
 
-Huiyu Pi manages provider API keys through the **Settings UI** and stores them in `~/.huiyu-pi/agent/auth.json`. Keys are never exposed to the browser — the server holds them in memory and proxies all LLM requests.
+Huiyu Pi manages provider API keys through the **Settings UI** and stores them in `~/.pi/agent/auth.json` (shared with the `pi` CLI if installed). Keys are never exposed to the browser — the server holds them in memory and proxies all LLM requests.
 
 ### Via Settings UI (Recommended)
 
@@ -207,7 +207,7 @@ Anthropic Claude, OpenAI GPT/o1/o3, DeepSeek, Google Gemini, Mistral, Groq, xAI,
 
 ### Custom OpenAI-compatible providers
 
-For self-hosted or third-party endpoints, create `~/.huiyu-pi/agent/models.json`:
+For self-hosted or third-party endpoints, create `~/.pi/agent/models.json`:
 
 ```json
 {
@@ -267,9 +267,9 @@ All settings can be controlled via CLI flags, environment variables, or config f
 
 | File | Purpose |
 |---|---|
-| `~/.huiyu-pi/agent/auth.json` | Provider API keys (managed via Settings UI) |
-| `~/.huiyu-pi/agent/settings.json` | Agent settings (model, thinking level, etc.) |
-| `~/.huiyu-pi/agent/models.json` | Custom OpenAI-compatible providers |
+| `~/.pi/agent/auth.json` | Provider API keys (managed via Settings UI) |
+| `~/.pi/agent/settings.json` | Agent settings (model, thinking level, etc.) |
+| `~/.pi/agent/models.json` | Custom OpenAI-compatible providers |
 | `~/.huiyu-pi/mcp.json` | Global MCP server configuration |
 
 ---
