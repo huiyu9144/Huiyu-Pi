@@ -1,4 +1,12 @@
-import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { createPortal } from "react-dom";
 import {
   AtSign,
@@ -37,6 +45,7 @@ import { useUiStore } from "../store/ui-store";
 import { useSnapshotStore } from "../store/snapshot-store";
 import type { SnapshotDetail } from "../lib/api-client";
 import { ConfirmDialog } from "./Modal";
+import { ChatScrollbarDots } from "./ChatScrollbarDots";
 
 /**
  * Per-ChatView diff view-type preference. Each diff-rendering surface
@@ -195,6 +204,15 @@ export function ChatView({ sessionId }: Props) {
     consumePendingScroll(sessionId);
   }, [pendingScrollTarget, messages.length, sessionId, consumePendingScroll]);
 
+  const handleDotScroll = useCallback((index: number) => {
+    const root = scrollRef.current;
+    if (root === null) return;
+    const node = root.querySelector(`[data-message-index="${index}"]`);
+    if (node === null) return;
+    node.scrollIntoView({ block: "center", behavior: "smooth" });
+    isFollowingBottomRef.current = false;
+  }, []);
+
   return (
     <ChatDiffViewContext.Provider
       value={{ viewType: chatViewType, setViewType: setAndPersistChatViewType }}
@@ -224,7 +242,7 @@ export function ChatView({ sessionId }: Props) {
         <div
           ref={scrollRef}
           onScroll={onScroll}
-          className="chat-scroll-container flex-1 overflow-y-auto px-6 py-4"
+          className="chat-scroll-container relative flex-1 overflow-y-auto px-6 py-4"
           style={{ scrollbarGutter: "stable" }}
         >
           {messages.length === 0 && streamingText.length === 0 && !isStreaming && (
@@ -460,6 +478,7 @@ export function ChatView({ sessionId }: Props) {
               <QuickActionRunCard key={run.runId} run={run} />
             ))}
           </div>
+          <ChatScrollbarDots messages={messages} onScrollToMessage={handleDotScroll} />
         </div>
       </div>
       {treeOpen && project !== undefined && (

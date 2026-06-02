@@ -688,6 +688,59 @@ header.border-b {
   -webkit-appearance: none;
 }
 
+/* -------- Scrollbar dots: user-message minimap markers -------- */
+.scrollbar-dots-track {
+  position: absolute;
+  top: 0;
+  right: 2px;
+  width: 12px;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+.scrollbar-dot {
+  position: absolute;
+  right: 2px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #60a5fa;
+  opacity: 0.45;
+  pointer-events: auto;
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition:
+    opacity 0.15s,
+    transform 0.15s;
+}
+.scrollbar-dot:hover,
+.scrollbar-dot-active {
+  opacity: 1;
+  transform: translateY(-50%) scale(1.4);
+}
+.scrollbar-dots-tooltip {
+  position: fixed;
+  max-width: 260px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #1e293b;
+  color: #e2e8f0;
+  font-size: 11px;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+  z-index: 50;
+  transform: translateY(-50%);
+}
+[data-theme="light"] .scrollbar-dots-tooltip {
+  background: #f1f5f9;
+  color: #334155;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
 /* -------- Custom scrollbar: for right panel, session list, etc. -------- */
 .custom-scrollbar {
   scrollbar-width: thin;
