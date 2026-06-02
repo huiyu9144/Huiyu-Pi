@@ -54,6 +54,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-06-02
+
+### 🐛 Bug Fixes
+
+- Fixed duplicate v1.4.0 entry in CHANGELOG
+
+### 📦 Docker
+
+- First automated Docker image published to ghcr.io/huiyu9144/huiyu-pi
+- README updated with `docker run` pull command
+
 ## [1.4.0] - 2026-06-02
 
 ### ✨ New Features
