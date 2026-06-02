@@ -1,24 +1,8 @@
+import { memo } from "react";
 import { useMcpStore } from "../store/mcp-store";
 import { useUiStore } from "../store/ui-store";
 
-/**
- * Compact MCP connection-status indicator for the App header. Reads
- * `settings` from `mcp-store` (single 30s ticker shared with the
- * Settings tab — see store doc-comment). Renders nothing when MCP is
- * enabled but no servers are configured, so deployments that don't
- * use MCP get a clean header.
- *
- * Click opens Settings → MCP via the same ui-store request the
- * `/mcp` slash command uses, so the badge doubles as a one-click
- * jump to the configuration surface.
- *
- * Color rules:
- *   - emerald: every configured server is connected
- *   - amber:   some connected, some not
- *   - red:     none connected (and at least one configured)
- *   - neutral: master kill-switch off
- */
-export function McpStatusBadge() {
+export const McpStatusBadge = memo(function McpStatusBadge() {
   const data = useMcpStore((s) => s.settings);
   const openSettings = useUiStore((s) => s.openSettings);
   if (data === undefined) return null;
@@ -49,4 +33,4 @@ export function McpStatusBadge() {
       {label}
     </button>
   );
-}
+});

@@ -9,6 +9,7 @@ packages/*/dist/
 
 # npm publish staging (assembled by scripts/build-publish-dir.mjs)
 publish/
+publish-tmp/
 
 # TypeScript incremental build info
 *.tsbuildinfo
@@ -93,3 +94,30 @@ pi-webui-dev-plan.md
 workspace/
 forge/
 pi-forge/
+
+# Marketing / promo materials (hosted externally, not needed in repo)
+docs/images/
+docs/promo-materials/
+docs/superpowers/
+
+# Reports & audits
+dogfood-report/
+lighthouse-reports/
+
+# Dev screenshots & traces
+screenshots/
+/*.png
+/*.jpg
+perf-trace.json
+trace.json
+meta.json
+
+# Local dev scripts (not part of the distributed app)
+start-dev.bat
+start-dev.bat.lnk
+
+# Windows shortcuts
+*.lnk
+
+# Python test scratch
+test_stream.py

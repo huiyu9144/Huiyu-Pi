@@ -161,6 +161,7 @@ export async function streamSSE<T extends { type: string }>(
       if (err instanceof ApiError && TERMINAL_STATUS.has(err.status)) {
         throw err;
       }
+      if (opts.signal?.aborted) return;
       // Anything else is transient: backoff + retry. Cap respected via
       // maxReconnects; default 0 means unlimited.
       attempt += 1;
@@ -183,6 +184,7 @@ export async function streamSSE<T extends { type: string }>(
       continue;
     }
     if (outcome === "aborted") return;
+    if (opts.signal?.aborted) return;
     // Server closed the stream cleanly. In our deployment this still
     // means "the session went away" or "the server restarted" — try to
     // reconnect rather than giving up. The next attempt will hit a 404

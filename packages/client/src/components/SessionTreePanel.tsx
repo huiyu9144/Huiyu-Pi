@@ -82,9 +82,6 @@ export function SessionTreePanel({ sessionId, projectId, onClose }: Props) {
   const loadSessionsForProject = useSessionStore((s) => s.loadSessionsForProject);
   const reloadMessages = useSessionStore((s) => s.reloadMessages);
   const setPendingDraft = useSessionStore((s) => s.setPendingDraft);
-  // Tree4 — auto-refresh once per agent_end. Same trigger pattern
-  // file tree / TurnDiffPanel / ContextInspectorPanel use.
-  const agentEndCount = useSessionStore((s) => s.agentEndCountBySession[sessionId] ?? 0);
 
   const [tree, setTree] = useState<SessionTreeResponse | undefined>(undefined);
   const [loading, setLoading] = useState(true);
@@ -113,16 +110,6 @@ export function SessionTreePanel({ sessionId, projectId, onClose }: Props) {
     void refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]);
-
-  // Tree4 — refetch when a new agent_end fires. The first mount
-  // already loaded via the effect above; this fires only on
-  // subsequent increments. agentEndCount is read reactively, so a
-  // closed panel doesn't poll — only an open one repaints.
-  useEffect(() => {
-    if (agentEndCount === 0) return;
-    void refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [agentEndCount]);
 
   const nodes = useMemo<NodeView[]>(() => {
     if (tree === undefined) return [];

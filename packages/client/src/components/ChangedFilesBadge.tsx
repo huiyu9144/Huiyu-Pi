@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { FileDiff, X } from "lucide-react";
 import { api, ApiError } from "../lib/api-client";
-import { useSessionStore } from "../store/session-store";
+import { useSessionStore, getSessionAbortSignal } from "../store/session-store";
 
 /**
  * Inline button under ChatView showing "N file(s) edited" whenever
@@ -47,21 +47,19 @@ export function ChangedFilesBadge({
 
   useEffect(() => {
     if (isStreaming) return;
-    let cancelled = false;
+    const ctrl = new AbortController();
+    const sessionSignal = getSessionAbortSignal();
+    const onSessionAbort = (): void => ctrl.abort();
+    sessionSignal.addEventListener("abort", onSessionAbort);
     api
-      .getTurnDiff(sessionId)
+      .getTurnDiff(sessionId, ctrl.signal)
       .then((r) => {
-        if (!cancelled) {
-          setCount(r.entries.length);
-          if (r.entries.length > 0) setDismissed(false);
-        }
+        if (ctrl.signal.aborted) return;
+        setCount(r.entries.length);
+        if (r.entries.length > 0) setDismissed(false);
       })
       .catch((err: unknown) => {
-        if (cancelled) return;
-        // 404 → cold session with no live turn-diff; treat as 0
-        // silently. Other errors (500, network drops) shouldn't be
-        // mistaken for "no changes" — log so a server regression
-        // doesn't silently hide the badge.
+        if (ctrl.signal.aborted) return;
         if (err instanceof ApiError && err.status === 404) {
           setCount(0);
         } else {
@@ -72,7 +70,8 @@ export function ChangedFilesBadge({
         }
       });
     return () => {
-      cancelled = true;
+      sessionSignal.removeEventListener("abort", onSessionAbort);
+      ctrl.abort();
     };
   }, [sessionId, agentEndCount, isStreaming]);
 

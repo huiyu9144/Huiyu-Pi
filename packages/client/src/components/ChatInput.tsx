@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import { api, ApiError, type ProvidersListing } from "../lib/api-client";
 import { useIsMobile } from "../lib/use-is-mobile";
-import { EMPTY_MESSAGES, useSessionStore, type AgentMessageLike } from "../store/session-store";
+import { EMPTY_MESSAGES, useSessionStore, getSessionAbortSignal, type AgentMessageLike } from "../store/session-store";
 import { useActiveProject } from "../store/project-store";
 import { useSnapshotStore } from "../store/snapshot-store";
 import { useUiConfigStore } from "../store/ui-config-store";
@@ -1220,35 +1220,41 @@ export function ChatInput({ sessionId }: Props) {
     { provider: string; modelId: string } | undefined
   >(undefined);
 
+  // Global singleton fetch — settings and providers are project-agnostic
+  // and never change at runtime (unless the user edits settings.json on
+  // disk and restarts the server).  Caching here avoids a redundant
+  // round-trip every time ChatInput re-mounts (session switch, React
+  // StrictMode double-mount, etc.) which would waste one HTTP/1.1 slot.
+  const settingsFetched = useRef(false);
   useEffect(() => {
     let cancelled = false;
-    const timer = setTimeout(() => {
+    if (!settingsFetched.current) {
+      settingsFetched.current = true;
       void api
-        .getProviders()
-        .then((p) => {
-          if (!cancelled) setProviders(p);
-        })
-        .catch((err: unknown) => {
+        .getSettings()
+        .then((s) => {
           if (cancelled) return;
-          const code = err instanceof ApiError ? err.code : (err as Error).message;
-          setModelError(`models unavailable (${code})`);
+          setDefaultModel({
+            provider: typeof s.defaultProvider === "string" ? s.defaultProvider : "",
+            modelId: typeof s.defaultModel === "string" ? s.defaultModel : "",
+          });
+        })
+        .catch(() => {
+          /* settings fetch failed */
         });
-    }, 2000);
+    }
     void api
-      .getSettings()
-      .then((s) => {
-        if (cancelled) return;
-        setDefaultModel({
-          provider: typeof s.defaultProvider === "string" ? s.defaultProvider : "",
-          modelId: typeof s.defaultModel === "string" ? s.defaultModel : "",
-        });
+      .getProviders()
+      .then((p) => {
+        if (!cancelled) setProviders(p);
       })
-      .catch(() => {
-        /* settings fetch failed */
+      .catch((err: unknown) => {
+        if (cancelled) return;
+        const code = err instanceof ApiError ? err.code : (err as Error).message;
+        setModelError(`models unavailable (${code})`);
       });
     return () => {
       cancelled = true;
-      clearTimeout(timer);
     };
   }, []);
 
@@ -1266,16 +1272,15 @@ export function ChatInput({ sessionId }: Props) {
     setThinkingError(undefined);
     setThinkingLevel(undefined);
     setActiveSessionModel(undefined);
-    // Pull the SDK-persisted thinking level + active model for this
-    // session. Same captured-id pattern as the setModel call below — a
-    // slow GET for session A that resolves after the user switched to
-    // B mustn't overwrite B's state with A's values.
+    const ctrl = new AbortController();
+    const sessionSignal = getSessionAbortSignal();
+    const onSessionAbort = (): void => ctrl.abort();
+    sessionSignal.addEventListener("abort", onSessionAbort);
     {
-      const callSessionId = sessionId;
       void api
-        .getSession(callSessionId)
+        .getSession(sessionId, ctrl.signal)
         .then((summary) => {
-          if (callSessionId !== sessionId) return;
+          if (ctrl.signal.aborted) return;
           setThinkingLevel(summary.thinkingLevel);
           if (summary.modelProvider !== undefined && summary.modelId !== undefined) {
             setActiveSessionModel({
@@ -1284,38 +1289,36 @@ export function ChatInput({ sessionId }: Props) {
             });
           }
         })
-        .catch(() => {
-          // Disk-only or transient — leave thinkingLevel undefined so
-          // the picker stays hidden until next switch / change.
-        });
+        .catch(() => {});
     }
-    if (stored === "") return;
-    const [provider, ...rest] = stored.split(":");
-    const modelId = rest.join(":");
-    if (provider === undefined || modelId.length === 0) return;
-    // Capture the sessionId at call time so a slow setModel for session
-    // A that resolves AFTER the user has switched to session B doesn't
-    // surface its error toast on B (the wrong session). Retry on
-    // session_not_found to handle the race where the server hasn't
-    // finished initializing a newly-created session yet.
-    const callSessionId = sessionId;
-    void (async () => {
-      for (let attempt = 0; attempt < 3; attempt++) {
-        try {
-          await api.setModel(callSessionId, provider, modelId);
-          return;
-        } catch (err) {
-          if (callSessionId !== sessionId) return;
-          const code = err instanceof ApiError ? err.code : (err as Error).message;
-          if (code === "session_not_found" && attempt < 2) {
-            await new Promise((r) => setTimeout(r, 500));
-            continue;
+    if (stored !== "") {
+      const [provider, ...rest] = stored.split(":");
+      const modelId = rest.join(":");
+      if (provider !== undefined && modelId.length > 0) {
+        void (async () => {
+          for (let attempt = 0; attempt < 3; attempt++) {
+            if (ctrl.signal.aborted) return;
+            try {
+              await api.setModel(sessionId, provider, modelId, ctrl.signal);
+              return;
+            } catch (err) {
+              if (ctrl.signal.aborted) return;
+              const code = err instanceof ApiError ? err.code : (err as Error).message;
+              if (code === "session_not_found" && attempt < 2) {
+                await new Promise((r) => setTimeout(r, 500));
+                continue;
+              }
+              setModelError(`set model failed: ${code}`);
+              return;
+            }
           }
-          setModelError(`set model failed: ${code}`);
-          return;
-        }
+        })();
       }
-    })();
+    }
+    return () => {
+      sessionSignal.removeEventListener("abort", onSessionAbort);
+      ctrl.abort();
+    };
   }, [sessionId]);
 
   // Consume any pending input draft set by the session-tree's
@@ -1512,12 +1515,6 @@ export function ChatInput({ sessionId }: Props) {
           clearAttachments();
           setAttachmentError("Attachments aren't sent with `!` exec. Cleared.");
         }
-        // Snapshot before bash exec so file changes can be restored later
-        if (project !== undefined) {
-          await useSnapshotStore
-            .getState()
-            .snapBeforeAgent(project.id, "! " + command.slice(0, 56), sessionId);
-        }
         await api.exec(sessionId, command, { excludeFromContext });
         // The acting tab refetches via session-store's user_bash_result
         // handler too, but we trigger one directly so it lands without
@@ -1538,20 +1535,8 @@ export function ChatInput({ sessionId }: Props) {
           clearAttachments();
           setAttachmentError("Attachments aren't sent on steer (mid-turn). Cleared.");
         }
-        // Snapshot before steer so file changes to this point can be restored
-        if (project !== undefined) {
-          await useSnapshotStore
-            .getState()
-            .snapBeforeAgent(project.id, value.slice(0, 60) || "pre-steer", sessionId);
-        }
         await sendSteer(sessionId, value);
       } else {
-        // Create snapshot BEFORE sending prompt, so it captures the true pre-agent state.
-        // Fire-and-forget (void) would race with the agent and may record post-modification files.
-        if (project !== undefined) {
-          const label = value.slice(0, 60) || "pre-message";
-          await useSnapshotStore.getState().snapBeforeAgent(project.id, label, sessionId);
-        }
         await sendPrompt(sessionId, value, attachments.length > 0 ? attachments : undefined);
       }
       setText("");
@@ -1897,16 +1882,15 @@ export function ChatInput({ sessionId }: Props) {
     }
     const ta = textareaRef.current;
     if (ta === null) return;
-    const prev = ta.style.height;
     ta.style.height = "auto";
     const measured = ta.scrollHeight;
-    ta.style.height = prev;
     const min = 44; // matches min-h-11 on attach/send buttons
     const max = Math.round(window.innerHeight * 0.3);
     const next = Math.max(min, Math.min(measured, max));
+    // Write the clamped height directly to avoid the forced reflow
+    // of restoring and re-setting through React state.
+    ta.style.height = `${next}px`;
     if (next !== autoHeight) setAutoHeight(next);
-    // Recompute when the input grows/shrinks or the viewport flips
-    // (orientation change → different 30vh).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [text, isMobile]);
 
@@ -2031,6 +2015,8 @@ export function ChatInput({ sessionId }: Props) {
               }, 0);
             }}
             placeholder="Ask Huiyu Pi ..."
+            id="chat-input"
+            name="chat-input"
             title={
               isAutoRetrying
                 ? "The agent is auto-retrying after a provider error. New messages are queued and delivered when the retry succeeds."
@@ -2302,12 +2288,6 @@ export function ChatInput({ sessionId }: Props) {
             </div>
           )}
         </div>
-        {isStreaming && (
-          <p className="text-[10px] text-neutral-600">
-            Send queues at the next agent break — Pi picks steer or follow-up. Abort: stop the agent
-            (or press Esc twice in the textbox).
-          </p>
-        )}
       </div>
     </div>
   );
@@ -2426,6 +2406,7 @@ function ModelPicker({
   const wrapperRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const [panelPos, setPanelPos] = useState<{ bottom: number; left: number } | null>(null);
 
   const filtered = useMemo(() => {
     if (query.trim().length === 0) {
@@ -2494,6 +2475,13 @@ function ModelPicker({
     if (open) {
       setQuery("");
       setActiveIdx(0);
+      const rect = wrapperRef.current?.getBoundingClientRect();
+      if (rect) {
+        setPanelPos({
+          bottom: window.innerHeight - rect.top + 4,
+          left: rect.left,
+        });
+      }
       // Focus the input after the dropdown mounts.
       requestAnimationFrame(() => inputRef.current?.focus());
     }
@@ -2538,8 +2526,8 @@ function ModelPicker({
     <div ref={wrapperRef} className="relative">
       <button
         onClick={() => setOpen((o) => !o)}
-        disabled={providers === undefined}
-        className="flex max-w-[260px] items-center gap-1 truncate rounded px-2 py-1 text-left text-[11px] text-neutral-400 disabled:opacity-50"
+        disabled={false}
+        className="flex max-w-[260px] items-center gap-1 truncate rounded px-2 py-1 text-left text-[11px] text-neutral-400 hover:text-neutral-200"
         title="Override the model for this session (click to search)"
       >
         <Bot size={12} className="shrink-0 text-neutral-500" />
@@ -2551,9 +2539,8 @@ function ModelPicker({
           <div
             className="fixed z-[9999] w-[360px] rounded border border-neutral-700 bg-neutral-950"
             style={{
-              bottom:
-                window.innerHeight - (wrapperRef.current?.getBoundingClientRect().top ?? 0) + 4,
-              left: wrapperRef.current?.getBoundingClientRect().left ?? 0,
+              bottom: panelPos?.bottom ?? 80,
+              left: panelPos?.left ?? 16,
             }}
           >
             <input
@@ -2586,7 +2573,11 @@ function ModelPicker({
                 </span>
                 {value === "" && <span className="text-emerald-400">●</span>}
               </button>
-              {filtered.length === 0 ? (
+              {providers === undefined ? (
+                <p className="px-3 py-2 text-xs italic text-neutral-500">
+                  Loading models…
+                </p>
+              ) : filtered.length === 0 ? (
                 <p className="px-3 py-2 text-xs italic text-neutral-500">
                   No models match. Add an API key in Settings → Providers.
                 </p>

@@ -6,16 +6,58 @@ import { bootTheme } from "./lib/theme";
 
 bootTheme();
 
-// Unregister any previously installed service worker to ensure fresh
-// content from every build. VitePWA has been removed — no future SW
-// will be generated, but old SW instances may still be active in the
-// browser from prior builds. Running this on every mount guarantees
-// the old SW is evicted.
-if ("serviceWorker" in navigator) {
-  void navigator.serviceWorker.getRegistrations().then((regs) => {
-    for (const reg of regs) void reg.unregister();
-  });
+/**
+ * Startup gate: ensure the environment is clean before React mounts.
+ *
+ * Quick health-check that `fetch()` actually reaches the server.
+ * If it doesn't (proxy extension / CSP mismatch / server down), we show
+ * a helpful error instead of a blank "No sessions yet" sidebar.
+ *
+ * Service worker note: production builds register a SW via vite-plugin-pwa
+ * (see vite.config.ts). We deliberately do NOT unregister it here —
+ * unregistering at boot would defeat the whole point of PWA caching.
+ * Dev mode (`npm run dev`, port 9145) has `devOptions.enabled: false` so
+ * no SW is registered there in the first place, meaning HMR is unaffected.
+ */
+async function prepareEnvironment(): Promise<void> {
+  try {
+    await fetch("/api/v1/health", { signal: AbortSignal.timeout(5000) }).then((res) => {
+      if (!res.ok) throw new Error(`health ${res.status}`);
+    });
+  } catch (err) {
+    const rootEl = document.getElementById("root");
+    if (rootEl) {
+      rootEl.innerHTML = `
+        <main style="padding:2rem;font-family:monospace;color:#fca5a5;background:#0a0a0a;min-height:100vh">
+          <h1 style="color:#fff;margin-bottom:1rem">⚠ Huiyu Pi: 连接失败</h1>
+          <p style="color:#d4d4d4;margin-bottom:1rem">无法连接到服务器 (${err instanceof Error ? err.message : err})</p>
+          <p style="margin-bottom:1rem">请尝试以下步骤：</p>
+          <ol style="color:#a3a3a3;padding-left:1.5rem;line-height:1.8">
+            <li>按 <kbd style="background:#333;padding:2px 6px;border-radius:3px">F12</kbd> 打开开发者工具 → Application → Storage → <b>Clear site data</b></li>
+            <li>禁用可能拦截请求的浏览器扩展（如图片嗅探、代理工具等）</li>
+            <li>按 <kbd style="background:#333;padding:2px 6px;border-radius:3px">Ctrl+Shift+R</kbd> 强制刷新页面</li>
+          </ol>
+          <p style="margin-top:1rem;color:#71717a;font-size:12px">
+            如果服务器未运行，请先启动：<code style="background:#333;padding:2px 6px">npm run start</code>
+          </p>
+        </main>`;
+    }
+    throw err;
+  }
 }
+
+void prepareEnvironment().then(() => {
+  const rootEl = document.getElementById("root");
+  if (!rootEl) throw new Error("#root element missing in index.html");
+
+  createRoot(rootEl).render(
+    <StrictMode>
+      <RootErrorBoundary>
+        <App />
+      </RootErrorBoundary>
+    </StrictMode>,
+  );
+});
 
 /**
  * Dev-time error boundary that renders the error visibly on the page when
@@ -74,16 +116,3 @@ window.addEventListener("error", (e) => {
 window.addEventListener("unhandledrejection", (e) => {
   console.error("[huiyu-pi] unhandled rejection", e.reason);
 });
-
-const rootEl = document.getElementById("root");
-if (!rootEl) {
-  throw new Error("#root element missing in index.html");
-}
-
-createRoot(rootEl).render(
-  <StrictMode>
-    <RootErrorBoundary>
-      <App />
-    </RootErrorBoundary>
-  </StrictMode>,
-);

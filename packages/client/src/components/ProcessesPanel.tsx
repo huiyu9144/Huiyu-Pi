@@ -21,6 +21,7 @@ import {
   type ProcessInfo,
   type ProcessStatus,
 } from "../store/processes-store";
+import { getSessionAbortSignal } from "../store/session-store";
 
 /**
  * Right-pane "Processes" tab. Lists processes for the active
@@ -47,22 +48,26 @@ export function ProcessesPanel({ sessionId }: Props) {
   const [busyClear, setBusyClear] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
+    const ctrl = new AbortController();
+    const sessionSignal = getSessionAbortSignal();
+    const onSessionAbort = (): void => ctrl.abort();
+    sessionSignal.addEventListener("abort", onSessionAbort);
     void api
-      .listProcesses(sessionId)
+      .listProcesses(sessionId, ctrl.signal)
       .then((res) => {
-        if (cancelled) return;
+        if (ctrl.signal.aborted) return;
         const cur = useProcessesStore.getState().bySession[sessionId];
         if (cur === undefined || cur.length === 0) {
           setProcesses(sessionId, res.processes);
         }
       })
       .catch((err: unknown) => {
-        if (cancelled) return;
+        if (ctrl.signal.aborted) return;
         setError(err instanceof ApiError ? err.code : (err as Error).message);
       });
     return () => {
-      cancelled = true;
+      sessionSignal.removeEventListener("abort", onSessionAbort);
+      ctrl.abort();
     };
   }, [sessionId, setProcesses]);
 

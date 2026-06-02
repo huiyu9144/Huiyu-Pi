@@ -1535,6 +1535,68 @@ function safeParseJson(text: string): { ok: true; value: unknown } | { ok: false
   }
 }
 
+/**
+ * Concurrency limiter for HTTP/1.1 browsers.
+ *
+ * Chrome/Firefox enforce a per-domain connection pool of ~6 sockets
+ * (HTTP/1.1).  Our page fires 15+ fetch() calls on mount
+ * (sessions × N projects, settings, turn-diff, tree, status, …)
+ * plus 1-3 long-lived SSE streams that never release their slot.
+ * Without a limiter the excess requests queue inside the browser's
+ * network stack and appear as "pending" indefinitely in DevTools.
+ *
+ * This gate caps *active* `fetch()` calls to MAX_CONCURRENT so the
+ * browser always has free slots for new requests.  Waiting callers
+ * are resolved in FIFO order as slots open up.
+ *
+ * SSE streams are NOT gated — they use raw fetch in sse-client.ts
+ * and must hold their connection for the session lifetime.
+ */
+const MAX_CONCURRENT = 3;
+let activeCount = 0;
+const pendingQueue: Array<{
+  resolve: () => void;
+  reject: (err: unknown) => void;
+  signal?: AbortSignal;
+}> = [];
+
+function acquireSlot(signal?: AbortSignal): Promise<void> {
+  if (activeCount < MAX_CONCURRENT) {
+    activeCount++;
+    return Promise.resolve();
+  }
+
+  let onAbort: (() => void) | undefined;
+  const slot = new Promise<void>((resolve, reject) => {
+    const entry: (typeof pendingQueue)[number] = { resolve, reject };
+    if (signal !== undefined) {
+      entry.signal = signal;
+      onAbort = (): void => {
+        const idx = pendingQueue.indexOf(entry);
+        if (idx !== -1) {
+          pendingQueue.splice(idx, 1);
+          reject(new DOMException("Aborted", "AbortError"));
+        }
+      };
+      signal.addEventListener("abort", onAbort, { once: true });
+    }
+    pendingQueue.push(entry);
+  });
+
+  return slot.finally(() => {
+    if (onAbort && signal) signal.removeEventListener("abort", onAbort);
+  });
+}
+
+function releaseSlot(): void {
+  activeCount--;
+  const next = pendingQueue.shift();
+  if (next !== undefined) {
+    activeCount++;
+    next.resolve();
+  }
+}
+
 async function request<T>(
   path: string,
   validator: Validator<T>,
@@ -1558,49 +1620,55 @@ async function request<T>(
   }
   if (opts.signal !== undefined) init.signal = opts.signal;
 
+  await acquireSlot(opts.signal);
   let res: Response;
   try {
     res = await fetch(path, init);
   } catch (err) {
+    releaseSlot();
     if (err instanceof Error && err.name === "AbortError") throw err;
     throw new ApiError(0, "network_error", (err as Error).message);
   }
 
-  if (res.status === 401 && !opts.skipAuth) {
-    clearStoredToken();
-    window.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
-  }
-
-  const text = await res.text();
-  const parsed = safeParseJson(text);
-
-  if (!res.ok) {
-    // Distinguish three failure shapes so consumers branching on
-    // err.code can tell them apart:
-    //   - server returned a typed error envelope ({ error, message? }):
-    //     pass through the error code verbatim
-    //   - server returned a 4xx/5xx with valid JSON but no `error` field:
-    //     synthesize `request_failed`
-    //   - server returned a 4xx/5xx with non-JSON body (HTML error page,
-    //     proxy intercept, network HTML): `invalid_error_body` so it's
-    //     distinct from the 2xx-non-JSON case below
-    let code: string;
-    if (parsed.ok && isObject(parsed.value) && "error" in parsed.value) {
-      code = String((parsed.value as { error: unknown }).error);
-    } else if (parsed.ok) {
-      code = "request_failed";
-    } else {
-      code = "invalid_error_body";
+  try {
+    if (res.status === 401 && !opts.skipAuth) {
+      clearStoredToken();
+      window.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
     }
-    throw new ApiError(res.status, code, parsed.ok ? undefined : `non-JSON ${res.status} body`);
-  }
 
-  if (!parsed.ok) {
-    throw new ApiError(res.status, "invalid_response_body", "server returned non-JSON 2xx body");
-  }
+    const text = await res.text();
+    const parsed = safeParseJson(text);
 
-  return validator(parsed.value, res.status);
+    if (!res.ok) {
+      let code: string;
+      if (parsed.ok && isObject(parsed.value) && "error" in parsed.value) {
+        code = String((parsed.value as { error: unknown }).error);
+      } else if (parsed.ok) {
+        code = "request_failed";
+      } else {
+        code = "invalid_error_body";
+      }
+      throw new ApiError(res.status, code, parsed.ok ? undefined : `non-JSON ${res.status} body`);
+    }
+
+    if (!parsed.ok) {
+      throw new ApiError(res.status, "invalid_response_body", "server returned non-JSON 2xx body");
+    }
+
+    return validator(parsed.value, res.status);
+  } finally {
+    releaseSlot();
+  }
 }
+
+// Providers listing is expensive (server-side file locks + ModelRegistry rebuild)
+// and the data is practically static. Cache it with a 60-second TTL.
+interface CacheEntry {
+  data: ProvidersListing;
+  ts: number;
+}
+let providersCache: CacheEntry | null = null;
+const PROVIDERS_CACHE_TTL = 60_000;
 
 export const api = {
   authStatus: () => request("/api/v1/auth/status", vAuthStatus, { skipAuth: true }),
@@ -1740,8 +1808,8 @@ export const api = {
       method: "POST",
       body: { projectId },
     }),
-  getSession: (id: string) =>
-    request(`/api/v1/sessions/${encodeURIComponent(id)}`, vSessionSummary),
+  getSession: (id: string, signal?: AbortSignal) =>
+    request(`/api/v1/sessions/${encodeURIComponent(id)}`, vSessionSummary, signal !== undefined ? { signal } : {}),
   getMessages: (id: string) =>
     request(`/api/v1/sessions/${encodeURIComponent(id)}/messages`, (v, s) => {
       if (!isObject(v) || !Array.isArray(v.messages)) {
@@ -1803,8 +1871,8 @@ export const api = {
       method: "POST",
       body: { entryId },
     }),
-  getTurnDiff: (id: string) =>
-    request(`/api/v1/sessions/${encodeURIComponent(id)}/turn-diff`, vTurnDiff),
+  getTurnDiff: (id: string, signal?: AbortSignal) =>
+    request(`/api/v1/sessions/${encodeURIComponent(id)}/turn-diff`, vTurnDiff, signal !== undefined ? { signal } : {}),
 
   // ---------------- prompt + control ----------------
   prompt: (
@@ -1900,7 +1968,7 @@ export const api = {
         body: { command, excludeFromContext: opts?.excludeFromContext === true },
       },
     ),
-  setModel: (id: string, provider: string, modelId: string) =>
+  setModel: (id: string, provider: string, modelId: string, signal?: AbortSignal) =>
     request(
       `/api/v1/sessions/${encodeURIComponent(id)}/model`,
       (v, s) => {
@@ -1909,7 +1977,7 @@ export const api = {
         }
         return { provider: v.provider, modelId: v.modelId };
       },
-      { method: "POST", body: { provider, modelId } },
+      { method: "POST", body: { provider, modelId }, ...(signal !== undefined ? { signal } : {}) },
     ),
   // Per-session thinking-level override. Server clamps to the active
   // model's supported levels and returns the effective value — callers
@@ -1931,7 +1999,17 @@ export const api = {
   getModelsJson: () => request("/api/v1/config/models", vModelsJson),
   setModelsJson: (data: { providers: Record<string, unknown> }) =>
     request("/api/v1/config/models", vModelsJson, { method: "PUT", body: data }),
-  getProviders: () => request("/api/v1/config/providers", vProvidersListing),
+  getProviders: () => {
+    const now = Date.now();
+    if (providersCache !== null && now - providersCache.ts < PROVIDERS_CACHE_TTL) {
+      return Promise.resolve(providersCache.data);
+    }
+    return request("/api/v1/config/providers", vProvidersListing).then((data) => {
+      providersCache = { data, ts: Date.now() };
+      return data;
+    });
+  },
+  clearProvidersCache: () => { providersCache = null; },
   getSettings: () => request("/api/v1/config/settings", vSettings),
   updateSettings: (patch: Record<string, unknown>) =>
     request("/api/v1/config/settings", vSettings, { method: "PUT", body: patch }),
@@ -2041,12 +2119,12 @@ export const api = {
     }),
 
   // ---------------- todo ----------------
-  listTodos: (sessionId: string) =>
-    request(`/api/v1/sessions/${encodeURIComponent(sessionId)}/todos`, vTodoList),
+  listTodos: (sessionId: string, signal?: AbortSignal) =>
+    request(`/api/v1/sessions/${encodeURIComponent(sessionId)}/todos`, vTodoList, signal !== undefined ? { signal } : {}),
 
   // ---------------- processes ----------------
-  listProcesses: (sessionId: string) =>
-    request(`/api/v1/sessions/${encodeURIComponent(sessionId)}/processes`, vProcessesList),
+  listProcesses: (sessionId: string, signal?: AbortSignal) =>
+    request(`/api/v1/sessions/${encodeURIComponent(sessionId)}/processes`, vProcessesList, signal !== undefined ? { signal } : {}),
   getProcessOutput: (sessionId: string, processId: string, tail?: number) => {
     const qs = tail !== undefined ? `?tail=${tail}` : "";
     return request(
@@ -2125,8 +2203,8 @@ export const api = {
    * since this is purely env-derived.
    */
   orchestrationConfig: () => request("/api/v1/orchestration/config", vOrchestrationConfig),
-  getSessionLink: (sessionId: string) =>
-    request(`/api/v1/orchestration/sessions/${encodeURIComponent(sessionId)}`, vSessionLink),
+  getSessionLink: (sessionId: string, signal?: AbortSignal) =>
+    request(`/api/v1/orchestration/sessions/${encodeURIComponent(sessionId)}`, vSessionLink, signal !== undefined ? { signal } : {}),
   enableSupervisor: (sessionId: string) =>
     request(
       `/api/v1/orchestration/sessions/${encodeURIComponent(sessionId)}/enable`,
@@ -2137,13 +2215,14 @@ export const api = {
     request(`/api/v1/orchestration/sessions/${encodeURIComponent(sessionId)}/disable`, vVoid, {
       method: "POST",
     }),
-  listSupervisorWorkers: (sessionId: string) =>
+  listSupervisorWorkers: (sessionId: string, signal?: AbortSignal) =>
     request(
       `/api/v1/orchestration/sessions/${encodeURIComponent(sessionId)}/workers`,
       vWorkerSummaryList,
+      signal !== undefined ? { signal } : {},
     ),
-  listSupervisorInbox: (sessionId: string) =>
-    request(`/api/v1/orchestration/sessions/${encodeURIComponent(sessionId)}/inbox`, vInboxList),
+  listSupervisorInbox: (sessionId: string, signal?: AbortSignal) =>
+    request(`/api/v1/orchestration/sessions/${encodeURIComponent(sessionId)}/inbox`, vInboxList, signal !== undefined ? { signal } : {}),
   clearSupervisorInbox: (sessionId: string) =>
     request(`/api/v1/orchestration/sessions/${encodeURIComponent(sessionId)}/inbox/clear`, vVoid, {
       method: "POST",
@@ -2957,6 +3036,8 @@ export const api = {
     label?: string,
     trigger?: "manual" | "pre-agent" | "post-agent",
     sessionId?: string,
+    createdAt?: string,
+    changedFiles?: string[],
   ) =>
     request(
       `/api/v1/projects/${encodeURIComponent(projectId)}/snapshots`,
@@ -2971,7 +3052,7 @@ export const api = {
       },
       {
         method: "POST",
-        body: { label: label ?? "手动快照", trigger: trigger ?? "manual", sessionId },
+        body: { label: label ?? "手动快照", trigger: trigger ?? "manual", sessionId, createdAt, changedFiles },
       },
     ),
   listSnapshots: (projectId: string) =>

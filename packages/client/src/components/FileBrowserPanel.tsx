@@ -105,10 +105,14 @@ export function FileBrowserPanel() {
   // hook ordering stays stable across renders (rules-of-hooks).
   const [selectedPaths, setSelectedPaths] = useState<Set<string>>(new Set());
 
+  // Load the file tree when this panel mounts or the active
+  // project changes. No auto-refresh on agent_end — the user
+  // clicks the refresh button (or re-opens the tab) when they
+  // want to see updated files.
   useEffect(() => {
-    if (project !== undefined) void loadTree(project.id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [project?.id, loadTree]);
+    if (project === undefined) return;
+    void loadTree(project.id);
+  }, [project?.id]);
 
   if (project === undefined) {
     return (

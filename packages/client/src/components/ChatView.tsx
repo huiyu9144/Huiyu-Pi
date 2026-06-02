@@ -35,6 +35,7 @@ import { useQuickActionRunsStore } from "../store/quick-actions-store";
 import { parseSubagentDetails, type SubagentResult } from "../lib/subagent-parser";
 import { useUiStore } from "../store/ui-store";
 import { useSnapshotStore } from "../store/snapshot-store";
+import type { SnapshotDetail } from "../lib/api-client";
 import { api } from "../lib/api-client";
 import { ConfirmDialog } from "./Modal";
 
@@ -99,8 +100,6 @@ export function ChatView({ sessionId }: Props) {
   const banner = useSessionStore((s) => s.bannerBySession[sessionId]);
   const clearBanner = useSessionStore((s) => s.clearBanner);
   const queued = useSessionStore((s) => s.queuedBySession[sessionId]);
-  const openStream = useSessionStore((s) => s.openStream);
-  const closeStream = useSessionStore((s) => s.closeStream);
   // Pending scroll target set by the global search bar when the user
   // clicks a result. Read as a primitive so the effect below only
   // re-fires when the target index actually changes (selecting the
@@ -133,15 +132,6 @@ export function ChatView({ sessionId }: Props) {
   const project = useActiveProject();
   const treeOpen = useUiStore((s) => s.treeModalOpen);
   const setTreeOpen = useUiStore((s) => s.setTreeModalOpen);
-
-  // Open SSE on mount, close on unmount/session change. The store ensures
-  // openStream is idempotent for the same id.
-  useEffect(() => {
-    openStream(sessionId);
-    return () => {
-      closeStream(sessionId);
-    };
-  }, [sessionId, openStream, closeStream]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   // "Sticky bottom" scroll: track the user's INTENT in a ref via the
@@ -601,8 +591,9 @@ function ChatEditDiff({
   return (
     <details
       className={`group rounded ${flat ? "bg-[#121212]" : "border border-neutral-800 bg-neutral-950"} text-xs`}
+      style={{ backgroundColor: "var(--pi-toolcall-bg)", borderColor: "var(--pi-toolcall-border)" }}
     >
-      <summary className="flex cursor-pointer items-center justify-between gap-2 pl-4 pr-3 py-2 text-neutral-300">
+      <summary className="flex cursor-pointer items-center gap-2 pl-4 pr-3 py-2 text-neutral-300">
         <span className="flex min-w-0 items-center gap-1">
           <ChevronRight size={10} className="shrink-0 transition-transform group-open:rotate-90" />
           <span className="flex items-baseline gap-2">
@@ -612,16 +603,13 @@ function ChatEditDiff({
             <span className="ml-1 text-red-400 light:text-red-700">−{dels}</span>
           </span>
         </span>
+      </summary>
+      <div className="flex items-center justify-end gap-2 px-4 pb-1">
         <button
-          onClick={(e) => {
-            // The summary's default click toggles the <details>; stop
-            // propagation so flipping the view doesn't also collapse
-            // the diff the user just opened.
-            e.preventDefault();
-            e.stopPropagation();
+          onClick={() => {
             setViewType(viewType === "split" ? "unified" : "split");
           }}
-          className="rounded p-0.5 text-neutral-400"
+          className="rounded p-0.5 text-neutral-400 hover:text-neutral-200"
           title={
             viewType === "split"
               ? "Switch chat diffs to unified view"
@@ -630,7 +618,7 @@ function ChatEditDiff({
         >
           {viewType === "split" ? <Rows2 size={11} /> : <Columns2 size={11} />}
         </button>
-      </summary>
+      </div>
       {flat ? (
         <pre className="select-text overflow-auto pl-4 pr-3 pb-2 font-mono text-[11px] leading-tight">
           {diff.split("\n").map((line, i) => {
@@ -978,30 +966,7 @@ function Message({
 function TurnDiffFooter({ sessionId }: { sessionId: string }) {
   const agentEndCount = useSessionStore((s) => s.agentEndCountBySession[sessionId] ?? 0);
   const isStreaming = useSessionStore((s) => s.streamingBySession[sessionId] ?? false);
-  const [entries, setEntries] = useState<{ file: string; additions: number; deletions: number }[]>(
-    [],
-  );
-
-  useEffect(() => {
-    if (isStreaming) return;
-    let cancelled = false;
-    api
-      .getTurnDiff(sessionId)
-      .then((r) => {
-        if (!cancelled) setEntries(r.entries);
-      })
-      .catch(() => {
-        if (!cancelled) setEntries([]);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [sessionId, agentEndCount, isStreaming]);
-
-  if (entries.length === 0) return null;
-
-  const totalAdd = entries.reduce((s, e) => s + e.additions, 0);
-  const totalDel = entries.reduce((s, e) => s + e.deletions, 0);
+  if (isStreaming || agentEndCount === 0) return null;
 
   return (
     <button
@@ -1013,10 +978,7 @@ function TurnDiffFooter({ sessionId }: { sessionId: string }) {
       title="Open changes tab to review"
     >
       <FileDiff size={11} />
-      <span>{entries.length === 1 ? "1 file edited" : `${entries.length} files edited`}</span>
-      <span className="text-neutral-600">·</span>
-      <span className="text-emerald-500">+{totalAdd}</span>
-      <span className="text-red-500">-{totalDel}</span>
+      <span>View changes</span>
     </button>
   );
 }
@@ -1156,7 +1118,7 @@ function AssistantRenderSegmentView({
 
   if (!segment.batchable && toolEntry !== undefined) {
     return (
-      <div className="space-y-2 rounded-lg bg-[#121212] border border-[#1a1a1a] py-2">
+      <div className="space-y-2 rounded-lg bg-[#121212] border border-[#1a1a1a] py-2" style={{ backgroundColor: "var(--pi-toolcall-bg)", borderColor: "var(--pi-toolcall-border)" }}>
         {segment.entries.map((entry, index) =>
           entry.kind === "thinking" ? (
             <AssistantBlock key={`thinking-${index}`} block={entry.block} flat />
@@ -1378,7 +1340,7 @@ function ToolCallBatchCard({ entries }: { entries: ToolBatchEntry[] }) {
     })
     .slice(0, 3);
   return (
-    <details className="group rounded-lg bg-[#121212] border border-[#1a1a1a] text-xs">
+    <details className="group rounded-lg bg-[#121212] border border-[#1a1a1a] text-xs" style={{ backgroundColor: "var(--pi-toolcall-bg)", borderColor: "var(--pi-toolcall-border)" }}>
       <summary className="flex cursor-pointer flex-col gap-2 pl-4 pr-3 py-2 text-neutral-300 sm:flex-row sm:items-center sm:justify-between">
         <span className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
           <ChevronRight
@@ -2228,7 +2190,7 @@ function isObjectShape(v: unknown): v is Record<string, unknown> {
 function RestoreSnapshotButton({ msgIndex, sessionId }: { msgIndex: number; sessionId: string }) {
   const project = useActiveProject();
   const loadSnapshots = useSnapshotStore((s) => s.loadSnapshots);
-  const getSessionDelta = useSnapshotStore((s) => s.getSessionDelta);
+  const getSnapshotDetail = useSnapshotStore((s) => s.getSnapshotDetail);
   const restoreSessionDiff = useSnapshotStore((s) => s.restoreSessionDiff);
   const restoring = useSnapshotStore((s) => s.restoring);
   const messages = useSessionStore((s) => s.messagesBySession[sessionId] ?? EMPTY_MESSAGES);
@@ -2236,7 +2198,7 @@ function RestoreSnapshotButton({ msgIndex, sessionId }: { msgIndex: number; sess
 
   const [open, setOpen] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [delta, setDelta] = useState<import("../lib/api-client").SessionDelta | null>(null);
+  const [delta, setDelta] = useState<SnapshotDetail | null>(null);
   const [loading, setLoading] = useState(false);
   const [pos, setPos] = useState({ top: 0, left: 0 });
   const btnRef = useRef<HTMLButtonElement>(null);
@@ -2248,15 +2210,7 @@ function RestoreSnapshotButton({ msgIndex, sessionId }: { msgIndex: number; sess
 
   const loadDelta = async () => {
     try {
-      // Always ensure sessions + snapshots are loaded
       await Promise.all([loadSessionsForProject(project.id), loadSnapshots(project.id)]);
-
-      // Re-read from store after refresh
-      const allRefreshed = useSnapshotStore
-        .getState()
-        .snapshots.filter((s) => s.trigger === "pre-agent" && s.projectId === project.id)
-        .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
-      const sessionSnapshots = allRefreshed.filter((s) => s.sessionId === sessionId);
 
       const clickedMsg = messages[msgIndex];
       const clickedTimestamp =
@@ -2266,24 +2220,28 @@ function RestoreSnapshotButton({ msgIndex, sessionId }: { msgIndex: number; sess
         return;
       }
 
-      // Find the snapshot created just before this message was sent,
-      // matching the same sessionId and the closest timestamp < message time.
+      const allRefreshed = useSnapshotStore
+        .getState()
+        .snapshots.filter((s) => s.projectId === project.id)
+        .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+
       let matchedId: string | undefined;
-      for (let i = sessionSnapshots.length - 1; i >= 0; i--) {
-        const snapMs = new Date(sessionSnapshots[i]!.createdAt).getTime();
-        if (snapMs < clickedTimestamp) {
-          matchedId = sessionSnapshots[i]!.id;
+      for (let i = allRefreshed.length - 1; i >= 0; i--) {
+        const s = allRefreshed[i]!;
+        if (s.sessionId === sessionId && new Date(s.createdAt).getTime() < clickedTimestamp) {
+          matchedId = s.id;
           break;
         }
       }
+
       if (matchedId === undefined) {
         setLoading(false);
         return;
       }
 
       targetRef.current = matchedId;
-      const d = await getSessionDelta(project.id, matchedId);
-      setDelta(d ?? null);
+      const snap = await getSnapshotDetail(project.id, matchedId);
+      setDelta(snap ?? null);
     } catch (err) {
       console.error("[RestoreSnapshotButton] loadDelta failed:", err);
     } finally {
@@ -2340,83 +2298,65 @@ function RestoreSnapshotButton({ msgIndex, sessionId }: { msgIndex: number; sess
     await restoreSessionDiff(project.id, targetRef.current, project.path);
   };
 
-  const badge = (s: string) => {
-    const map: Record<string, { cls: string; label: string }> = {
-      added: { cls: "bg-emerald-900/50 text-emerald-400 border-emerald-800/60", label: "Add" },
-      modified: { cls: "bg-amber-900/40 text-amber-400 border-amber-800/60", label: "Mod" },
-      deleted: { cls: "bg-red-900/40 text-red-400 border-red-800/60", label: "Del" },
-    };
-    const m = map[s] ?? { cls: "bg-neutral-800 text-neutral-400 border-neutral-700", label: s };
-    return (
-      <span
-        className={`inline-block shrink-0 rounded border px-1.5 py-px text-[9px] font-medium leading-tight ${m.cls}`}
-      >
-        {m.label}
-      </span>
-    );
-  };
-
   const popup = open
     ? createPortal(
         <div
-          className="fixed z-[100]"
+          className="fixed z-[9999]"
           style={{ top: pos.top, left: pos.left, width: 320 }}
           onMouseEnter={cancelClose}
           onMouseLeave={scheduleClose}
         >
           <div className="mb-px h-1" />
-          <div className="overflow-hidden rounded-lg border border-neutral-800 bg-neutral-900 shadow-xl">
-            <div className="px-3 py-2">
-              <span className="text-xs font-medium text-neutral-200">Session Restore Preview</span>
+          <div className="overflow-hidden rounded-lg border border-neutral-700/60 bg-neutral-900/95 shadow-xl backdrop-blur-sm light:border-neutral-300 light:bg-white/95 light:shadow-lg">
+            <div className="flex items-center gap-2 border-b border-neutral-700/30 px-3 py-2.5 light:border-neutral-200">
+              <History size={12} className="text-neutral-400 light:text-neutral-500" />
+              <span className="text-xs font-medium text-neutral-200 light:text-neutral-800">Session Restore Preview</span>
             </div>
             {loading ? (
-              <div className="flex items-center justify-center gap-2 px-3 py-6 text-xs text-neutral-500">
-                <span className="inline-block h-3 w-3 animate-spin rounded-full border border-neutral-600 border-t-neutral-400" />
-                Computing diff...
+              <div className="flex items-center justify-center gap-2 px-3 py-8 text-xs text-neutral-500">
+                <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-neutral-600 border-t-neutral-300 light:border-neutral-400 light:border-t-neutral-600" />
               </div>
             ) : delta !== null ? (
               <>
-                <div className="max-h-64 overflow-y-auto custom-scrollbar">
-                  {delta.entries.length === 0 ? (
-                    <div className="px-3 py-4 text-center text-xs text-neutral-500">
-                      No session changes to restore
+                <div className="max-h-64 overflow-y-auto overscroll-contain custom-scrollbar">
+                  {Object.keys(delta.files).length === 0 ? (
+                    <div className="px-3 py-5 text-center text-xs text-neutral-500 light:text-neutral-400">
+                      <div className="mb-1 text-lg">📭</div>
+                      Snapshot is empty
                     </div>
                   ) : (
-                    delta.entries.slice(0, 50).map((e) => (
+                    Object.keys(delta.files).sort().slice(0, 50).map((path) => (
                       <div
-                        key={e.path}
-                        className="flex items-center gap-2 px-3 py-1.5 hover:bg-neutral-800/60"
+                        key={path}
+                        className="flex items-center gap-2.5 px-3 py-2 transition-colors hover:bg-neutral-800/60 light:hover:bg-neutral-50"
                       >
-                        {badge(e.status)}
                         <span
-                          className="min-w-0 flex-1 truncate font-mono text-[11px] text-neutral-300"
-                          title={e.path}
+                          className="min-w-0 flex-1 truncate font-mono text-[11px] text-neutral-300 light:text-neutral-700"
+                          title={path}
                         >
-                          {e.path}
+                          {path}
                         </span>
                       </div>
                     ))
                   )}
-                  {delta.entries.length > 50 && (
-                    <div className="px-3 py-1.5 text-[10px] text-neutral-500">
-                      +{delta.entries.length - 50} more
+                  {Object.keys(delta.files).length > 50 && (
+                    <div className="border-t border-neutral-700/30 px-3 py-1.5 text-[10px] text-neutral-500 light:border-neutral-200 light:text-neutral-400">
+                      +{Object.keys(delta.files).length - 50} more files
                     </div>
                   )}
                 </div>
-                <div className="flex items-center gap-3 px-3 py-2 text-[10px] text-neutral-400">
+                <div className="flex items-center gap-3 border-t border-neutral-700/30 bg-neutral-800/30 px-3 py-2 text-[10px] text-neutral-400 light:border-neutral-200 light:bg-neutral-50 light:text-neutral-500">
                   <span>
-                    Add <span className="text-emerald-400">{delta.summary.added}</span>
-                  </span>
-                  <span>
-                    Mod <span className="text-amber-400">{delta.summary.modified}</span>
-                  </span>
-                  <span>
-                    Del <span className="text-red-400">{delta.summary.deleted}</span>
+                    Files{" "}
+                    <span className="font-medium text-neutral-300 light:text-neutral-700">
+                      {Object.keys(delta.files).length}
+                    </span>
                   </span>
                 </div>
               </>
             ) : (
-              <div className="px-3 py-4 text-center text-xs text-neutral-500">
+              <div className="px-3 py-5 text-center text-xs text-neutral-500 light:text-neutral-400">
+                <div className="mb-1 text-lg">✅</div>
                 No changes detected
               </div>
             )}
@@ -2456,7 +2396,7 @@ function RestoreSnapshotButton({ msgIndex, sessionId }: { msgIndex: number; sess
         title="Confirm Session Restore"
         message={
           delta !== null
-            ? `Restore this session's changes after this message.\n\n${delta.entries.length} files will change:\n· ${delta.summary.added} added\n· ${delta.summary.modified} modified\n· ${delta.summary.deleted} deleted\n\nOther sessions' changes will be preserved.\nCurrent state will be auto-saved as a backup.`
+            ? `Restore this session's changes after this message.\n\n${Object.keys(delta.files).length} files in snapshot.\n\nCurrent state will be auto-saved as a backup.`
             : "Restore this session's changes after this message.\n\nCurrent state will be auto-saved as a backup."
         }
         primaryLabel="Restore"

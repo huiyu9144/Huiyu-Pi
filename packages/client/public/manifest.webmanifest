@@ -1,7 +1,7 @@
 {
   "name": "Huiyu Pi",
   "short_name": "Huiyu Pi",
-  "description": "Self-hosted browser workbench for the pi coding agent — a webui frontend for pi, pi-forge, and the coding agent ecosystem. Chat with AI, browse files, run a terminal, review diffs, all from one tab.",
+  "description": "Self-hosted browser workbench for the pi coding agent — a webui frontend for pi and the coding agent ecosystem. Chat with AI, browse files, run a terminal, review diffs, all from one tab.",
   "theme_color": "#0a0a0a",
   "background_color": "#0a0a0a",
   "display": "standalone",

@@ -2,9 +2,9 @@
  * Huiyu Pi-customized ResourceLoader for the agent.
  *
  * **Custom system prompt.** Replaces the SDK's verbose default system prompt
- * (which includes ~150 tokens of pi SDK documentation instructions) with a
- * streamlined version that keeps the identity, tools list, and guidelines but
- * drops the pi-docs section — irrelevant for Huiyu Pi users. The SDK's
+ * with a streamlined version that keeps only the identity statement and
+ * behavioral guidelines. Tool descriptions are omitted because they duplicate
+ * the function-calling schemas the SDK already sends to the LLM. The SDK's
  * `buildSystemPrompt` still appends project context files, skills, date/cwd,
  * and the appendSystemPrompt section automatically.
  *
@@ -62,7 +62,6 @@ import { getProjectSystemPromptAddendum } from "./system-prompt-overrides.js";
 import { compactionContinuationExtension } from "./agent-extensions/compaction-continuation.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const PI_DOCS_SKILL_PATH = join(__dirname, "skills", "pi-docs", "SKILL.md");
 
 /**
  * Plain string (not a backtick template) so what's stored is exactly
@@ -100,7 +99,7 @@ export const FORGE_SECRET_HYGIENE_RULE =
  *
  * The SDK's `buildSystemPrompt` still appends after this:
  *   - appendSystemPrompt (secret hygiene + project addendum)
- *   - Project context files (CLAUDE.md / AGENTS.md)
+ *   - Project context files (AGENTS.md / CLAUDE.md, if present in cwd)
  *   - Skills section
  *   - Current date + working directory
  */
@@ -109,31 +108,14 @@ export const FORGE_SYSTEM_PROMPT =
   "harness. You help users by reading files, executing commands, editing " +
   "code, and writing new files." +
   "\n\n" +
-  "Available tools:" +
-  "\n" +
-  "- read: Read file contents" +
-  "\n" +
-  "- bash: Execute bash commands (ls, grep, find, etc.)" +
-  "\n" +
-  "- edit: Make precise file edits with exact text replacement, including " +
-  "multiple disjoint edits in one call" +
-  "\n" +
-  "- write: Create or overwrite files" +
-  "\n" +
-  "- grep: Search file contents for patterns (respects .gitignore)" +
-  "\n" +
-  "- find: Find files by glob pattern (respects .gitignore)" +
-  "\n" +
-  "- ls: List directory contents" +
-  "\n\n" +
-  "In addition to the tools above, you may have access to other custom " +
+  "In addition to the built-in tools, you may have access to other custom " +
   "tools depending on the project." +
   "\n\n" +
   "Guidelines:" +
   "\n" +
-  "- Be concise in your responses" +
+  "- Fast do what was asked. No extra steps." +
   "\n" +
-  "- Show file paths clearly when working with files" +
+  "- Mention file paths in your response." +
   "\n" +
   "- Use read to examine files instead of cat or sed." +
   "\n" +
@@ -185,7 +167,7 @@ export async function buildForgeResourceLoader(
     settingsManager,
     systemPrompt: FORGE_SYSTEM_PROMPT,
     appendSystemPrompt,
-    additionalSkillPaths: [PI_DOCS_SKILL_PATH],
+    additionalSkillPaths: [],
     // In-process pi extensions Huiyu Pi always registers. The
     // `compactionContinuationExtension` hooks the `context` event and
     // appends a one-line imperative nudge to LLM input when the last

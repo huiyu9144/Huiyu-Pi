@@ -39,7 +39,6 @@ export function useInstallPrompt() {
     if (dismissed) return;
 
     const onBeforeInstall = (e: Event): void => {
-      e.preventDefault();
       setDeferred(e as BeforeInstallPromptEvent);
     };
     window.addEventListener("beforeinstallprompt", onBeforeInstall);

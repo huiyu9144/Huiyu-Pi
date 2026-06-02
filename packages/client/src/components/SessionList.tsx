@@ -5,7 +5,7 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
 } from "react";
-import { AlertCircle, ChevronDown, ChevronRight, Loader2, MessageCircle, X } from "lucide-react";
+import { AlertCircle, Check, ChevronDown, ChevronRight, Loader2, MessageCircle, X } from "lucide-react";
 import { EMPTY_SESSIONS, useSessionStore } from "../store/session-store";
 import { useProjectStore } from "../store/project-store";
 import { ConfirmDialog } from "./Modal";
@@ -29,6 +29,8 @@ export function SessionList({ projectId }: Props) {
   const activeSessionId = useSessionStore((s) => s.activeSessionId);
   const streamingBySession = useSessionStore((s) => s.streamingBySession);
   const bannerBySession = useSessionStore((s) => s.bannerBySession);
+  const unacknowledgedEnds = useSessionStore((s) => s.unacknowledgedEnds);
+  const acknowledgeEnd = useSessionStore((s) => s.acknowledgeEnd);
   const loadSessionsForProject = useSessionStore((s) => s.loadSessionsForProject);
   const setActiveSession = useSessionStore((s) => s.setActiveSession);
   const disposeSession = useSessionStore((s) => s.disposeSession);
@@ -326,6 +328,8 @@ export function SessionList({ projectId }: Props) {
             onToggleExpanded={toggleExpanded}
             isArmedForDelete={armedDeleteId === s.sessionId}
             onDeleteClick={onDeleteClick}
+            unacknowledged={!!unacknowledgedEnds[s.sessionId]}
+            onAcknowledgeEnd={acknowledgeEnd}
           />,
         ];
         if (isExpanded) {
@@ -352,6 +356,8 @@ export function SessionList({ projectId }: Props) {
                 onToggleExpanded={toggleExpanded}
                 isArmedForDelete={armedDeleteId === c.sessionId}
                 onDeleteClick={onDeleteClick}
+                unacknowledged={!!unacknowledgedEnds[c.sessionId]}
+                onAcknowledgeEnd={acknowledgeEnd}
               />,
             );
           }
@@ -396,6 +402,9 @@ interface SessionRowProps {
   /** True when this row's × is in its "click again to delete" state. */
   isArmedForDelete: boolean;
   onDeleteClick: (sessionId: string) => void;
+  /** True when agent_end was received via global events while user was elsewhere. */
+  unacknowledged: boolean;
+  onAcknowledgeEnd: (sessionId: string) => void;
 }
 
 function SessionRow(props: SessionRowProps) {
@@ -419,6 +428,8 @@ function SessionRow(props: SessionRowProps) {
     onToggleExpanded,
     isArmedForDelete,
     onDeleteClick,
+    unacknowledged,
+    onAcknowledgeEnd,
   } = props;
   const label =
     s.name ??
@@ -473,6 +484,7 @@ function SessionRow(props: SessionRowProps) {
           onBlur={() => onCommitRename(s.sessionId)}
           placeholder={label}
           maxLength={200}
+          name="session-rename"
           className="flex-1 rounded border border-neutral-700 bg-neutral-950 px-1.5 py-0.5 text-xs text-neutral-100 outline-none focus:border-neutral-500 cursor-text"
         />
       ) : (
@@ -483,8 +495,22 @@ function SessionRow(props: SessionRowProps) {
           {isStreaming ? (
             <Loader2
               size={10}
-              className={`shrink-0 animate-spin ${isSelected || isActive ? "text-emerald-400" : "text-emerald-500"}`}
+              className={`shrink-0 animate-spin ${isSelected || isActive ? "text-[#5E81AC]" : "text-[#90A7BE]"}`}
             />
+          ) : unacknowledged ? (
+            <span
+              title="Agent finished — click to dismiss"
+              onClick={(e) => {
+                e.stopPropagation();
+                onAcknowledgeEnd(s.sessionId);
+              }}
+              className="cursor-pointer"
+            >
+              <Check
+                size={10}
+                className={`shrink-0 ${isSelected || isActive ? "text-emerald-400" : "text-emerald-500"}`}
+              />
+            </span>
           ) : hasError ? (
             <span title="Session has errors">
               <AlertCircle
@@ -492,11 +518,6 @@ function SessionRow(props: SessionRowProps) {
                 className={`shrink-0 ${isSelected || isActive ? "text-amber-400" : "text-amber-500/70"}`}
               />
             </span>
-          ) : s.isLive ? (
-            <MessageCircle
-              size={10}
-              className={`shrink-0 ${isSelected || isActive ? "text-neutral-100" : "text-[#545454]"}`}
-            />
           ) : (
             <MessageCircle
               size={10}

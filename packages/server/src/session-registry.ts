@@ -13,6 +13,7 @@ import { config } from "./config.js";
 import { makeDedupe, makeLock } from "./concurrency.js";
 import { effectivePromptsForProject, effectiveSkillsForProject } from "./config-manager.js";
 import { readProjects } from "./project-manager.js";
+import { emitGlobalEvent } from "./global-events-bus.js";
 import { filterEnabledTools, readToolOverrides } from "./tool-overrides.js";
 import { discoverExtensionResources } from "./extensions-discovery.js";
 import type { ToolDefinition } from "@earendil-works/pi-coding-agent";
@@ -36,6 +37,7 @@ import { createOrchestrationTools } from "./orchestration/tools.js";
 import { bridgeWorkerAgentEvent } from "./orchestration/event-bridge.js";
 import { notifySupervisorDisposed, notifySupervisorIdle } from "./orchestration/inbox.js";
 import { archiveSessionFiles } from "./session-archive.js";
+import { createSnapshot } from "./snapshot-store.js";
 
 /**
  * Minimal SSE client contract used by the registry to fan out events.
@@ -450,12 +452,19 @@ function makeSubscribeHandler(live: LiveSession): () => void {
         outboundEvent = {
           ...(event as object),
           errorMessage: errMsg,
+          agentEndTime: new Date().toISOString(),
         } as unknown as AgentSessionEvent;
-      } else if (verbose) {
-        logAgentEvent("info", {
-          msg: "agent_end (no error)",
-          sessionId: live.sessionId,
-        });
+      } else {
+        if (verbose) {
+          logAgentEvent("info", {
+            msg: "agent_end (no error)",
+            sessionId: live.sessionId,
+          });
+        }
+        outboundEvent = {
+          ...(event as object),
+          agentEndTime: new Date().toISOString(),
+        } as unknown as AgentSessionEvent;
       }
     }
 
@@ -466,6 +475,55 @@ function makeSubscribeHandler(live: LiveSession): () => void {
         // Drop the client on send failure — Phase 5's SSE adapter will
         // also call disposeClient on its socket close hook.
         live.clients.delete(client);
+      }
+    }
+
+    if (e.type === "agent_end" || e.type === "session_list_changed") {
+      // Stamp the sessionId onto the global event. The SDK's
+      // AgentSessionEvent union doesn't include a sessionId field (it
+      // comes from a per-session subscription), so without this merge
+      // the global SSE clients receive an agent_end with no way to
+      // tell which session finished. The sidebar's
+      // unacknowledgedEnds map keys on sessionId, so a missing
+      // sessionId here silently drops the event and the row stays
+      // stuck on the spinner icon after the user switches away.
+      const enriched: AgentSessionEvent = {
+        ...(outboundEvent as object),
+        sessionId: live.sessionId,
+      } as unknown as AgentSessionEvent;
+      emitGlobalEvent(enriched);
+    }
+
+    if (e.type === "agent_end") {
+      if (live.clients.size > 0) {
+        logAgentEvent("info", {
+          msg: "SSE connected — client will create snapshot",
+          sessionId: live.sessionId,
+        });
+      } else {
+        const agentEndTime = new Date().toISOString();
+        void (async () => {
+          try {
+            await createSnapshot(
+              live.projectId,
+              live.workspacePath,
+              "post-agent",
+              "post-agent",
+              live.sessionId,
+              agentEndTime,
+            );
+            logAgentEvent("info", {
+              msg: "server-side snapshot created (SSE offline)",
+              sessionId: live.sessionId,
+            });
+          } catch (err) {
+            logAgentEvent("warn", {
+              msg: "server-side snapshot creation failed",
+              sessionId: live.sessionId,
+              error: String(err),
+            });
+          }
+        })();
       }
     }
 

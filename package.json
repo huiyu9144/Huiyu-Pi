@@ -3,7 +3,7 @@
   "version": "1.2.0",
   "private": true,
   "type": "module",
-  "description": "Self-hosted browser workbench for the pi coding agent — a webui frontend for pi, pi-forge, and the coding agent ecosystem",
+  "description": "Self-hosted browser workbench for the pi coding agent — a webui frontend for pi and the coding agent ecosystem",
   "keywords": [
     "huiyu",
     "pi",

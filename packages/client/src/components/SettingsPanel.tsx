@@ -263,6 +263,7 @@ function ProvidersTab({ onError }: { onError: (msg: string | undefined) => void 
   const refresh = async (): Promise<void> => {
     onError(undefined);
     try {
+      api.clearProvidersCache();
       const [p, a] = await Promise.all([api.getProviders(), api.getAuthSummary()]);
       setProviders(p);
       setAuth(a);
@@ -271,6 +272,7 @@ function ProvidersTab({ onError }: { onError: (msg: string | undefined) => void 
     }
   };
 
+  // Load immediately — this is above the fold.
   useEffect(() => {
     void refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -861,8 +863,11 @@ function SkillsTab({ onError }: { onError: (msg: string | undefined) => void }) 
     }
   };
 
+  // Staggered load — defer 300ms so providers/settings (above
+  // the fold) claim connection slots first.
   useEffect(() => {
-    void refresh();
+    const t = setTimeout(() => void refresh(), 300);
+    return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project?.id]);
 
@@ -1103,8 +1108,10 @@ function PromptsTab({ onError }: { onError: (msg: string | undefined) => void })
     }
   };
 
+  // Staggered load — same 300ms defer as skills.
   useEffect(() => {
-    void refresh();
+    const t = setTimeout(() => void refresh(), 300);
+    return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project?.id]);
 
@@ -1504,8 +1511,10 @@ function ToolsTab({ onError }: { onError: (msg: string | undefined) => void }) {
     }
   };
 
+  // Staggered load — longer defer, this is further down the page.
   useEffect(() => {
-    void refresh();
+    const t = setTimeout(() => void refresh(), 600);
+    return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -1798,29 +1807,31 @@ function SystemPromptTab({ onError }: { onError: (msg: string | undefined) => vo
   const [busy, setBusy] = useState(false);
   const [savedMsg, setSavedMsg] = useState<string | undefined>(undefined);
 
+  // Staggered load — same 600ms defer as tools.
   useEffect(() => {
-    if (project === undefined) {
-      setAddendum(undefined);
-      setDraft("");
-      return;
-    }
-    let cancelled = false;
-    onError(undefined);
-    void (async () => {
-      try {
-        const res = await api.getProjectSystemPrompt(project.id);
-        if (cancelled) return;
-        setAddendum(res.addendum);
-        setDraft(res.addendum);
-        setMaxBytes(res.maxBytes);
-      } catch (err) {
-        if (cancelled) return;
-        onError(`Failed to load system prompt: ${errorCode(err)}`);
+    const t = setTimeout(() => {
+      if (project === undefined) {
+        setAddendum(undefined);
+        setDraft("");
+        return;
       }
-    })();
-    return () => {
-      cancelled = true;
-    };
+      let cancelled = false;
+      onError(undefined);
+      void (async () => {
+        try {
+          const res = await api.getProjectSystemPrompt(project.id);
+          if (cancelled) return;
+          setAddendum(res.addendum);
+          setDraft(res.addendum);
+          setMaxBytes(res.maxBytes);
+        } catch (err) {
+          if (cancelled) return;
+          onError(`Failed to load system prompt: ${errorCode(err)}`);
+        }
+      })();
+    }, 600);
+
+    return () => { clearTimeout(t); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project?.id]);
 

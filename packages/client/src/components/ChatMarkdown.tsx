@@ -51,10 +51,10 @@ import "katex/dist/katex.min.css";
 
 const FILE_REF_PREFIX = "forge-preview:";
 
-const FILE_PATH_RE = /📄\s+([^\s`<>]+\.\w+)/g;
+const FILE_PATH_RE = /📄\s+(?:[^\s:：]*(?:：|:)\s*)?((?:[A-Za-z]:[\\/]|\/)[^\s`<>]+\.\w+)/g;
 
 const BARE_PATH_RE =
-  /((?:[A-Za-z]:[\\/]|[~/])[^\s`<>|"]+?\.(?:html?|mdx?|md|markdown|mdown|htm))\b/g;
+  /((?:[A-Za-z]:[\\/]|[~/])[^\s`<>|"]+?\.(?:html?|mdx?|md|markdown|mdown|htm|txt|json|ya?ml|toml|xml|csv|tsv|log|css|scss|less|jsx?|tsx?|vue|svelte|py|java|go|rs|rb|php|cs|swift|kt|c|cpp|cc|h|sh|bash|zsh|ps1|bat|cmd|sql|gradle|cmake|mk|dockerfile|svg|graphql|proto))\b/g;
 
 function normalizePath(p: string): string {
   return p.replace(/\\/g, "/");
@@ -62,7 +62,9 @@ function normalizePath(p: string): string {
 
 function wrapFilePaths(text: string): string {
   let result = text.replace(FILE_PATH_RE, (_match, path: string) => {
-    return `[${path}](<${FILE_REF_PREFIX}${normalizePath(path)}>)`;
+    const normalized = normalizePath(path);
+    const fileName = path.split(/[\\/]/).pop() ?? path;
+    return `[${fileName}](<${FILE_REF_PREFIX}${normalized}>)`;
   });
   result = result.replace(BARE_PATH_RE, (_match, filePath: string) => {
     const normalized = normalizePath(filePath);

@@ -9,64 +9,54 @@
 </p>
 
 <p align="center">
-  <b>100% Free · Open Source · Self-Hosted</b><br>
-  A local open-source Agent tool that lets you build your own Harness system from scratch.<br>
-  Built on Pi and pi-forge — <b>context reduced to near-zero, speed boosted dramatically</b>.<br>
-  A browser-based webui frontend for the pi coding agent. Build from scratch cleanly without platform restrictions.
+  <img src="https://img.shields.io/badge/context-~80_tokens-00d4aa?style=flat-square" alt="~80 tokens">
+  <img src="https://img.shields.io/badge/first_token-~0.3s-60A5FA?style=flat-square" alt="~0.3s">
+  <img src="https://img.shields.io/badge/cost-90%25%2B_cheaper-00d4aa?style=flat-square" alt="90%+ cheaper">
+  <img src="https://img.shields.io/badge/deploy-local-brightgreen?style=flat-square" alt="Local">
+  <img src="https://img.shields.io/github/license/huiyu9144/Huiyu-Pi?style=flat-square" alt="License">
+  <img src="https://img.shields.io/github/stars/huiyu9144/Huiyu-Pi?style=flat-square" alt="Stars">
+  <img src="https://img.shields.io/github/forks/huiyu9144/Huiyu-Pi?style=flat-square" alt="Forks">
+  <img src="https://img.shields.io/github/issues/huiyu9144/Huiyu-Pi?style=flat-square" alt="Issues">
+  <img src="https://img.shields.io/github/release/huiyu9144/Huiyu-Pi?style=flat-square" alt="Release">
 </p>
 
 <p align="center">
-  <a href="https://discord.gg/BdJDs4AKbS"><img src="https://img.shields.io/discord/1334932402172137576?style=flat-square&logo=discord&logoColor=white&label=Discord&color=5865F2" alt="Discord"></a>
-  <a href="https://github.com/huiyu9144/Huiyu-Pi/stargazers"><img src="https://img.shields.io/github/stars/huiyu9144/Huiyu-Pi?style=flat-square&logo=github&color=f1c40f&labelColor=555555" alt="GitHub Stars"></a>
-  <a href="https://github.com/huiyu9144/Huiyu-Pi/network/members"><img src="https://img.shields.io/github/forks/huiyu9144/Huiyu-Pi?style=flat-square&logo=github&color=20B2AA&label=Forks" alt="GitHub Forks"></a>
-  <a href="https://github.com/huiyu9144/Huiyu-Pi/blob/main/LICENSE"><img src="https://img.shields.io/github/license/huiyu9144/Huiyu-Pi?style=flat-square&color=20B2AA" alt="MIT License"></a>
-  <a href="https://github.com/huiyu9144/Huiyu-Pi/releases"><img src="https://img.shields.io/github/v/release/huiyu9144/Huiyu-Pi?style=flat-square&color=20B2AA" alt="Release"></a>
-  <a href="https://github.com/huiyu9144/Huiyu-Pi/issues"><img src="https://img.shields.io/github/issues/huiyu9144/Huiyu-Pi?style=flat-square&color=20B2AA" alt="Issues"></a>
+  <b>AI coding agent, stripped to essentials.</b><br>
+  ~80 tokens system prompt &middot; ~0.3s first token &middot; 7 basic tools &middot; 100% local
 </p>
 
 <p align="center">
-  <i>Built on top of <a href="https://github.com/Devin-Marks/pi-forge">pi-forge</a> and <a href="https://github.com/earendil-works/pi">pi</a>.</i>
+  <img src="https://github.com/huiyu9144/Huiyu-Pi/releases/download/assets/before-after-hd.jpg" alt="Before vs After" width="100%">
 </p>
-
-<p align="center">
-  <img src="docs/images/demo.gif" alt="Huiyu Pi Demo" width="100%">
-</p>
-
-## Screenshots
-
-<table>
-  <tr>
-    <td width="50%"><img src="docs/images/screenshot-session.jpg" alt="Session Management"></td>
-    <td width="50%"><img src="docs/images/screenshot-terminal.jpg" alt="Integrated Terminal"></td>
-  </tr>
-  <tr>
-    <td align="center"><b>Session Management</b></td>
-    <td align="center"><b>Integrated Terminal</b></td>
-  </tr>
-  <tr>
-    <td width="50%"><img src="docs/images/screenshot-files.png" alt="File Browser + Editor"></td>
-    <td width="50%"><img src="docs/images/screenshot-git.jpg" alt="Git Integration"></td>
-  </tr>
-  <tr>
-    <td align="center"><b>File Browser + Editor</b></td>
-    <td align="center"><b>Git Integration</b></td>
-  </tr>
-</table>
 
 ---
 
-## Why Choose Huiyu Pi?
+## Quick Start
 
-Built on pi and pi-forge, fixing their lack of a frontend WebUI and clunky interaction details. Huiyu Pi is a browser-based webui for the pi coding agent — it's blazing fast and feels great to use — that's why I'm sharing it.
+```bash
+npx huiyu-pi
+```
 
-| | Advantage | Details |
+Open `http://localhost:9144` in your browser, configure your API key in **Settings → Providers**, and go.
+
+*Also available as global npm install, manual clone, or one-click scripts — see [Installation](#installation) below.*
+
+---
+
+## Why ~80 Tokens?
+
+Most AI coding tools pack 15,000–28,000 tokens into every request — rules, tool definitions, role prompts, output formatting. The AI spends most of its attention reading boilerplate instead of solving your problem.
+
+Huiyu Pi takes the opposite approach: strip everything non-essential. 7 basic tools. Clean canvas. No baggage.
+
+| | Before (typical) | Huiyu Pi |
 |---|---|---|
-| ⚡ | **Faster Performance** | Default context and prompts compressed from ~20K tokens to near zero. AI response time is dramatically shorter. |
-| 💰 | **Lower Token Consumption** | Most unused context stripped away, drastically reducing per-request API costs. |
-| 🎯 | **Less Context, More Focus** | Less context = AI stays focused on core instructions for more precise execution. |
-| 🔒 | **Local Deployment = Safe** | Fully local — API keys and data never leave your machine. Zero data leak risk. |
-| 🏗️ | **Build Your AI Empire** | Build your own Harness and Agent from scratch. Full control, fully customizable. |
-| 🛠️ | **Fixing the Original's Gaps** | Fixes pi's lack of WebUI and pi-forge's interaction issues. Blazing fast, incredibly smooth. |
+| System prompt overhead | 15K–28K tokens | **~80 tokens** |
+| First token response | 2–10 seconds | **~0.3 seconds** |
+| Per-request cost | $0.02–$0.10+ | **90%+ cheaper** |
+| Tool definitions | 10–24+ | **7 essentials** |
+| Client type | Heavy desktop / Electron | **Pure Web UI** |
+| Data privacy | Cloud or hybrid | **100% local** |
 
 ---
 
@@ -98,17 +88,38 @@ Dark and light themes controlled by CSS variables. Create your own skin without 
 
 ---
 
-## Quick Start
+## Screenshots
 
-### Quick Start (no install required)
+<table>
+  <tr>
+    <td width="50%"><img src="https://github.com/huiyu9144/Huiyu-Pi/releases/download/assets/screenshot-session.jpg" alt="Session Management"></td>
+    <td width="50%"><img src="https://github.com/huiyu9144/Huiyu-Pi/releases/download/assets/screenshot-terminal.jpg" alt="Integrated Terminal"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Session Management</b></td>
+    <td align="center"><b>Integrated Terminal</b></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="https://github.com/huiyu9144/Huiyu-Pi/releases/download/assets/screenshot-files.png" alt="File Browser + Editor"></td>
+    <td width="50%"><img src="https://github.com/huiyu9144/Huiyu-Pi/releases/download/assets/screenshot-git.jpg" alt="Git Integration"></td>
+  </tr>
+  <tr>
+    <td align="center"><b>File Browser + Editor</b></td>
+    <td align="center"><b>Git Integration</b></td>
+  </tr>
+</table>
+
+---
+
+## Installation
+
+### One-click (no install)
 
 ```bash
 npx huiyu-pi
 ```
 
-Opens your browser at `http://localhost:9144`. Provider API keys go into Settings → Providers.
-
-### One-time global install (faster subsequent launches)
+### Global install (faster subsequent launches)
 
 ```bash
 npm install -g huiyu-pi
@@ -117,12 +128,12 @@ huiyu-pi
 # Override defaults via flags:
 huiyu-pi --port 4000 --workspace-path ~/Code
 huiyu-pi --api-key @/run/secrets/api-key --no-expose-docs
-huiyu-pi --help       # full flag table
+huiyu-pi --help
 ```
 
-By default Huiyu Pi listens on `http://localhost:9144`, reads provider config from `~/.pi/agent/` (shared with the host pi CLI if you have one), and stores its own state in `~/.huiyu-pi/`. Override with flags or env vars — every server env var has a matching `--flag`.
+By default Huiyu Pi listens on `http://localhost:9144`, reads provider config from `~/.pi/agent/` (shared with the host pi CLI if you have one), and stores its own state in `~/.huiyu-pi/`.
 
-### Manual Start (Development)
+### Manual (development)
 
 ```bash
 git clone https://github.com/huiyu9144/Huiyu-Pi.git
@@ -131,28 +142,21 @@ npm install
 npm run dev
 ```
 
-### Windows / macOS / Linux One-click
+### Platform one-click scripts
+Clone the repo, run `start.bat` (Windows) or `bash start.sh` (macOS/Linux).
 
-Clone the repo, run `start.bat` (Windows) or `bash start.sh` (macOS/Linux) — installs everything and opens your browser.
-
-### LAN Access
-
-Access Huiyu Pi from other devices on the same network:
+### LAN access
 
 ```bash
-# Using the LAN startup script (dev mode)
 start-lan.bat          # Windows
 bash start-lan.sh      # macOS / Linux
 ```
 
-Or override the default loopback address via environment variable or CLI flag:
-
+Or via environment variable / CLI flag:
 ```bash
 HOST=0.0.0.0 huiyu-pi          # npm global install
 huiyu-pi --host 0.0.0.0        # CLI flag
 ```
-
-The console will display the detected LAN IP (e.g. `http://192.168.1.100:9144`) — enter that URL on any device connected to the same WiFi/VLAN to open the UI.
 
 > **Security note:** Binding to `0.0.0.0` exposes the agent's shell and filesystem to **everyone on your network**. Only enable on trusted private networks.
 
@@ -166,8 +170,6 @@ Open `http://localhost:9144`, go to **Settings → Providers**, and enter your A
 
 **Option 2: Config file**
 
-Create `~/.pi/agent/auth.json`:
-
 ```json
 {
   "deepseek": {
@@ -180,10 +182,6 @@ Create `~/.pi/agent/auth.json`:
 **Option 3: Environment variable**
 
 ```bash
-# Windows
-set DEEPSEEK_API_KEY=sk-your-api-key
-
-# macOS/Linux
 export DEEPSEEK_API_KEY=sk-your-api-key
 ```
 
@@ -199,7 +197,7 @@ huiyu-pi --api-key @/path/to/api-key.txt
 
 ## Customization
 
-The theme is controlled by CSS custom properties in `src/globals.css`. Override the variables to create your own skin:
+The theme is controlled by CSS custom properties in `src/globals.css`:
 
 ```css
 :root {
@@ -228,9 +226,9 @@ html[data-theme="light"] {
 
 ## Community
 
-- 💬 [Join our Discord](https://discord.gg/BdJDs4AKbS) — ask questions, share tips, connect with users and contributors.
-- ⭐ [Star us on GitHub](https://github.com/huiyu9144/Huiyu-PiwebUI-Forge) — it helps others discover the project.
-- 🌐 [Visit our Website](https://www.huiyu.ai) — learn more about Huiyu Pi.
+- 💬 [Join our Discord](https://discord.gg/BdJDs4AKbS)
+- ⭐ [Star us on GitHub](https://github.com/huiyu9144/Huiyu-Pi)
+- 🌐 [Visit our Website](https://www.huiyu.ai)
 
 ---
 
@@ -242,10 +240,10 @@ We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## Acknowledgments
 
-This project is built on top of two open-source projects:
+Built on top of two open-source projects:
 
-- [**pi-forge**](https://github.com/Devin-Marks/pi-forge) by [Devin Marks](https://github.com/Devin-Marks) and contributors — the self-hosted browser UI for the Pi coding agent.
-- [**pi**](https://github.com/earendil-works/pi) by [earendil-works](https://github.com/earendil-works) and contributors — the core Pi coding agent SDK and CLI.
+- [**pi-forge**](https://github.com/Devin-Marks/pi-forge) by [Devin Marks](https://github.com/Devin-Marks) and contributors
+- [**pi**](https://github.com/earendil-works/pi) by [earendil-works](https://github.com/earendil-works) and contributors
 
 ## License
 

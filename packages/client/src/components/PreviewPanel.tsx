@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { X, FileText, Copy, FolderOpen, Edit, Save, ExternalLink } from "lucide-react";
 import { useUiStore } from "../store/ui-store";
 import { useActiveProject } from "../store/project-store";
@@ -21,7 +21,7 @@ function isHtmlFile(path: string): boolean {
   return HTML_EXTS.has(getExt(path));
 }
 
-export function PreviewPanel() {
+export const PreviewPanel = memo(function PreviewPanel() {
   const filePath = useUiStore((s) => s.previewFilePath);
   const closePreviewFile = useUiStore((s) => s.closePreviewFile);
   const active = useActiveProject();
@@ -249,4 +249,4 @@ export function PreviewPanel() {
       </div>
     </div>
   );
-}
+});

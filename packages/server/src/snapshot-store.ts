@@ -7,7 +7,7 @@ import {
   writeFile as fsWriteFile,
 } from "node:fs/promises";
 import { createReadStream, createWriteStream } from "node:fs";
-import { join, resolve, dirname } from "node:path";
+import { join, resolve, dirname, isAbsolute, relative } from "node:path";
 import { createHash, randomUUID } from "node:crypto";
 import { Transform, type TransformCallback } from "node:stream";
 import { pipeline } from "node:stream/promises";
@@ -265,6 +265,8 @@ export async function createSnapshot(
   label: string,
   trigger: SnapshotTrigger = "manual",
   sessionId?: string,
+  createdAt?: string,
+  changedFiles?: string[],
 ): Promise<{ snapshot: SnapshotMeta; warnings: string[] }> {
   const existing = await listSnapshots(projectId);
   if (existing.length >= MAX_SNAPSHOTS_PER_PROJECT) {
@@ -299,7 +301,7 @@ export async function createSnapshot(
     id: snapshotId,
     projectId,
     label,
-    createdAt: new Date().toISOString(),
+    createdAt: createdAt ?? new Date().toISOString(),
     trigger,
     files: {},
     totalFiles: 0,
@@ -309,6 +311,21 @@ export async function createSnapshot(
 
   const warnings: string[] = [];
   const allFiles = flattenTree(tree).filter((f) => f.type === "file");
+
+  const changedSet = changedFiles !== undefined && changedFiles.length > 0
+    ? new Set(
+        changedFiles.map((p) => {
+          if (isAbsolute(p)) {
+            try {
+              return relative(projectPath, p).replaceAll("\\", "/");
+            } catch {
+              return p;
+            }
+          }
+          return p;
+        }),
+      )
+    : null;
 
   // Phase 1: stat all files in parallel, collect metadata
   interface FileMeta {
@@ -338,6 +355,23 @@ export async function createSnapshot(
       continue;
     }
     fileMetas.push({ relPath, absPath, size: fileStat.size });
+  }
+
+  if (changedSet !== null) {
+    fileMetas.length = 0;
+    for (const file of allFiles) {
+      if (changedSet.has(file.path)) {
+        const absPath = resolve(projectPath, file.path);
+        let fileStat;
+        try { fileStat = await stat(absPath); } catch { continue; }
+        if (fileStat.size > SKIP_FILE_BYTES) {
+          manifest.files[file.path] = { hash: "", size: fileStat.size, encoding: "binary", skipped: true };
+          warnings.push(`跳过大文件: ${file.path} (${(fileStat.size / 1024 / 1024).toFixed(1)}MB)`);
+          continue;
+        }
+        fileMetas.push({ relPath: file.path, absPath, size: fileStat.size });
+      }
+    }
   }
 
   // Check total size budget — mark files beyond the limit as skipped
@@ -617,14 +651,12 @@ export async function computeSessionDelta(
   const targetManifest = await readManifest(targetSnapshotId);
   const targetSessionId = targetManifest.sessionId;
 
-  // Find the snapshot immediately before target in the same session.
   const sessionSnaps = await listSnapshots(projectId);
   const sorted = sessionSnaps
-    .filter((s) => s.sessionId === targetSessionId && s.trigger === "pre-agent")
+    .filter((s) => s.sessionId === targetSessionId)
     .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
   const targetIdx = sorted.findIndex((s) => s.id === targetSnapshotId);
 
-  // No previous snapshot in this session — nothing to show.
   if (targetIdx <= 0) {
     return {
       targetId: targetSnapshotId,
@@ -639,7 +671,6 @@ export async function computeSessionDelta(
   const currentByPath = new Map(currentFiles.map((f) => [f.path, f]));
   const currentSet = new Set(currentFiles.map((f) => f.path));
 
-  // Step 1: find files that changed between prev and target (this session's changes)
   const sessionChanged = new Set<string>();
   const prevFiles = Object.keys(prevManifest.files);
   const tgtFiles = Object.keys(targetManifest.files);
@@ -650,7 +681,6 @@ export async function computeSessionDelta(
     if (prevHash !== tgtHash) sessionChanged.add(path);
   }
 
-  // Step 2: for each session-changed file, check if target differs from current disk
   const entries: SnapshotDeltaEntry[] = [];
   for (const path of sessionChanged) {
     const inTarget = path in targetManifest.files;

@@ -90,6 +90,9 @@ function describeError(err: unknown): string {
   return err instanceof ApiError ? err.code : err instanceof Error ? err.message : String(err);
 }
 
+let settingsInflight = false;
+const projectInflight = new Set<string | undefined>();
+
 export const useMcpStore = create<McpState>((set, get) => ({
   settings: undefined,
   globalServers: {},
@@ -120,37 +123,35 @@ export const useMcpStore = create<McpState>((set, get) => ({
   },
 
   refreshSettings: async () => {
+    if (settingsInflight) return;
+    settingsInflight = true;
     try {
       const r = await api.getMcpSettings();
       set({ settings: r, error: undefined });
     } catch (err) {
-      // Network blips / 401 leave the prior `settings` value in place
-      // so the badge doesn't flicker red on a transient error. The
-      // unauthorized event handler in auth-store separately clears
-      // the entire authed UI when 401 is real.
       if (!(err instanceof ApiError)) return;
-      // 401 also leaves prior state — auth-store handles the actual
-      // signout. Other API errors (5xx, schema) surface in `error`.
       if (err.status === 401) return;
       set({ error: describeError(err) });
+    } finally {
+      settingsInflight = false;
     }
   },
 
   refreshProject: async (projectId) => {
-    if (projectId === undefined) {
-      // No active project — still refresh the global config + status
-      // so the Settings tab works without a project selected.
-      try {
-        const list = await api.listMcpServers();
-        set({ globalServers: list.servers, error: undefined });
-      } catch (err) {
-        if (err instanceof ApiError && err.status === 401) return;
-        set({ error: describeError(err) });
-      }
-      return;
-    }
-    set({ loading: true });
+    if (projectInflight.has(projectId)) return;
+    projectInflight.add(projectId);
     try {
+      if (projectId === undefined) {
+        try {
+          const list = await api.listMcpServers();
+          set({ globalServers: list.servers, error: undefined });
+        } catch (err) {
+          if (err instanceof ApiError && err.status === 401) return;
+          set({ error: describeError(err) });
+        }
+        return;
+      }
+      set({ loading: true });
       const list = await api.listMcpServers(projectId);
       set((state) => {
         const entry: ProjectScopeData = {
@@ -167,6 +168,8 @@ export const useMcpStore = create<McpState>((set, get) => ({
       });
     } catch (err) {
       set({ loading: false, error: describeError(err) });
+    } finally {
+      projectInflight.delete(projectId);
     }
   },
 

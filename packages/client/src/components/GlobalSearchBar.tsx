@@ -216,6 +216,8 @@ export function GlobalSearchBar() {
           }}
           onKeyDown={onKeyDown}
           placeholder=""
+          id="global-search-input"
+          name="global-search"
           aria-label="Search across all sessions"
           className="w-40 rounded-md bg-neutral-900 py-1 pl-7 pr-7 text-xs text-neutral-200 placeholder-neutral-500 outline-none"
         />

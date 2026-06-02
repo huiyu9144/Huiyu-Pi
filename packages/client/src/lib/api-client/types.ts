@@ -784,7 +784,7 @@ export type Validator<T> = (value: unknown, status: number) => T;
 
 // ---------------- snapshots ----------------
 
-export type SnapshotTrigger = "manual" | "pre-agent" | "pre-restore";
+export type SnapshotTrigger = "manual" | "pre-agent" | "post-agent" | "pre-restore";
 
 export interface SnapshotMeta {
   id: string;

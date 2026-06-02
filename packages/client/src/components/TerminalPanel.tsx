@@ -66,7 +66,7 @@ function isTerminalCloseCode(code: number): boolean {
  * (so we don't leak shells in directories the user can no longer reach
  * via the picker).
  */
-export function TerminalPanel() {
+export function TerminalPanel({ onClose }: { onClose?: () => void }) {
   const project = useActiveProject();
   const tabs = useTerminalStore((s) => s.tabs);
   const activeTabId = useTerminalStore((s) => s.activeTabId);
@@ -149,6 +149,15 @@ export function TerminalPanel() {
             New
           </button>
         </div>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="rounded p-1 text-neutral-500 hover:bg-neutral-800 hover:text-neutral-200"
+            title="Close terminal panel"
+          >
+            <X size={14} />
+          </button>
+        )}
       </div>
 
       {/* xterm hosts. We render every tab across EVERY project here

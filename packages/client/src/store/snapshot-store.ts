@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { api, ApiError } from "../lib/api-client";
 import type {
   SnapshotMeta,
+  SnapshotDetail,
   SnapshotStorageInfo,
   SnapshotDelta,
   SessionDelta,
@@ -23,6 +24,8 @@ interface SnapshotState {
     label: string,
     trigger?: "manual" | "pre-agent" | "post-agent",
     sessionId?: string,
+    createdAt?: string,
+    changedFiles?: string[],
   ) => Promise<SnapshotMeta | undefined>;
   snapBeforeAgent: (
     projectId: string,
@@ -33,6 +36,8 @@ interface SnapshotState {
     projectId: string,
     label: string,
     sessionId?: string,
+    createdAt?: string,
+    changedFiles?: string[],
   ) => Promise<string | undefined>;
   restoreSnapshot: (
     projectId: string,
@@ -41,6 +46,7 @@ interface SnapshotState {
   ) => Promise<{ safetySnapshot: SnapshotMeta; warnings: string[] } | undefined>;
   deleteSnapshot: (projectId: string, snapshotId: string) => Promise<void>;
   getStorageInfo: (projectId: string) => Promise<void>;
+  getSnapshotDetail: (projectId: string, snapshotId: string) => Promise<SnapshotDetail | undefined>;
   getDelta: (projectId: string, snapshotId: string) => Promise<SnapshotDelta | undefined>;
   getSessionDelta: (projectId: string, targetId: string) => Promise<SessionDelta | undefined>;
   restoreSessionDiff: (
@@ -77,16 +83,22 @@ export const useSnapshotStore = create<SnapshotState>((set, get) => ({
     }
   },
 
-  createSnapshot: async (projectId, label, trigger, sessionId) => {
+  createSnapshot: async (projectId, label, trigger, sessionId, createdAt, changedFiles) => {
     set({ creating: true, error: undefined });
     try {
-      const { snapshot, warnings } = await api.createSnapshot(projectId, label, trigger, sessionId);
+      const { snapshot, warnings } = await api.createSnapshot(
+        projectId,
+        label,
+        trigger,
+        sessionId,
+        createdAt,
+        changedFiles,
+      );
       if (warnings.length > 0) {
         console.warn("[snapshot] warnings:", warnings);
       }
       const current = get().snapshots;
       set({ snapshots: [snapshot, ...current], creating: false });
-      void get().getStorageInfo(projectId);
       return snapshot;
     } catch (err) {
       const msg = err instanceof ApiError ? (err.message ?? err.code) : (err as Error).message;
@@ -100,8 +112,8 @@ export const useSnapshotStore = create<SnapshotState>((set, get) => ({
     return snap?.id;
   },
 
-  snapAfterAgent: async (projectId, label, sessionId) => {
-    const snap = await get().createSnapshot(projectId, label, "post-agent", sessionId);
+  snapAfterAgent: async (projectId, label, sessionId, createdAt, changedFiles) => {
+    const snap = await get().createSnapshot(projectId, label, "post-agent", sessionId, createdAt, changedFiles);
     return snap?.id;
   },
 
@@ -140,6 +152,15 @@ export const useSnapshotStore = create<SnapshotState>((set, get) => ({
       set({ storageInfo: info });
     } catch {
       // best-effort
+    }
+  },
+
+  getSnapshotDetail: async (projectId, snapshotId) => {
+    try {
+      const { snapshot } = await api.getSnapshot(projectId, snapshotId);
+      return snapshot;
+    } catch {
+      return undefined;
     }
   },
 

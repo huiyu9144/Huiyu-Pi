@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ReactElement } from "react";
 import { ChevronDown, ChevronRight, Code2, Loader2, RefreshCw, Search, X } from "lucide-react";
 import { Highlight, themes as prismThemes } from "prism-react-renderer";
 import { api, ApiError, type ContextTurn, type SessionContextResponse } from "../lib/api-client";
-import { useSessionStore } from "../store/session-store";
+import { useSessionStore, getSessionAbortSignal } from "../store/session-store";
 
 /**
  * Chars-per-token estimate used by every local approximation in this
@@ -40,12 +40,6 @@ const CHARS_PER_TOKEN = 3;
  */
 export function ContextInspectorPanel() {
   const sessionId = useSessionStore((s) => s.activeSessionId);
-  const agentEndCount = useSessionStore((s) =>
-    sessionId !== undefined ? (s.agentEndCountBySession[sessionId] ?? 0) : 0,
-  );
-  const compactionEndCount = useSessionStore((s) =>
-    sessionId !== undefined ? (s.compactionEndCountBySession[sessionId] ?? 0) : 0,
-  );
   // Ctx1 — live updates between agent_end events. Subscribe to the
   // session-store's streaming text + flag so we can synthesize a
   // tail "streaming assistant" row in the message list while the
@@ -72,6 +66,17 @@ export function ContextInspectorPanel() {
   // slow earlier response can't clobber a fresh one. Mirrors the
   // pattern in SearchPanel.
   const abortRef = useRef<AbortController | undefined>(undefined);
+
+  useEffect(() => {
+    const sessionSignal = getSessionAbortSignal();
+    const onSessionAbort = (): void => {
+      abortRef.current?.abort();
+    };
+    sessionSignal.addEventListener("abort", onSessionAbort);
+    return () => {
+      sessionSignal.removeEventListener("abort", onSessionAbort);
+    };
+  }, []);
 
   const refresh = async (): Promise<void> => {
     if (sessionId === undefined) {
@@ -106,15 +111,12 @@ export function ContextInspectorPanel() {
     }
   };
 
-  // Initial load + agent_end + compaction_end refresh. Skip the dep
-  // on `refresh` because it's a fresh closure each render and would
-  // self-loop. The compaction counter is a separate signal so a
-  // compaction with no agent_end (the SDK can compact mid-turn)
-  // still kicks the pane to refetch token usage.
+  // Load on mount / session switch. No auto-refresh on agent_end
+  // or compaction_end — the user re-opens the tab when they want
+  // fresh context data.
   useEffect(() => {
     void refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionId, agentEndCount, compactionEndCount]);
+  }, [sessionId]);
 
   // Cancel any in-flight request on unmount.
   useEffect(

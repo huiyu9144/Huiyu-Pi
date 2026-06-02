@@ -9,7 +9,7 @@ import {
   type WorkerSummary,
 } from "../lib/api-client";
 import { useUiConfigStore } from "../store/ui-config-store";
-import { useSessionStore } from "../store/session-store";
+import { useSessionStore, getSessionAbortSignal } from "../store/session-store";
 
 interface Props {
   sessionId: string;
@@ -45,38 +45,47 @@ export function OrchestrationPanel({ sessionId, onClose }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | undefined>(undefined);
 
-  const reload = async (): Promise<void> => {
+  const reload = async (signal?: AbortSignal): Promise<void> => {
     setLoading(true);
     setError(undefined);
     try {
-      const l = await api.getSessionLink(sessionId);
+      const l = await api.getSessionLink(sessionId, signal);
+      if (signal?.aborted) return;
       setLink(l);
       if (l.role === "supervisor") {
-        const w = await api.listSupervisorWorkers(sessionId);
+        const w = await api.listSupervisorWorkers(sessionId, signal);
+        if (signal?.aborted) return;
         setWorkers(w.workers);
-        const i = await api.listSupervisorInbox(sessionId);
+        const i = await api.listSupervisorInbox(sessionId, signal);
+        if (signal?.aborted) return;
         setInbox(i.items);
       } else {
         setWorkers([]);
         setInbox([]);
       }
     } catch (err) {
+      if (signal?.aborted) return;
       setError(err instanceof ApiError ? err.code : (err as Error).message);
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) setLoading(false);
     }
   };
 
   useEffect(() => {
     if (!orchestrationEnabled) return;
-    void reload();
-    // Poll for live worker state. 4s — fast enough to feel live,
-    // slow enough not to spam the server. Aligns with the cadence
-    // the webhooks deliveries panel uses.
+    const ctrl = new AbortController();
+    const sessionSignal = getSessionAbortSignal();
+    const onSessionAbort = (): void => ctrl.abort();
+    sessionSignal.addEventListener("abort", onSessionAbort);
+    void reload(ctrl.signal);
     const t = setInterval(() => {
-      void reload();
+      void reload(ctrl.signal);
     }, 4_000);
-    return () => clearInterval(t);
+    return () => {
+      clearInterval(t);
+      sessionSignal.removeEventListener("abort", onSessionAbort);
+      ctrl.abort();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orchestrationEnabled, sessionId]);
 

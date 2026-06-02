@@ -32,6 +32,7 @@ import { processesRoutes } from "./routes/processes.js";
 import { searchRoutes } from "./routes/search.js";
 import { snapshotRoutes } from "./routes/snapshots.js";
 import { terminalRoutes } from "./routes/terminal.js";
+import { globalEventsRoutes } from "./routes/global-events.js";
 import { disposeAll as disposeAllMcp, loadGlobal as loadGlobalMcp } from "./mcp/manager.js";
 import { initAskUserQuestionFanout, initProcessesFanout, initTodoFanout } from "./sse-bridge.js";
 import { webhookRoutes } from "./routes/webhooks.js";
@@ -413,6 +414,7 @@ export async function buildServer(): Promise<FastifyInstance> {
       await api.register(searchRoutes);
       await api.register(snapshotRoutes);
       await api.register(terminalRoutes);
+      await api.register(globalEventsRoutes);
     },
     { prefix: "/api/v1" },
   );

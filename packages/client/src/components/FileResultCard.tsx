@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Eye, ExternalLink, FolderOpen } from "lucide-react";
 import { useUiStore } from "../store/ui-store";
 import { useProjectStore } from "../store/project-store";
@@ -100,7 +101,7 @@ function formatSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export function FileResultCard({
+export const FileResultCard = memo(function FileResultCard({
   filePath,
   content,
   toolName: _toolName,
@@ -203,4 +204,4 @@ export function FileResultCard({
       </div>
     </div>
   );
-}
+});

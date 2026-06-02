@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync, FastifyReply, FastifyRequest } from "fastify";
 import {
   AuthProviderNotFoundError,
+  clearProvidersListingCache,
   getAllPromptOverrides,
   getAllSkillOverrides,
   liveProvidersListing,
@@ -258,6 +259,7 @@ export const configRoutes: FastifyPluginAsync = async (fastify) => {
     async (req, reply) => {
       try {
         await writeModelsJson(req.body);
+        clearProvidersListingCache();
         return req.body;
       } catch (err) {
         return internalError(reply, err);
@@ -385,6 +387,7 @@ export const configRoutes: FastifyPluginAsync = async (fastify) => {
     async (req, reply) => {
       try {
         writeApiKey(req.params.provider, req.body.apiKey);
+        clearProvidersListingCache();
         return { provider: req.params.provider, configured: true };
       } catch (err) {
         return internalError(reply, err);
@@ -409,6 +412,7 @@ export const configRoutes: FastifyPluginAsync = async (fastify) => {
     async (req, reply) => {
       try {
         removeApiKey(req.params.provider);
+        clearProvidersListingCache();
         return reply.code(204).send();
       } catch (err) {
         if (err instanceof AuthProviderNotFoundError) {

@@ -266,16 +266,11 @@ export function App() {
   const loadFileTree = useFileStore((s) => s.loadTree);
   const restoreTabs = useFileStore((s) => s.restoreTabs);
   const refreshOpenFiles = useFileStore((s) => s.refreshOpenFiles);
-  // After every agent turn, reconcile the file browser tree AND the
-  // open editor tabs against on-disk state. Decoupled from
-  // tool-result inspection: this fires once per `agent_end` and
-  // catches every kind of change — built-in edit/write tools, MCP
-  // tools, terminal commands the agent shelled out to, git ops, etc.
-  // Refresh helper handles per-tab reconciliation (silent reload
-  // for clean buffers, externally-changed banner for dirty ones).
+  // After every agent turn, reconcile the open editor tabs against
+  // on-disk state. The file tree loads on-demand when the user opens
+  // the Files tab — no need to burn a connection here.
   useEffect(() => {
     if (active === undefined || isStreaming) return;
-    void loadFileTree(active.id);
     void refreshOpenFiles(active.id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active?.id, isStreaming, agentEndCount]);
@@ -918,16 +913,16 @@ export function App() {
               maxSize={Math.max(MIN_TERMINAL_HEIGHT, Math.floor(windowHeight * 0.7))}
             />
             <div
-              className="shrink-0 border-t border-neutral-800"
+              className="relative z-[51] shrink-0 border-t border-neutral-800"
               style={{ height: `${terminalHeight}px` }}
             >
-              <TerminalPanel />
+              <TerminalPanel onClose={() => setTerminalOpenPersisted(false)} />
             </div>
           </>
         )}
       </div>
 
-      <div className="fixed bottom-4 left-4 z-50">
+      <div className="fixed bottom-0 left-0 z-50 w-64 border-r-[0.5px] border-t border-neutral-800 bg-neutral-900 px-2 pb-2 pt-1.5">
         <div className="flex flex-col" onMouseEnter={onCoffeeEnter} onMouseLeave={onCoffeeLeave}>
           {coffeeHover && (
             <div className="mb-1" onMouseEnter={onCoffeeEnter} onMouseLeave={onCoffeeLeave}>

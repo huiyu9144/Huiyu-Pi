@@ -34,25 +34,9 @@ function readPersistedViewType(): ViewType {
  */
 export function TurnDiffPanel() {
   const activeSessionId = useSessionStore((s) => s.activeSessionId);
-  // Refresh the diff once per agent_end via the explicit counter the
-  // session-store bumps on every terminal event. Same signal App.tsx
-  // uses for the file-tree refresh — keeps both panels in lockstep
-  // and avoids the messages-length proxy's false positives from
-  // mid-turn refetches.
-  const agentEndCount = useSessionStore((s) =>
-    activeSessionId !== undefined ? (s.agentEndCountBySession[activeSessionId] ?? 0) : 0,
-  );
-  const isStreaming = useSessionStore((s) =>
-    activeSessionId !== undefined ? (s.streamingBySession[activeSessionId] ?? false) : false,
-  );
 
-  // `entries` defaults to `[]` (NOT undefined) so the panel never
-  // gets stuck on a "Loading…" splash if the very first refresh
-  // fails for an unexpected reason — the empty-state copy + the
-  // header spinner together convey "we're trying" without blocking
-  // the rest of the UI. Real load progress comes from `loading`,
-  // surfaced via the spinning `RefreshCw` icon in the header.
   const [entries, setEntries] = useState<TurnDiffEntry[]>([]);
+  // Gets stuck on a "Loading…" splash if the very first refresh
   const [error, setError] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
@@ -69,43 +53,45 @@ export function TurnDiffPanel() {
 
   const refresh = async (): Promise<void> => {
     if (activeSessionId === undefined) return;
+    // Skip non-live sessions so the console stays clean (turn-diff
+    // only works for sessions with an active SSE connection).
+    const state = useSessionStore.getState();
+    let isLive = false;
+    for (const sessions of Object.values(state.byProject)) {
+      for (const ss of sessions) {
+        if (ss.sessionId === activeSessionId && ss.isLive) {
+          isLive = true;
+          break;
+        }
+      }
+      if (isLive) break;
+    }
+    if (!isLive) {
+      setEntries([]);
+      return;
+    }
     setLoading(true);
     setError(undefined);
     try {
       const r = await api.getTurnDiff(activeSessionId);
       setEntries(r.entries);
     } catch (err) {
-      // 404 means session isn't live; treat as "no entries" rather
-      // than as a hard error so the panel doesn't show a red banner
-      // every time the user picks a cold session.
-      if (err instanceof ApiError && err.status === 404) {
-        setEntries([]);
-      } else {
-        // Surface ALL other errors AND clear entries so the user
-        // sees both signals (a stale list under a red banner is
-        // confusing). Was previously letting `entries` linger.
-        setEntries([]);
-        setError(err instanceof ApiError ? err.code : (err as Error).message);
-      }
+      setEntries([]);
+      setError(err instanceof ApiError ? err.code : (err as Error).message);
     } finally {
       setLoading(false);
     }
   };
 
-  // Fetch on session change + after each agent_end (length proxy).
-  // We deliberately wait for streaming to finish — fetching mid-turn
-  // would show a partial set and immediately replace it on agent_end.
-  // Reset entries on session switch so the new session doesn't
-  // briefly show the previous one's diff.
+  // Fetch once when the panel mounts or the active session changes.
+  // No auto-refresh on agent_end — the user opens this panel
+  // explicitly when they want to see changes.
   useEffect(() => {
     setEntries([]);
     setError(undefined);
-  }, [activeSessionId]);
-  useEffect(() => {
-    if (activeSessionId === undefined || isStreaming) return;
+    if (activeSessionId === undefined) return;
     void refresh();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeSessionId, agentEndCount, isStreaming]);
+  }, [activeSessionId]);
 
   if (activeSessionId === undefined) {
     return (

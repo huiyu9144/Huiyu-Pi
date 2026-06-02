@@ -43,6 +43,8 @@
   --pi-editor-bg: #0a0a0a;
   --pi-terminal-bg: #0a0a0a;
   --pi-terminal-fg: #e5e5e5;
+  --pi-toolcall-bg: #121212;
+  --pi-toolcall-border: #1a1a1a;
 }
 
 [data-theme="light"] {
@@ -64,6 +66,8 @@
   --pi-editor-bg: #e0e0e0;
   --pi-terminal-bg: #d4d4d4;
   --pi-terminal-fg: #111111;
+  --pi-toolcall-bg: #c8c8c8;
+  --pi-toolcall-border: #aaaaaa;
 }
 
 [data-theme="dracula"] {
@@ -481,6 +485,11 @@
   }
 }
 
+/* Ensure spinning animations are GPU-composited to prevent layout shifts */
+.animate-spin {
+  will-change: transform;
+}
+
 /* The new icon is a full-color PNG with rounded corners — no
    light-mode inversion needed. */
 
@@ -530,6 +539,20 @@ header.border-b {
 }
 .hover\:border-neutral-500:hover {
   border-color: transparent;
+}
+
+/* --- Light-mode: restore card/section borders --- */
+[data-theme="light"] .border.border-neutral-800 {
+  border-color: var(--color-neutral-600) !important;
+}
+[data-theme="light"] .border.border-neutral-700 {
+  border-color: var(--color-neutral-500) !important;
+}
+[data-theme="light"] .border-neutral-800 {
+  border-color: var(--color-neutral-600) !important;
+}
+[data-theme="light"] .border-neutral-700 {
+  border-color: var(--color-neutral-500) !important;
 }
 
 /* --- Hover backgrounds --- */

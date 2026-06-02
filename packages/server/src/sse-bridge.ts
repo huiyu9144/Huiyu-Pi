@@ -4,6 +4,7 @@ import type { AgentMessage } from "@earendil-works/pi-agent-core";
 import type { AgentSessionEvent } from "@earendil-works/pi-coding-agent";
 import type { LiveSession, SSEClient } from "./session-registry.js";
 import { getSession } from "./session-registry.js";
+import { onGlobalEvent, emitGlobalEvent } from "./global-events-bus.js";
 import {
   getPendingForSession as getPendingAskQuestions,
   subscribe as subscribeAskQuestions,
@@ -98,6 +99,56 @@ const HEARTBEAT_LINE = `: heartbeat ${"_".repeat(HEARTBEAT_PADDING_BYTES - 14)}\
  */
 const COMPACTION_START_PADDING_BYTES = 2048;
 const COMPACTION_START_PADDING_LINE = `: pad-flush ${"_".repeat(COMPACTION_START_PADDING_BYTES - 14)}\n\n`;
+
+// ============================================================================
+// Global event channel — cross-session broadcast
+// ============================================================================
+
+/**
+ * Clients subscribed to the global event stream (GET /api/v1/events).
+ * They receive a subset of events from ALL sessions — specifically
+ * agent_end and session_list_changed — so the sidebar can stay
+ * up-to-date even when the user has switched away from a running
+ * session (and its per-session SSE is closed).
+ */
+const globalClients = new Set<SSEClient>();
+
+export function registerGlobalClient(client: SSEClient): void {
+  globalClients.add(client);
+}
+
+export function unregisterGlobalClient(client: SSEClient): void {
+  globalClients.delete(client);
+}
+
+/**
+ * Broadcast an event to all globally-subscribed clients.
+ * Called from session-registry's makeSubscribeHandler after the
+ * per-session fan-out, for agent_end and session_list_changed.
+ *
+ * Implementation: writes to the global-events-bus so that
+ * session-registry doesn't need to import sse-bridge (circular
+ * dependency avoidance).  This module listens on the bus and fans
+ * out to globalClients.
+ */
+export function broadcastGlobal(event: AgentSessionEvent): void {
+  emitGlobalEvent(event);
+}
+
+// Wire the bus → globalClients fanout at module load time (zero-cost
+// when no global clients exist — the listener short-circuits).
+onGlobalEvent((event) => {
+  if (globalClients.size === 0) return;
+  const dead: SSEClient[] = [];
+  for (const client of globalClients) {
+    try {
+      client.send(event);
+    } catch {
+      dead.push(client);
+    }
+  }
+  for (const d of dead) globalClients.delete(d);
+});
 
 /**
  * One-shot snapshot event sent immediately on SSE connect so the browser can

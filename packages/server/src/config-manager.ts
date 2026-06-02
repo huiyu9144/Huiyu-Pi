@@ -378,11 +378,27 @@ export async function updateSettings(patch: Record<string, unknown>): Promise<Se
 }
 
 // ---------------------------------------------------------------------------
-// providers — live from ModelRegistry. Builds a fresh registry per call so a
-// PUT /config/models is reflected on the next GET /config/providers without
-// needing a restart.
+// providers — live from ModelRegistry. Cached with a 5-minute TTL and
+// invalidated on any auth/models.json mutation so the UI never sees stale
+// data. Builds a fresh registry per cache-miss call so a PUT /config/models
+// is reflected on the next GET /config/providers without needing a restart.
+
+interface ProvidersListingCache {
+  data: ProvidersListing;
+  ts: number;
+}
+let providersListingCache: ProvidersListingCache | null = null;
+const PROVIDERS_LISTING_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+export function clearProvidersListingCache(): void {
+  providersListingCache = null;
+}
 
 export async function liveProvidersListing(): Promise<ProvidersListing> {
+  const now = Date.now();
+  if (providersListingCache !== null && now - providersListingCache.ts < PROVIDERS_LISTING_CACHE_TTL) {
+    return providersListingCache.data;
+  }
   const store = authStorage();
   const registry = ModelRegistry.create(store, MODELS_FILE());
   const all: Model<Api>[] = registry.getAll();
@@ -412,7 +428,9 @@ export async function liveProvidersListing(): Promise<ProvidersListing> {
       supportedThinkingLevels: getSupportedThinkingLevels(m),
     });
   }
-  return { providers: Array.from(grouped.values()) };
+  const result = { providers: Array.from(grouped.values()) };
+  providersListingCache = { data: result, ts: Date.now() };
+  return result;
 }
 
 // ---------------------------------------------------------------------------

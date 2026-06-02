@@ -8,6 +8,7 @@ import {
   type Task,
   type TaskStatus,
 } from "../store/todo-store";
+import { getSessionAbortSignal } from "../store/session-store";
 
 interface Props {
   sessionId: string;
@@ -31,25 +32,26 @@ export function TodoPanel({ sessionId, onClose }: Props) {
   const [loadError, setLoadError] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    let cancelled = false;
+    const ctrl = new AbortController();
+    const sessionSignal = getSessionAbortSignal();
+    const onSessionAbort = (): void => ctrl.abort();
+    sessionSignal.addEventListener("abort", onSessionAbort);
     void api
-      .listTodos(sessionId)
+      .listTodos(sessionId, ctrl.signal)
       .then((res) => {
-        if (cancelled) return;
-        // Only overwrite when the store entry is empty. If SSE has
-        // already pushed a more-recent state, don't clobber it
-        // with the GET response.
+        if (ctrl.signal.aborted) return;
         const cur = useTodoStore.getState().byId[sessionId];
         if (cur === undefined || cur.tasks.length === 0) {
           setState(sessionId, { tasks: res.tasks, nextId: res.nextId });
         }
       })
       .catch((err: unknown) => {
-        if (cancelled) return;
+        if (ctrl.signal.aborted) return;
         setLoadError(err instanceof ApiError ? err.code : (err as Error).message);
       });
     return () => {
-      cancelled = true;
+      sessionSignal.removeEventListener("abort", onSessionAbort);
+      ctrl.abort();
     };
   }, [sessionId, setState]);
 

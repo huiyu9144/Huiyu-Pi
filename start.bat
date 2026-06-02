@@ -51,36 +51,36 @@ if exist "packages\server\dist\index.js" (
     echo [API] Build done.
 )
 
-start /B node packages/server/dist/index.js
-
-echo Waiting for API server...
-
-:wait_api
-timeout /t 1 /nobreak >nul
-curl.exe -s -o nul -w "%%{http_code}" http://localhost:9144/api/v1/health 2>nul | findstr "200" >nul
-if errorlevel 1 goto wait_api
+REM 新用户 clone 下来时 dist 目录是空的（.gitignore 已忽略 dist/），
+REM server 起来后 9144 会因为没有 client dist 而返回空白页。
+REM 这里强制走一次 build：dist 已存在则秒跳过；不存在则生成全新产物，
+REM PWA 的 SW 内容哈希也是这次 build 产出的，跟开发者本地缓存完全无关。
+if exist "packages\client\dist\index.html" (
+    echo [Client] Using pre-built client (fast start^)
+) else (
+    echo [Client] First run: building client...
+    call npm run build -w packages/client
+    if errorlevel 1 (
+        echo [ERROR] Client build failed.
+        pause
+        exit /b 1
+    )
+    echo [Client] Build done.
+)
 
 echo.
 echo ========================================
-echo   Server ready!
-echo   Opening http://localhost:9144 ...
+echo   Server starting...
 echo   Close this window to stop the server.
 echo ========================================
 echo.
 
 start "" http://localhost:9144
 
-:: Block until the server process exits or the console window is closed.
-:: Wait-Process keeps PowerShell alive in this console. When the window
-:: is closed (CTRL_CLOSE_EVENT), PowerShell terminates and cleanup runs
-:: below �� which force-kills the child server process so it can't
-:: linger and serve stale code.
-for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":9144 " ^| findstr "LISTENING" 2^>nul') do set SERVER_PID=%%a
-if defined SERVER_PID (
-    powershell -NoProfile -Command "try { Wait-Process -Id %SERVER_PID% -ErrorAction Stop } catch {}" 2>nul
-    taskkill /F /PID %SERVER_PID% 2>nul
-)
+node packages/server/dist/index.js
 
+echo.
+echo Server stopped.
 exit /b 0
 
 :cleanup_ports

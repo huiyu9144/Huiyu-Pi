@@ -14,7 +14,6 @@
  *   - Width clamps to the viewport so the popover doesn't overflow.
  */
 import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { api, ApiError } from "../lib/api-client";
 import {
@@ -71,39 +70,26 @@ function PopoverShell({
 
   if (!open) return null;
 
-  const anchor = anchorRef.current;
-  const rect = anchor?.getBoundingClientRect();
-  const style: React.CSSProperties = rect
-    ? {
-        position: "fixed",
-        bottom: window.innerHeight - rect.top + 4,
-        right: window.innerWidth - rect.right,
-        zIndex: 9999,
-      }
-    : { position: "fixed", bottom: 80, right: 16, zIndex: 9999 };
-
-  return createPortal(
+  return (
     <div
       ref={popoverRef}
       role="dialog"
       aria-label={title}
-      className="w-72 max-w-[calc(100vw-1rem)] overflow-hidden rounded-md border border-neutral-700 bg-neutral-900 shadow-xl light:border-neutral-300 light:bg-white"
-      style={style}
+      className="absolute bottom-full right-0 z-30 mb-1 w-72 max-w-[calc(100vw-1rem)] overflow-hidden rounded-md border border-neutral-700 bg-neutral-900 shadow-xl light:border-neutral-300 light:bg-white"
     >
       <header className="flex items-center justify-between gap-2 border-b border-neutral-800 px-3 py-2 text-[11px] uppercase tracking-wider text-neutral-400 light:border-neutral-200 light:text-neutral-500">
         <span>{title}</span>
         <button
           type="button"
           onClick={onClose}
-          className="rounded p-0.5 text-neutral-400"
+          className="rounded p-0.5 text-neutral-500 hover:bg-neutral-800 hover:text-neutral-200 light:hover:bg-neutral-100 light:hover:text-neutral-700"
           aria-label="Close"
         >
           <X size={12} />
         </button>
       </header>
       <div className="max-h-72 overflow-y-auto">{children}</div>
-    </div>,
-    document.body,
+    </div>
   );
 }
 

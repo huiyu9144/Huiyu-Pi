@@ -57,6 +57,55 @@ interface RefetchState {
 const refetchState = new Map<string, RefetchState>();
 
 /**
+ * Coalesced session-list refetch. Multiple callers requesting a refresh
+ * for the same projectId within the same event-loop turn share one
+ * HTTP request — same pattern as scheduleMessagesRefetch for messages.
+ *
+ * Why: agent_end, session_list_changed, snapshot-guard timeout, and
+ * cross-tab events can all fire in quick succession, each triggering
+ * loadSessionsForProject. Without coalescing this stacks N identical
+ * GET /sessions requests.
+ */
+interface ListRefetchState {
+  inflight: boolean;
+  queued: boolean;
+}
+const listRefetchState = new Map<string, ListRefetchState>();
+
+const listFetchTimestamps = new Map<string, number>();
+const LIST_FRESH_MS = 2_000;
+
+function scheduleListRefetch(projectId: string): void {
+  const st = listRefetchState.get(projectId) ?? { inflight: false, queued: false };
+  if (st.inflight) {
+    st.queued = true;
+    listRefetchState.set(projectId, st);
+    return;
+  }
+  st.inflight = true;
+  listRefetchState.set(projectId, st);
+
+  const run = (): Promise<void> =>
+    useSessionStore
+      .getState()
+      .loadSessionsForProject(projectId)
+      .finally(() => {
+        const cur = listRefetchState.get(projectId);
+        if (cur === undefined) return;
+        if (cur.queued) {
+          cur.queued = false;
+          cur.inflight = false;
+          listRefetchState.set(projectId, cur);
+          scheduleListRefetch(projectId);
+        } else {
+          listRefetchState.delete(projectId);
+        }
+      });
+
+  void run();
+}
+
+/**
  * Per-session AbortController for the open SSE stream. Module-scoped
  * (not in Zustand state) for the same reason as `pendingDeltas` /
  * `pendingRaf`: it's plumbing, not data. Keeping it inside Zustand
@@ -65,53 +114,127 @@ const refetchState = new Map<string, RefetchState>();
  * never re-render, because we mutate the Map imperatively rather than
  * through `set()`.
  */
-const controllers = new Map<string, AbortController>();
+/**
+ * At most one active SSE stream at any time. This prevents HTTP/1.1
+ * connection-pool exhaustion — aborting a fetch on one slot and
+ * immediately opening another on the same domain can race with TCP
+ * close, so we defer the new fetch to a microtask via
+ * Promise.resolve().then() in setActiveSession.
+ */
+let streamCtrl: AbortController | undefined;
+let streamSessionId: string | undefined;
+
+let sessionAbortCtrl = new AbortController();
+let sessionVersion = 0;
+
+export function getSessionAbortSignal(): AbortSignal {
+  return sessionAbortCtrl.signal;
+}
+
+export function getSessionVersion(): number {
+  return sessionVersion;
+}
 
 /**
- * Stale-streaming recovery: every 10 s, check for sessions whose
- * streamingBySession is still `true` but whose SSE controller has
- * been removed (user navigated away, tab was backgrounded, network
- * blip dropped the stream before agent_end arrived). Without this
- * the sidebar spinner stays stuck forever — the server-side turn
- * finished minutes ago but the client never learned.
+ * Snapshot-fed streaming guard: per-session one-shot timer that fires
+ * when a `snapshot` event arrives with `isStreaming: true` but no
+ * real `agent_start` or `agent_end` follows within 30 seconds.
  *
- * Cost: one Zustand `get()` read + a Map lookup per tick. Skips
- * entirely when nothing is streaming. Fires at most one
- * loadSessionsForProject per project per interval.
+ * Why this exists: the server's `session.isStreaming` can get stuck
+ * at `true` after an agent turn completes (server-side race). When
+ * the client reconnects (page refresh, tab switch, network blip), the
+ * `snapshot` copies that stuck flag → the sidebar shows "Thinking…"
+ * forever with no way to clear it, because no `agent_end` will ever
+ * arrive.
+ *
+ * The existing stale-streaming recovery only handles sessions whose
+ * SSE controller has been removed from the `controllers` Map. This
+ * guard handles the other case: the controller IS present (SSE stream
+ * is healthy) but the server's flag is wrong.
+ *
+ * A legitimate, long-running agent will start a turn (agent_start →
+ * timer cancelled) or finish (agent_end → timer cancelled) within the
+ * window. If neither arrives, the streaming state is almost certainly
+ * stale and safe to force-clear.
  */
-const STALE_POLL_MS = 10_000;
-let stalePollTimer: ReturnType<typeof setInterval> | undefined;
-function startStalePoll(): void {
-  if (stalePollTimer !== undefined) return;
-  stalePollTimer = setInterval(() => {
-    const state = useSessionStore.getState();
-    const streamingIds = Object.entries(state.streamingBySession)
-      .filter(([, v]) => v === true)
-      .map(([id]) => id);
-    if (streamingIds.length === 0) return;
-    const staleIds = streamingIds.filter((id) => !controllers.has(id));
-    if (staleIds.length === 0) return;
-    // Collect affected projects, deduplicate, refresh once each.
-    const refreshedProjects = new Set<string>();
-    for (const sid of staleIds) {
-      const pid = findProjectIdForSession(state, sid);
-      if (pid !== undefined && !refreshedProjects.has(pid)) {
-        refreshedProjects.add(pid);
-        // Flip streaming off immediately so the spinner disappears;
-        // the subsequent list refetch brings isLive up to date.
+const snapshotGuardTimers = new Map<string, ReturnType<typeof setTimeout>>();
+const SNAPSHOT_GUARD_MS = 30_000;
+
+function clearSnapshotGuard(sessionId: string): void {
+  const t = snapshotGuardTimers.get(sessionId);
+  if (t !== undefined) {
+    clearTimeout(t);
+    snapshotGuardTimers.delete(sessionId);
+  }
+}
+
+/**
+ * Tracks when each session's streamingBySession was last set to true.
+ * Used by snapshot guard and future timeout mechanisms.
+ */
+const streamingStartTimestamps = new Map<string, number>();
+
+function touchStreamingStart(sessionId: string): void {
+  if (!streamingStartTimestamps.has(sessionId)) {
+    streamingStartTimestamps.set(sessionId, Date.now());
+  }
+}
+function clearStreamingStart(sessionId: string): void {
+  streamingStartTimestamps.delete(sessionId);
+}
+
+/**
+ * Global event stream — listens for cross-session broadcasts (agent_end,
+ * session_list_changed) so the sidebar stays up-to-date even when the user
+ * has switched away from a running session.
+ *
+ * Replaces the previous 15-s background-poll approach: instead of the
+ * client asking "is anyone done?" every 15 s, the server pushes
+ * "session X finished" the instant it happens.
+ *
+ * Cost: 1 long-lived SSE connection + ~100 bytes/s heartbeat.
+ */
+let globalEventsController: AbortController | undefined;
+
+function connectGlobalEvents(): void {
+  if (globalEventsController !== undefined) return;
+  const ctrl = new AbortController();
+  globalEventsController = ctrl;
+
+  void streamSSE<IncomingEvent>("/api/v1/events", {
+    signal: ctrl.signal,
+    onEvent: (_event) => {
+      const event = _event as { type?: string; sessionId?: string; projectId?: string };
+      if (event.type === "agent_end" && event.sessionId) {
+        const state = useSessionStore.getState();
+        const sid = event.sessionId;
+        const wasStreaming = !!state.streamingBySession[sid];
         useSessionStore.setState((s) => ({
           streamingBySession: { ...s.streamingBySession, [sid]: false },
           activeToolBySession: { ...s.activeToolBySession, [sid]: undefined },
+          unacknowledgedEnds: { ...s.unacknowledgedEnds, [sid]: true },
         }));
-        void state.loadSessionsForProject(pid);
+        if (wasStreaming) {
+          clearStreamingStart(sid);
+          clearSnapshotGuard(sid);
+        }
+        const pid = findProjectIdForSession(state, sid);
+        if (pid) scheduleListRefetch(pid);
       }
-    }
-  }, STALE_POLL_MS);
+      if (event.type === "session_list_changed" && event.projectId) {
+        scheduleListRefetch(event.projectId);
+      }
+    },
+    onClose: () => { globalEventsController = undefined; },
+  });
 }
-// Start on first import — safe because useSessionStore is already
-// created by the time this module-level code runs (create() is
-// synchronous and the store export is hoisted).
-startStalePoll();
+
+function disconnectGlobalEvents(): void {
+  if (globalEventsController !== undefined) {
+    globalEventsController.abort();
+    globalEventsController = undefined;
+  }
+}
 
 /**
  * Phase 8 keeps the message type loose — pi's AgentMessage union is rich
@@ -282,6 +405,12 @@ interface SessionState {
   pendingDraftBySession: Record<string, string>;
   /** Per-session streaming state from snapshot/agent_start/agent_end. */
   streamingBySession: Record<string, boolean>;
+  /**
+   * Sessions whose agent_end was received via the global event channel
+   * while the user was on a different session.  The sidebar shows a
+   * green checkmark (✓) for these until the user clicks to acknowledge.
+   */
+  unacknowledgedEnds: Record<string, boolean>;
   /** Per-session last-known toolEvent + retry banners (lightly modelled). */
   bannerBySession: Record<string, string | undefined>;
   /**
@@ -315,6 +444,7 @@ interface SessionState {
    * too. Cheap to compare; no allocations.
    */
   agentEndCountBySession: Record<string, number>;
+  changedFilesBySession: Record<string, string[]>;
   /**
    * Per-session monotonic counter incremented on every
    * `compaction_end` event. Mirrors `agentEndCountBySession` for
@@ -360,6 +490,7 @@ interface SessionState {
   setActiveSession: (sessionId: string | undefined) => void;
   openStream: (sessionId: string) => void;
   closeStream: (sessionId: string) => void;
+  acknowledgeEnd: (sessionId: string) => void;
   /**
    * Force a one-shot messages refetch for a session, independent of
    * the SSE event loop. Used after operations that change the
@@ -414,11 +545,13 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   compactionsBySession: {},
   pendingDraftBySession: {},
   streamingBySession: {},
+  unacknowledgedEnds: {},
   bannerBySession: {},
   dismissedErrorBySession: {},
   streamingTextBySession: {},
   activeToolBySession: {},
   agentEndCountBySession: {},
+  changedFilesBySession: {},
   compactionEndCountBySession: {},
   queuedBySession: {},
   pendingScrollByMessageIndex: {},
@@ -427,6 +560,9 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   pendingRenameSessionId: undefined,
 
   loadSessionsForProject: async (projectId) => {
+    const lastFetch = listFetchTimestamps.get(projectId) ?? 0;
+    if (Date.now() - lastFetch < LIST_FRESH_MS) return;
+    listFetchTimestamps.set(projectId, Date.now());
     set({ loadingList: true, error: undefined });
     try {
       const { sessions } = await api.listSessions(projectId);
@@ -466,11 +602,10 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         const existing = s.byProject[projectId] ?? [];
         return {
           byProject: { ...s.byProject, [projectId]: [unified, ...existing] },
-          activeSessionId: summary.sessionId,
           pendingRenameSessionId: summary.sessionId,
         };
       });
-      localStorage.setItem(ACTIVE_SESSION_KEY, summary.sessionId);
+      get().setActiveSession(summary.sessionId);
       // Cross-tab: tell other browser tabs viewing this project so
       // their sidebar inserts the new session immediately. Without
       // this, tab B doesn't know about tab A's session until the
@@ -578,35 +713,48 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   },
 
   setActiveSession: (sessionId) => {
+    const prev = get().activeSessionId;
+    if (prev !== undefined && prev !== sessionId) {
+      if (streamCtrl) {
+        streamCtrl.abort();
+        streamCtrl = undefined;
+        streamSessionId = undefined;
+      }
+      sessionAbortCtrl.abort();
+      sessionAbortCtrl = new AbortController();
+      sessionVersion++;
+      set((s) => ({
+        activeToolBySession: { ...s.activeToolBySession, [prev]: undefined },
+      }));
+      clearStreamingStart(prev);
+      clearSnapshotGuard(prev);
+    }
     if (sessionId !== undefined) localStorage.setItem(ACTIVE_SESSION_KEY, sessionId);
     else localStorage.removeItem(ACTIVE_SESSION_KEY);
-    set({ activeSessionId: sessionId });
+    set((s) => {
+      const ue = sessionId ? { ...s.unacknowledgedEnds } : s.unacknowledgedEnds;
+      if (sessionId) delete ue[sessionId];
+      return { activeSessionId: sessionId, unacknowledgedEnds: ue };
+    });
+    if (sessionId !== undefined && sessionId !== prev) {
+      Promise.resolve().then(() => {
+        if (get().activeSessionId !== sessionId) return;
+        get().openStream(sessionId);
+      });
+    }
   },
 
   openStream: (sessionId) => {
-    const existing = controllers.get(sessionId);
-    if (existing !== undefined) return; // already open
+    if (streamSessionId === sessionId && streamCtrl && !streamCtrl.signal.aborted) return;
+    if (streamCtrl) streamCtrl.abort();
     const ctrl = new AbortController();
-    controllers.set(sessionId, ctrl);
+    streamCtrl = ctrl;
+    streamSessionId = sessionId;
 
-    // Fetch the compaction archive once on session open so the chat
-    // can render any historical CompactionCards immediately. Live
-    // compactions during this session refresh via the
-    // `compaction_end` SSE event handler in applyEvent. Fire-and-
-    // forget; non-fatal on failure.
-    void get().loadCompactions(sessionId);
-
-    // Identity-checked deletes below. Without this, React Strict Mode's
-    // double-mount in dev (mount → unmount → mount) can create:
-    //   1. ctrl_A registered
-    //   2. ctrl_A aborted by closeStream → entry deleted
-    //   3. ctrl_B registered
-    //   4. ctrl_A's catch fires (post-abort) and would delete ctrl_B
-    // — leaking ctrl_B with no way to close it. The `===` guard makes
-    // the delete a no-op when WE are no longer the registered entry.
     const onTerminate = (): void => {
-      if (controllers.get(sessionId) === ctrl) {
-        controllers.delete(sessionId);
+      if (streamCtrl === ctrl) {
+        streamCtrl = undefined;
+        streamSessionId = undefined;
       }
     };
 
@@ -615,7 +763,6 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       onEvent: (event) => applyEvent(set, get, sessionId, event),
       onClose: onTerminate,
       onReconnect: ({ attempt, delayMs, reason }) => {
-        if (attempt < 3) return;
         set((s) => ({
           bannerBySession: {
             ...s.bannerBySession,
@@ -624,15 +771,6 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         }));
       },
     }).catch((err: unknown) => {
-      // streamSSE returns AbortError as a normal resolution; only real
-      // errors reach here.
-      // Cross-tab session deletion: another tab (or a script) called
-      // DELETE /sessions/:id, the server disposed, our SSE attempt
-      // got a 404 on reconnect. Drop the session from local state so
-      // the sidebar list / chat view clear immediately, matching the
-      // experience of a same-tab delete. Without this the deleted
-      // session lingered in the list with a stale "stream error"
-      // banner until the user manually refreshed.
       if (err instanceof ApiError && err.status === 404) {
         set((s) => removeSessionFromState(s, sessionId));
         if (get().activeSessionId === undefined) {
@@ -650,17 +788,20 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   },
 
   closeStream: (sessionId) => {
-    const ctrl = controllers.get(sessionId);
-    if (ctrl !== undefined) {
-      ctrl.abort("stream closed");
-      // Identity-check: only delete if no later openStream replaced
-      // the entry between abort() and now (event-loop ordering means
-      // this is essentially impossible synchronously, but the guard
-      // costs nothing and pairs symmetrically with the catch above).
-      if (controllers.get(sessionId) === ctrl) {
-        controllers.delete(sessionId);
-      }
+    if (streamSessionId === sessionId && streamCtrl) {
+      streamCtrl.abort();
+      streamCtrl = undefined;
+      streamSessionId = undefined;
     }
+  },
+
+  acknowledgeEnd: (sessionId: string) => {
+    set((s) => {
+      if (!s.unacknowledgedEnds[sessionId]) return s;
+      const next = { ...s.unacknowledgedEnds };
+      delete next[sessionId];
+      return { unacknowledgedEnds: next };
+    });
   },
 
   sendPrompt: async (sessionId, text, attachments) => {
@@ -786,7 +927,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
         // above only knows about the parent id — without a refetch,
         // those children linger in byProject as sidebar orphans
         // pointing at deleted files.
-        void get().loadSessionsForProject(priorProjectId);
+        scheduleListRefetch(priorProjectId);
       }
     } catch (err) {
       set({ error: err instanceof ApiError ? err.code : (err as Error).message });
@@ -806,6 +947,11 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   },
 }));
 
+const storedId = localStorage.getItem(ACTIVE_SESSION_KEY);
+if (storedId) {
+  useSessionStore.getState().openStream(storedId);
+}
+
 /**
  * Single dispatch point for SSE events. The bridge sends a `snapshot` first;
  * subsequent events are AgentSessionEvent variants. We coarsely re-fetch the
@@ -819,6 +965,11 @@ function applyEvent(
   sessionId: string,
   event: IncomingEvent,
 ): void {
+  // Any SSE activity indicates the stream is alive and the server-side
+  // session is progressing — reset the orphan guard to avoid false
+  // positives on legitimately running agents.
+  clearSnapshotGuard(sessionId);
+
   if (event.type === "snapshot") {
     // Clear any "Reconnecting…" banner — snapshot arriving means we're
     // back online with fresh server state. Active-tool also resets:
@@ -836,31 +987,70 @@ function applyEvent(
       bannerBySession: { ...s.bannerBySession, [sessionId]: undefined },
       activeToolBySession: { ...s.activeToolBySession, [sessionId]: undefined },
     }));
+    // Snapshot-fed streaming guard: if the server reports isStreaming
+    // but no real agent_start/agent_end follows within the window,
+    // the server flag is probably stuck — force-clean below.
+    clearSnapshotGuard(sessionId);
+    if (event.isStreaming ?? false) {
+      touchStreamingStart(sessionId);
+      snapshotGuardTimers.set(
+        sessionId,
+        setTimeout(() => {
+          const state = useSessionStore.getState();
+          if (state.streamingBySession[sessionId] !== true) return;
+          useSessionStore.setState((s) => ({
+            streamingBySession: { ...s.streamingBySession, [sessionId]: false },
+            activeToolBySession: { ...s.activeToolBySession, [sessionId]: undefined },
+          }));
+          clearStreamingStart(sessionId);
+          const pid = findProjectIdForSession(useSessionStore.getState(), sessionId);
+          if (pid !== undefined) scheduleListRefetch(pid);
+        }, SNAPSHOT_GUARD_MS),
+      );
+    } else {
+      clearStreamingStart(sessionId);
+    }
     return;
   }
 
   if (event.type === "agent_start") {
-    // Drop any RAF + buffered deltas left over from a prior turn so they
-    // don't bleed into the new bubble.
     const stale = pendingRaf.get(sessionId);
     if (stale !== undefined) cancelAnimationFrame(stale);
     pendingRaf.delete(sessionId);
     pendingDeltas.delete(sessionId);
-    set((s) => ({
-      streamingBySession: { ...s.streamingBySession, [sessionId]: true },
-      streamingTextBySession: { ...s.streamingTextBySession, [sessionId]: "" },
-      bannerBySession: { ...s.bannerBySession, [sessionId]: undefined },
-    }));
+    clearSnapshotGuard(sessionId);
+    touchStreamingStart(sessionId);
+    set((s) => {
+      const ue = { ...s.unacknowledgedEnds };
+      delete ue[sessionId];
+      return {
+        streamingBySession: { ...s.streamingBySession, [sessionId]: true },
+        streamingTextBySession: { ...s.streamingTextBySession, [sessionId]: "" },
+        bannerBySession: { ...s.bannerBySession, [sessionId]: undefined },
+        unacknowledgedEnds: ue,
+        changedFilesBySession: { ...s.changedFilesBySession, [sessionId]: [] },
+      };
+    });
     return;
   }
 
   if (event.type === "agent_end") {
+    // Capture the business time of the agent finish from the server-supplied
+    // timestamp. This becomes post-agent.createdAt so the snapshot's
+    // createdAt reflects "agent finished" rather than the delayed moment
+    // createSnapshot happens to finish running on disk.
+    const agentEndTime =
+      typeof event.agentEndTime === "string" ? event.agentEndTime : undefined;
     // Cancel the pending RAF — the post-end refetch supersedes any
     // unflushed deltas.
     const raf = pendingRaf.get(sessionId);
     if (raf !== undefined) cancelAnimationFrame(raf);
     pendingRaf.delete(sessionId);
     pendingDeltas.delete(sessionId);
+    // Agent finished normally — clear the orphan guard regardless of
+    // whether it was set by snapshot or agent_start.
+    clearSnapshotGuard(sessionId);
+    clearStreamingStart(sessionId);
     // Read the server-enriched errorMessage if present (the SDK's
     // native agent_end carries no error field; session-registry merges
     // `live.session.errorMessage` in on fan-out). We surface it as an
@@ -874,52 +1064,72 @@ function applyEvent(
     // matters — the messages array must be in place before the renderer
     // drops the streamingText bubble or we'd see a momentary gap.
     const projectId = findProjectIdForSession(get(), sessionId);
+    const isActive = get().activeSessionId === sessionId;
+
+    if (!isActive) {
+      set((s) => ({
+        streamingBySession: { ...s.streamingBySession, [sessionId]: false },
+        streamingTextBySession: { ...s.streamingTextBySession, [sessionId]: "" },
+        activeToolBySession: { ...s.activeToolBySession, [sessionId]: undefined },
+        unacknowledgedEnds: { ...s.unacknowledgedEnds, [sessionId]: true },
+        agentEndCountBySession: {
+          ...s.agentEndCountBySession,
+          [sessionId]: (s.agentEndCountBySession[sessionId] ?? 0) + 1,
+        },
+      }));
+      if (projectId !== undefined) scheduleListRefetch(projectId);
+      if (projectId !== undefined) {
+        const files = get().changedFilesBySession[sessionId];
+        void useSnapshotStore
+          .getState()
+          .snapAfterAgent(
+            projectId,
+            "post-agent",
+            sessionId,
+            agentEndTime,
+            files?.length ? files : undefined,
+          );
+      }
+      return;
+    }
+
+    // ACTIVE session: immediately show green checkmark in sidebar,
+    // then refetch messages in background.
+    set((s) => ({
+      streamingBySession: { ...s.streamingBySession, [sessionId]: false },
+      streamingTextBySession: { ...s.streamingTextBySession, [sessionId]: "" },
+      activeToolBySession: { ...s.activeToolBySession, [sessionId]: undefined },
+      unacknowledgedEnds: { ...s.unacknowledgedEnds, [sessionId]: true },
+      agentEndCountBySession: {
+        ...s.agentEndCountBySession,
+        [sessionId]: (s.agentEndCountBySession[sessionId] ?? 0) + 1,
+      },
+    }));
+
     void api
       .getMessages(sessionId)
       .then(({ messages }) => {
         set((s) => {
-          // Canonical refetch replaces the optimistic-shape messages
-          // with their final form. Walk the OLD array first to revoke
-          // any blob URLs the optimistic image attachments held.
           const stale = s.messagesBySession[sessionId];
           if (stale !== undefined) revokeOptimisticBlobUrls(stale);
-          // Banner update: only OVERWRITE if agent_end carries its own
-          // errorMessage. An empty errorBanner here would wipe an
-          // error banner set moments earlier by compaction_end or
-          // message_end — those carry the more useful detail for
-          // context-overflow / provider-rejection failures.
-          //
-          // If the error matches a previously dismissed error (recorded
-          // by clearBanner or a model switch), suppress it — the
-          // server's live.session.errorMessage may be a stale residue
-          // from a prior agent round that used a different model.
           const existingBanner = s.bannerBySession[sessionId];
           const dismissed = s.dismissedErrorBySession[sessionId];
           const nextBanner =
             errorBanner !== undefined && errorBanner === dismissed
               ? undefined
               : (errorBanner ?? existingBanner);
-          // Clear the dismissed flag when this agent_end carries no
-          // error — the problem (if any) has been resolved.
           const nextDismissed =
             errorBanner === undefined ? undefined : s.dismissedErrorBySession[sessionId];
           return {
             messagesBySession: { ...s.messagesBySession, [sessionId]: messages },
-            streamingBySession: { ...s.streamingBySession, [sessionId]: false },
-            streamingTextBySession: { ...s.streamingTextBySession, [sessionId]: "" },
-            activeToolBySession: { ...s.activeToolBySession, [sessionId]: undefined },
             bannerBySession: { ...s.bannerBySession, [sessionId]: nextBanner },
             dismissedErrorBySession: { ...s.dismissedErrorBySession, [sessionId]: nextDismissed },
-            agentEndCountBySession: {
-              ...s.agentEndCountBySession,
-              [sessionId]: (s.agentEndCountBySession[sessionId] ?? 0) + 1,
-            },
           };
         });
         // Refresh session list so isLive / lastActivityAt etc. sync
         // from server — without this the sidebar spinner may stay
         // stuck or the session metadata goes stale.
-        if (projectId !== undefined) void get().loadSessionsForProject(projectId);
+        if (projectId !== undefined) scheduleListRefetch(projectId);
         // Post-agent snapshot: capture the AI's result on disk after this turn.
         // Fire-and-forget is safe here — the snapshot is a bonus record that
         // doesn't need to block the UI from re-enabling.
@@ -927,7 +1137,10 @@ function applyEvent(
           const lastMsg = messages[messages.length - 1];
           const label =
             typeof lastMsg?.content === "string" ? lastMsg.content.slice(0, 60) : "post-agent";
-          void useSnapshotStore.getState().snapAfterAgent(projectId, label, sessionId);
+          const files = get().changedFilesBySession[sessionId];
+          void useSnapshotStore
+            .getState()
+            .snapAfterAgent(projectId, label, sessionId, agentEndTime, files?.length ? files : undefined);
         }
       })
       .catch(() => {
@@ -957,7 +1170,21 @@ function applyEvent(
         }));
         // Still try to refresh the list on failure — the session likely
         // ended even if we couldn't pull fresh messages.
-        if (projectId !== undefined) void get().loadSessionsForProject(projectId);
+        if (projectId !== undefined) scheduleListRefetch(projectId);
+        // Still create post-agent snapshot even when messages refetch fails —
+        // the agent already finished and changed files on disk.
+        if (projectId !== undefined) {
+          const files = get().changedFilesBySession[sessionId];
+          void useSnapshotStore
+            .getState()
+            .snapAfterAgent(
+              projectId,
+              "post-agent",
+              sessionId,
+              agentEndTime,
+              files?.length ? files : undefined,
+            );
+        }
       });
     return;
   }
@@ -983,28 +1210,29 @@ function applyEvent(
   }
 
   if (event.type === "tool_execution_start") {
-    // The SDK's tool_execution_start carries `toolName` and an `input`
-    // object whose shape varies per tool. Pull a one-line summary out
-    // best-effort: filename for read/write/edit, command for bash,
-    // first arg/key otherwise. The renderer falls back to bare
-    // `running <name>` when summary is undefined.
     const name = typeof event.toolName === "string" ? event.toolName : "tool";
-    const input = (event.input ?? {}) as Record<string, unknown>;
+    const input = ((event as Record<string, unknown>).args ?? {}) as Record<string, unknown>;
     const summary = summarizeToolInput(name, input);
     const tool: ActiveTool = summary !== undefined ? { name, summary } : { name };
-    set((s) => ({
-      activeToolBySession: { ...s.activeToolBySession, [sessionId]: tool },
-    }));
-    // Refetch so the assistant message containing the toolCall block
-    // becomes visible immediately (the SDK finalizes the assistant
-    // message right before it kicks off tool execution).
+    set((s) => {
+      const updates: Record<string, unknown> = {
+        activeToolBySession: { ...s.activeToolBySession, [sessionId]: tool },
+      };
+      if (name === "write" || name === "edit") {
+        const filePath = summary;
+        if (filePath !== undefined) {
+          const prev = s.changedFilesBySession[sessionId] ?? [];
+          if (!prev.includes(filePath)) {
+            updates.changedFilesBySession = {
+              ...s.changedFilesBySession,
+              [sessionId]: [...prev, filePath],
+            };
+          }
+        }
+      }
+      return updates;
+    });
     scheduleMessagesRefetch(set, sessionId);
-    // (The session-list refresh for session-creating tools — subagent,
-    // orchestrate_spawn_worker — used to live here as a client-side
-    // toolName check. The server now pushes `session_list_changed`
-    // directly: from session-registry's subscribe handler for subagent,
-    // from inside execute() for orchestrate_spawn_worker. The handler
-    // below routes both into loadSessionsForProject.)
     return;
   }
 
@@ -1028,7 +1256,7 @@ function applyEvent(
     // worker so the sidebar updates without waiting for the
     // supervisor's enclosing turn to finish.
     const pid = typeof event.projectId === "string" ? event.projectId : undefined;
-    if (pid !== undefined) void get().loadSessionsForProject(pid);
+    if (pid !== undefined) scheduleListRefetch(pid);
     return;
   }
 
@@ -1069,9 +1297,6 @@ function applyEvent(
         if (raf !== undefined) cancelAnimationFrame(raf);
         pendingRaf.delete(sessionId);
         pendingDeltas.delete(sessionId);
-        set((s) => ({
-          streamingTextBySession: { ...s.streamingTextBySession, [sessionId]: "" },
-        }));
       }
     }
     return;
@@ -1086,6 +1311,11 @@ function applyEvent(
       sessionId,
       questions: questions as PendingAskQuestion["questions"],
     });
+    set((s) => ({
+      streamingBySession: { ...s.streamingBySession, [sessionId]: false },
+      streamingTextBySession: { ...s.streamingTextBySession, [sessionId]: "" },
+    }));
+    clearStreamingStart(sessionId);
     return;
   }
 
@@ -1428,7 +1658,7 @@ if (!globalThis.__piForgeSessionCrossTabRegistered) {
       // removeSessionFromState above only knows about the parent
       // id — without this, children stay in byProject in the
       // receiving tab until its next mount.
-      void useSessionStore.getState().loadSessionsForProject(msg.projectId);
+      void scheduleListRefetch(msg.projectId);
       return;
     }
     if (msg.type === "session_renamed") {
@@ -1451,6 +1681,8 @@ if (!globalThis.__piForgeSessionCrossTabRegistered) {
   globalThis.__piForgeSessionCrossTabRegistered = true;
 }
 
+connectGlobalEvents();
+
 if (import.meta.hot) {
   import.meta.hot.dispose(() => {
     if (globalThis.__piForgeSessionCrossTabCleanup) {
@@ -1458,9 +1690,6 @@ if (import.meta.hot) {
     }
     globalThis.__piForgeSessionCrossTabRegistered = false;
     globalThis.__piForgeSessionCrossTabCleanup = undefined;
-    if (stalePollTimer !== undefined) {
-      clearInterval(stalePollTimer);
-      stalePollTimer = undefined;
-    }
+    disconnectGlobalEvents();
   });
 }

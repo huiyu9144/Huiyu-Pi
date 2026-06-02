@@ -3,7 +3,7 @@ import { ConversionError, convertAttachment, pickConverter } from "../attachment
 import { config } from "../config.js";
 import { formatErrorChain } from "../diagnostics.js";
 import { expandFileReferences, languageHintForPath } from "../file-references.js";
-import { getSession, type LiveSession } from "../session-registry.js";
+import { getSession, resumeSessionById, type LiveSession } from "../session-registry.js";
 import { errorSchema } from "./_schemas.js";
 
 /**
@@ -293,12 +293,17 @@ async function preflight(
   req: FastifyRequest,
   reply: FastifyReply,
 ): Promise<LiveSession | undefined> {
-  const live = getSession((req.params as { id: string }).id);
+  const sessionId = (req.params as { id: string }).id;
+  let live = getSession(sessionId);
   if (live === undefined) {
-    await reply
-      .code(404)
-      .send({ error: "session_not_found", message: "no live session with that id" });
-    return undefined;
+    try {
+      live = await resumeSessionById(sessionId);
+    } catch {
+      await reply
+        .code(404)
+        .send({ error: "session_not_found", message: "no live session with that id" });
+      return undefined;
+    }
   }
   const model = live.session.model;
   if (model === undefined) {
@@ -484,12 +489,19 @@ export const promptRoutes: FastifyPluginAsync = async (fastify) => {
       // browser releases the spinner and surfaces the error in chat.
       const synthesizeFailureEvent = (err: unknown): void => {
         const errorMessage = err instanceof Error ? err.message : String(err);
+        // Reset the SDK's internal isStreaming flag so the session
+        // doesn't remain stuck at "streaming=true" forever. Without
+        // this, a subsequent SSE reconnect (page refresh) reads the
+        // stale flag from snapshot and the client shows "Thinking..."
+        // despite the agent having already finished.
+        live.session.abort().catch(() => {});
         for (const client of live.clients) {
           try {
             client.send({
               type: "agent_end",
               sessionId: req.params.id,
               errorMessage,
+              agentEndTime: new Date().toISOString(),
             });
           } catch {
             // a single client send-failure shouldn't stop fan-out

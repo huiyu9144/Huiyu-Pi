@@ -29,7 +29,7 @@ const snapshotMetaSchema = {
     projectId: { type: "string" },
     label: { type: "string" },
     createdAt: { type: "string", format: "date-time" },
-    trigger: { type: "string", enum: ["manual", "pre-agent", "pre-restore"] },
+    trigger: { type: "string", enum: ["manual", "pre-agent", "post-agent", "pre-restore"] },
     sessionId: { type: "string" },
     totalFiles: { type: "integer", minimum: 0 },
     totalSize: { type: "integer", minimum: 0 },
@@ -64,7 +64,7 @@ const snapshotDetailSchema = {
     projectId: { type: "string" },
     label: { type: "string" },
     createdAt: { type: "string", format: "date-time" },
-    trigger: { type: "string", enum: ["manual", "pre-agent", "pre-restore"] },
+    trigger: { type: "string", enum: ["manual", "pre-agent", "post-agent", "pre-restore"] },
     sessionId: { type: "string" },
     files: {
       type: "object",
@@ -113,7 +113,13 @@ function mapError(reply: FastifyReply, err: unknown): FastifyReply {
 export const snapshotRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post<{
     Params: { projectId: string };
-    Body: { label?: string; trigger?: "manual" | "pre-agent" | "post-agent"; sessionId?: string };
+    Body: {
+      label?: string;
+      trigger?: "manual" | "pre-agent" | "post-agent";
+      sessionId?: string;
+      createdAt?: string;
+      changedFiles?: string[];
+    };
   }>(
     "/projects/:projectId/snapshots",
     {
@@ -129,6 +135,8 @@ export const snapshotRoutes: FastifyPluginAsync = async (fastify) => {
             label: { type: "string" },
             trigger: { type: "string", enum: ["manual", "pre-agent", "post-agent"] },
             sessionId: { type: "string" },
+            createdAt: { type: "string", format: "date-time" },
+            changedFiles: { type: "array", items: { type: "string" } },
           },
         },
         response: {
@@ -159,6 +167,8 @@ export const snapshotRoutes: FastifyPluginAsync = async (fastify) => {
           req.body?.label ?? "手动快照",
           req.body?.trigger ?? "manual",
           req.body?.sessionId,
+          req.body?.createdAt,
+          req.body?.changedFiles,
         );
         return { snapshot: result.snapshot, warnings: result.warnings };
       } catch (err) {

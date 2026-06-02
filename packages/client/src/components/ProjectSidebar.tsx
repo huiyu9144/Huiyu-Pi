@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Folder, Plus, X } from "lucide-react";
+import { Folder, Loader2, Plus, X } from "lucide-react";
 import { useProjectStore } from "../store/project-store";
 import { useSessionStore } from "../store/session-store";
 import { useUiStore } from "../store/ui-store";
@@ -34,11 +34,15 @@ export function ProjectSidebar({ className = "" }: ProjectSidebarProps = {}) {
    * Git) lines up by the time the session is selected.
    */
   const handleNewSession = async (projectId: string): Promise<void> => {
+    if (creatingProjectId !== undefined) return;
+    setCreatingProjectId(projectId);
     if (activeProjectId !== projectId) setActive(projectId);
     try {
       await createSession(projectId);
     } catch {
       // store.error surfaces — no UI noise here
+    } finally {
+      setCreatingProjectId(undefined);
     }
   };
   const showPicker = useUiStore((s) => s.projectPickerOpen);
@@ -47,15 +51,23 @@ export function ProjectSidebar({ className = "" }: ProjectSidebarProps = {}) {
   const [renameValue, setRenameValue] = useState("");
   const [draggingProjectId, setDraggingProjectId] = useState<string | undefined>();
   const [dragOverProjectId, setDragOverProjectId] = useState<string | undefined>();
+  /**
+   * Guards against rapid consecutive clicks on the + button.
+   * While a createSession POST is in flight, further clicks on any
+   * project's + button are ignored — the spin animation already
+   * signals "session being created" and the first click will set
+   * activeSessionId + pendingRename when it resolves.
+   */
+  const [creatingProjectId, setCreatingProjectId] = useState<string | undefined>();
 
   /**
-   * Delete-project modal state. `liveCount` and `onDiskCount` are
-   * captured at open time so the dialog copy stays stable while the
-   * user reads it (a session ending mid-read shouldn't change the
-   * number shown). `acknowledged` gates the Delete button when there
-   * are session files to remove — a required confirmation step
-   * rather than an opt-in toggle. Empty projects don't need the
-   * acknowledgement and the button is enabled immediately.
+   * Opens the delete-confirmation modal. If the project has session
+   * files on disk, the user must check the acknowledgement checkbox
+   * before the Delete button enables. No live-sessions block: any
+   * live sessions for this project get disposed as part of the delete
+   * (see submitDelete below), which matches the user's mental model of
+   * "delete project = make it go away" without the extra
+   * "dispose all live sessions first" dance.
    */
   const [deleteDialog, setDeleteDialog] = useState<
     | {
@@ -148,10 +160,10 @@ export function ProjectSidebar({ className = "" }: ProjectSidebarProps = {}) {
       // is a no-op on desktop and on non-notched phones.
       style={{
         paddingTop: "env(safe-area-inset-top)",
-        paddingBottom: "env(safe-area-inset-bottom)",
+        paddingBottom: "calc(45px + env(safe-area-inset-bottom))",
       }}
     >
-      <div className="custom-scrollbar flex-1 overflow-y-auto py-1">
+      <div className="custom-scrollbar flex-1 overflow-y-auto pt-1">
         {projects.length === 0 && (
           <p className="px-3 py-4 text-sm font-semibold text-[#545454] light:text-neutral-500">
             No projects yet.
@@ -230,10 +242,11 @@ export function ProjectSidebar({ className = "" }: ProjectSidebarProps = {}) {
                 )}
                 <button
                   onClick={() => void handleNewSession(p.id)}
-                  className="inline-flex p-1 text-neutral-400 opacity-0 group-hover:opacity-100 hover:text-white light:hover:text-neutral-950 transition-opacity"
-                  title="New session in this project"
+                  disabled={creatingProjectId !== undefined}
+                  className="inline-flex p-1 text-neutral-400 opacity-0 group-hover:opacity-100 hover:text-white light:hover:text-neutral-950 transition-opacity disabled:opacity-70 disabled:hover:text-neutral-400"
+                  title={creatingProjectId === p.id ? "Creating session…" : "New session in this project"}
                 >
-                  <Plus size={14} />
+                  {creatingProjectId === p.id ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
                 </button>
                 <button
                   onClick={() => handleDelete(p.id, p.name)}
