@@ -9,10 +9,11 @@ interface Props {
 interface DotInfo {
   index: number;
   top: string;
-  preview: string;
+  line1: string;
+  line2: string;
 }
 
-function extractPreview(msg: AgentMessageLike): string {
+function splitPreview(msg: AgentMessageLike): { line1: string; line2: string } {
   const raw =
     typeof msg.content === "string"
       ? msg.content
@@ -22,8 +23,17 @@ function extractPreview(msg: AgentMessageLike): string {
             .map((b) => b.text as string)
             .join(" ")
         : "";
-  const text = raw.replace(/<[^>]*>/g, "").trim();
-  return text.length > 100 ? text.slice(0, 100) + "…" : text || "Message";
+  const text = raw
+    .replace(/<[^>]*>/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (text.length === 0) return { line1: "Message", line2: "" };
+  const cut = Math.min(text.length, 60);
+  const breakAt = text.lastIndexOf(" ", cut);
+  const end = breakAt > 20 ? breakAt : cut;
+  const l1 = text.slice(0, end);
+  const l2 = text.slice(end).trim();
+  return { line1: l1, line2: l2.length > 60 ? l2.slice(0, 60) + "…" : l2 };
 }
 
 export function ChatScrollbarDots({ messages, onScrollToMessage }: Props) {
@@ -38,11 +48,15 @@ export function ChatScrollbarDots({ messages, onScrollToMessage }: Props) {
     }
     if (userMsgs.length === 0) return [];
     const total = messages.length;
-    return userMsgs.map(({ msg, idx }) => ({
-      index: idx,
-      top: `${((idx + 1) / (total + 1)) * 100}%`,
-      preview: extractPreview(msg),
-    }));
+    return userMsgs.map(({ msg, idx }) => {
+      const { line1, line2 } = splitPreview(msg);
+      return {
+        index: idx,
+        top: `${((idx + 1) / (total + 1)) * 100}%`,
+        line1,
+        line2,
+      };
+    });
   }, [messages]);
 
   const handleMouseEnter = useCallback((dot: DotInfo, e: React.MouseEvent) => {
@@ -59,7 +73,7 @@ export function ChatScrollbarDots({ messages, onScrollToMessage }: Props) {
   }, []);
 
   const handleMouseLeave = useCallback(() => {
-    hideTimerRef.current = setTimeout(() => setHoveredIdx(null), 100);
+    hideTimerRef.current = setTimeout(() => setHoveredIdx(null), 80);
   }, []);
 
   const handleClick = useCallback(
@@ -91,11 +105,14 @@ export function ChatScrollbarDots({ messages, onScrollToMessage }: Props) {
         <div
           className="scrollbar-dots-tooltip"
           style={{
-            left: "24px",
+            left: "22px",
             top: tooltipPos.y,
           }}
         >
-          {hoveredDot.preview}
+          <div className="scrollbar-dots-tooltip-line1">{hoveredDot.line1}</div>
+          {hoveredDot.line2.length > 0 && (
+            <div className="scrollbar-dots-tooltip-line2">{hoveredDot.line2}</div>
+          )}
         </div>
       )}
     </div>
