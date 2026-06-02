@@ -177,6 +177,32 @@ huiyu-pi --host 0.0.0.0        # CLI 参数
 
 > **安全提醒：** 绑定 `0.0.0.0` 会将 Agent 的终端和文件系统暴露给 **网络上的所有人**，请仅在可信的私有网络中启用。
 
+### Docker 部署（推荐生产环境使用）
+
+```bash
+# 1. 克隆仓库
+git clone https://github.com/huiyu9144/Huiyu-Pi.git
+cd Huiyu-Pi
+
+# 2. 配置环境变量
+cp docker/.env.example docker/.env
+# 编辑 docker/.env，设置 UI_PASSWORD 或 API_KEY
+
+# 3. 构建并启动
+cd docker
+docker compose up -d --build
+```
+
+打开 `http://localhost:9144` 即可使用。
+
+**自定义 UID/GID**（解决挂载目录权限问题）：
+```bash
+docker compose build --build-arg PUID=$(id -u) --build-arg PGID=$(id -g)
+docker compose up -d
+```
+
+详细配置请查看 [docker/README.md](docker/README.md)。
+
 ---
 
 ## API 密钥配置

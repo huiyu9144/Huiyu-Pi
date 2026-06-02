@@ -1,12 +1,12 @@
-# Single-tenant pi-forge.
+# Single-tenant Huiyu Pi.
 #   cp docker/.env.example docker/.env   # edit secrets first time
 #   cd docker && docker compose up -d --build
 #
 # Bind mounts, env-var rationale, and operator trade-offs:
-# see ../docs/containers.md.
+# see docker/README.md.
 
 services:
-  pi-forge:
+  huiyu-pi:
     build:
       context: ..
       dockerfile: docker/Dockerfile
@@ -20,7 +20,7 @@ services:
     ports:
       # Loopback only by default — drop the `127.0.0.1:` prefix to expose
       # to the LAN (and set UI_PASSWORD or API_KEY first; see SECURITY.md).
-      - "127.0.0.1:${HOST_PORT:-3000}:3000"
+      - "127.0.0.1:${HOST_PORT:-9144}:9144"
     volumes:
       - ${WORKSPACE_HOST_PATH:-../workspace}:/workspace
       - ${PI_CONFIG_HOST_PATH:-~/.pi/agent}:/home/pi/.pi/agent
@@ -32,7 +32,7 @@ services:
       - WORKSPACE_PATH=/workspace
       - PI_CONFIG_DIR=/home/pi/.pi/agent
       - FORGE_DATA_DIR=/home/pi/.huiyu-pi
-      - PORT=3000
+      - PORT=9144
       # Auth — read from .env. Both empty = auth disabled.
       - UI_PASSWORD=${UI_PASSWORD:-}
       - REQUIRE_PASSWORD_CHANGE=${REQUIRE_PASSWORD_CHANGE:-false}
@@ -62,7 +62,7 @@ services:
           "CMD",
           "node",
           "-e",
-          "fetch('http://127.0.0.1:3000/api/v1/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+          "fetch('http://127.0.0.1:9144/api/v1/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
         ]
       interval: 30s
       timeout: 5s

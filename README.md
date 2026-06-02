@@ -188,6 +188,32 @@ npm run build        # build server + client
 npm run start        # start production server on port 9144
 ```
 
+### Option E: Docker (recommended for production)
+
+```bash
+# 1. Clone the repo
+git clone https://github.com/huiyu9144/Huiyu-Pi.git
+cd Huiyu-Pi
+
+# 2. Configure environment
+cp docker/.env.example docker/.env
+# Edit docker/.env to set UI_PASSWORD or API_KEY for auth
+
+# 3. Build and start
+cd docker
+docker compose up -d --build
+```
+
+Open `http://localhost:9144` in your browser.
+
+**Custom UID/GID** (fix permission issues on bind mounts):
+```bash
+docker compose build --build-arg PUID=$(id -u) --build-arg PGID=$(id -g)
+docker compose up -d
+```
+
+For detailed Docker configuration, see [docker/README.md](docker/README.md).
+
 ---
 
 ## API Key Setup

@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.6
 #
-# Multi-stage Dockerfile for pi-forge.
+# Multi-stage Dockerfile for Huiyu Pi.
 #
 #   builder  → install deps, compile server TS, build Vite client
 #   runtime  → node:22-bookworm-slim with Python 3.14 + pip, compiled
@@ -20,7 +20,7 @@ FROM python:3.14-slim-bookworm AS python-base
 
 FROM node:22-bookworm-slim AS node-python-base
 
-# Keep the final image lineage on the official Node image — pi-forge is a
+# Keep the final image lineage on the official Node image — Huiyu Pi is a
 # Node app, so preserving Node/npm/corepack exactly as shipped is more
 # important than preserving the Python image as the final base. Copy the
 # official Python 3.14 runtime into /usr/local (Docker COPY merges into
@@ -84,7 +84,7 @@ RUN npm run build
 FROM node-python-base AS runtime
 
 # `tini` for proper PID-1 signal handling (Ctrl-C → SIGTERM → graceful
-# shutdown of pi-forge's onClose hook). Without it, dropped SIGTERMs
+# shutdown of Huiyu Pi's onClose hook). Without it, dropped SIGTERMs
 # leave SSE clients hanging on `docker compose down`.
 #
 # PUID/PGID build args let the user match the container's `pi` user to
@@ -105,7 +105,7 @@ ARG PGID=1000
 #   - tini: PID-1 signal handling (see above)
 #   - git: status / diff / commit / push / etc. — the GitPanel routes
 #     and the agent's `bash` tool both expect git on PATH. Also used by
-#     pi-forge's "clone repository" project-setup flow.
+#     Huiyu Pi's "clone repository" project-setup flow.
 #   - gh: the GitHub CLI. Authenticates against github.com / GHE via
 #     `gh auth login` (more ergonomic than wrangling raw PATs / SSH
 #     keys), wraps git for HTTPS clones with stored credentials, and
@@ -164,7 +164,7 @@ COPY --from=builder --chown=pi:pi /app/packages/server/dist ./packages/server/di
 COPY --from=builder --chown=pi:pi /app/packages/client/package.json ./packages/client/package.json
 COPY --from=builder --chown=pi:pi /app/packages/client/dist ./packages/client/dist
 
-# Workspace + pi config + pi-forge data dirs are mounted at runtime;
+# Workspace + pi config + Huiyu Pi data dirs are mounted at runtime;
 # create them so non-root `pi` can read them on first start even if the
 # host bind is currently empty.
 RUN mkdir -p /workspace /home/pi/.pi/agent /home/pi/.huiyu-pi /home/pi/.local \
@@ -186,7 +186,7 @@ USER pi
 # the container.
 ENV NODE_ENV=production \
     HOST=0.0.0.0 \
-    PORT=3000 \
+    PORT=9144 \
     PATH=/home/pi/.local/bin:/app/node_modules/.bin:$PATH \
     WORKSPACE_PATH=/workspace \
     PI_CONFIG_DIR=/home/pi/.pi/agent \
@@ -195,7 +195,7 @@ ENV NODE_ENV=production \
     SHELL=/bin/bash \
     TERM=xterm-256color
 
-EXPOSE 3000
+EXPOSE 9144
 
 ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["node", "packages/server/dist/index.js"]
