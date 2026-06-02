@@ -406,7 +406,7 @@ export function FileBrowserPanel() {
 
   return (
     <div className="flex h-full flex-col text-xs text-neutral-300">
-      <div className="flex items-center justify-between border-b border-neutral-800 px-3 py-2">
+      <div className="flex items-center justify-between border-b border-neutral-800 light:border-transparent px-3 py-2">
         <span
           className="flex items-center gap-1.5 truncate font-medium text-neutral-200"
           title={project.path}
