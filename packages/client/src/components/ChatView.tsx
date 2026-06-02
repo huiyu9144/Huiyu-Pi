@@ -1429,7 +1429,7 @@ function AssistantBlock({
   if (type === "thinking" && typeof block.thinking === "string") {
     return (
       <details
-        className={`group rounded ${flat ? "" : "border border-neutral-800"} pl-0 py-1 pr-2 text-xs text-neutral-400 [&:open]:pb-2 [&_summary]:list-none [&_pre]:m-0`}
+        className={`group rounded pl-0 py-1 pr-2 text-xs text-neutral-400 [&:open]:pb-2 [&_summary]:list-none [&_pre]:m-0`}
       >
         <summary className="cursor-pointer flex items-center gap-1 pl-4">
           <ChevronRight
