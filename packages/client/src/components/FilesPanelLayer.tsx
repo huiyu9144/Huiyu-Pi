@@ -188,7 +188,7 @@ export const FilesPanelLayer = memo(function FilesPanelLayer({
       />
       <div
         ref={filesPanelRef}
-        className="group flex shrink-0 flex-col border-l-[0.5px] border-neutral-800 bg-neutral-900"
+        className="group flex shrink-0 flex-col border-l-[0.5px] border-r-[0.5px] border-neutral-800 light:border-r-neutral-200 bg-neutral-900"
         style={{
           width: filesOpen ? `${filesWidth}px` : "0px",
           overflow: "hidden",

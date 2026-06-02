@@ -442,7 +442,7 @@ export function ChatView({ sessionId }: Props) {
               return out;
             })()}
             {streamingText.length > 0 && (
-              <div className="message-bubble rounded-lg border-[0.5px] border-neutral-800 bg-neutral-900 px-4 py-3">
+              <div className="message-bubble rounded-lg border-[0.5px] border-neutral-800 light:border-transparent bg-neutral-900 px-4 py-3">
                 <div className="mb-1 text-[10px] uppercase tracking-wider text-neutral-500">
                   assistant (streaming)
                 </div>
@@ -1035,7 +1035,7 @@ function AssistantMessageBubble({
   const isDone = stopReason !== undefined || !isStreaming;
   return (
     <div
-      className="message-bubble group rounded-lg border-[0.5px] border-neutral-800 bg-neutral-900 pl-0 pr-4 py-3"
+      className="message-bubble group rounded-lg border-[0.5px] border-neutral-800 light:border-transparent bg-neutral-900 pl-0 pr-4 py-3"
       data-message-role="assistant"
     >
       <div className="mb-1 flex items-center justify-between">
