@@ -12,6 +12,7 @@ interface DotInfo {
   top: string;
   line1: string;
   line2: string;
+  seq: number;
 }
 
 function splitPreview(msg: AgentMessageLike): { line1: string; line2: string } {
@@ -53,13 +54,14 @@ export function ChatScrollbarDots({ messages, onScrollToMessage, onScrollToBotto
     }
     if (userMsgs.length === 0) return [];
     const total = messages.length;
-    return userMsgs.map(({ msg, idx }) => {
+    return userMsgs.map(({ msg, idx }, seqIdx) => {
       const { line1, line2 } = splitPreview(msg);
       return {
         index: idx,
         top: `${((idx + 1) / (total + 1)) * 100}%`,
         line1,
         line2,
+        seq: seqIdx + 1,
       };
     });
   }, [messages]);
@@ -122,10 +124,7 @@ export function ChatScrollbarDots({ messages, onScrollToMessage, onScrollToBotto
 
   const hoveredDot = hoveredIdx !== null ? userDots.find((d) => d.index === hoveredIdx) : undefined;
 
-  const activeDotTop = hoveredIdx !== null ? userDots.find((d) => d.index === hoveredIdx) : null;
-
-  const tooltipTopPx =
-    activeDotTop !== null && activeDotTop !== undefined && mouseY !== null ? mouseY : 0;
+  const tooltipTopPx = mouseY ?? 0;
 
   return (
     <div
@@ -145,7 +144,7 @@ export function ChatScrollbarDots({ messages, onScrollToMessage, onScrollToBotto
       ))}
       <div
         className="scrollbar-dot scrollbar-dot-bottom"
-        style={{ bottom: "16px" }}
+        style={{ bottom: "66px" }}
         onMouseEnter={() => setHoveredIdx(-1)}
         onMouseLeave={handleDotLeave}
         onClick={handleBottomClick}
@@ -155,11 +154,14 @@ export function ChatScrollbarDots({ messages, onScrollToMessage, onScrollToBotto
         <div
           className="scrollbar-dots-tooltip"
           style={{
-            left: "16px",
+            left: "20px",
             top: `${tooltipTopPx}px`,
           }}
         >
-          <div className="scrollbar-dots-tooltip-line1">{hoveredDot.line1}</div>
+          <div className="scrollbar-dots-tooltip-line1">
+            <span className="scrollbar-dots-tooltip-seq">#{hoveredDot.seq}</span>
+            {hoveredDot.line1}
+          </div>
           {hoveredDot.line2.length > 0 && (
             <div className="scrollbar-dots-tooltip-line2">{hoveredDot.line2}</div>
           )}
