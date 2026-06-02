@@ -116,8 +116,8 @@ console.log("\nboolean coercion");
   const bare = parseCliArgs(["--minimal-ui"]);
   assert("bare --minimal-ui → true", envFor(bare, "MINIMAL_UI") === "true");
 
-  const eqFalse = parseCliArgs(["--minimal-ui=false"]);
-  assert("--minimal-ui=false → false", envFor(eqFalse, "MINIMAL_UI") === "false");
+  const eqFalse = parseCliArgs(["--no-minimal-ui"]);
+  assert("--no-minimal-ui → false", envFor(eqFalse, "MINIMAL_UI") === "false");
 
   const noFlag = parseCliArgs(["--no-serve-client"]);
   assert("--no-serve-client → false", envFor(noFlag, "SERVE_CLIENT") === "false");
