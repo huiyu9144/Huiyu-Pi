@@ -3052,7 +3052,7 @@ export const api = {
       },
       {
         method: "POST",
-        body: { label: label ?? "手动快照", trigger: trigger ?? "manual", sessionId, createdAt, changedFiles },
+        body: { label: label ?? "Manual snapshot", trigger: trigger ?? "manual", sessionId, createdAt, changedFiles },
       },
     ),
   listSnapshots: (projectId: string) =>

@@ -51,10 +51,10 @@ if exist "packages\server\dist\index.js" (
     echo [API] Build done.
 )
 
-REM 新用户 clone 下来时 dist 目录是空的（.gitignore 已忽略 dist/），
-REM server 起来后 9144 会因为没有 client dist 而返回空白页。
-REM 这里强制走一次 build：dist 已存在则秒跳过；不存在则生成全新产物，
-REM PWA 的 SW 内容哈希也是这次 build 产出的，跟开发者本地缓存完全无关。
+REM New users cloning the repo have no dist/ (gitignored). Without a
+REM client build the server starts fine but serves a blank page.
+REM Force a build here: if dist/ exists it's a no-op; if not it produces
+REM fresh assets including PWA SW content-hashes from this build.
 if exist "packages\client\dist\index.html" (
     echo [Client] Using pre-built client (fast start^)
 ) else (

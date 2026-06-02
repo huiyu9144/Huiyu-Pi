@@ -52,24 +52,35 @@
 
 ---
 
-## Prerequisites
+## Why ~80 Tokens?
 
-| Requirement | Why | How to install |
+Most AI coding tools pack 15,000–28,000 tokens into every request — rules, tool definitions, role prompts, output formatting. The AI spends most of its attention reading boilerplate instead of solving your problem.
+
+Huiyu Pi takes the opposite approach: strip everything non-essential. 4 basic tools. Clean canvas. No baggage.
+
+| | Before (typical) | Huiyu Pi |
 |---|---|---|
-| **Node.js ≥ 20** | Runtime for server and build tools | [nodejs.org](https://nodejs.org/) — download LTS version |
-| **npm** (comes with Node) | Package manager | Included with Node.js |
-| **Build tools** (for terminal support) | node-pty is a native C++ module that needs compilation | See below |
+| System prompt overhead | 15K–28K tokens | **~80 tokens** |
+| First token response | 2–10 seconds | **~0.3 seconds** |
+| Per-request cost | $0.02–$0.10+ | **90%+ cheaper** |
+| Tool definitions | 10–24+ | **4 essentials** |
+| Client type | Heavy desktop / Electron | **Pure Web UI** |
+| Data privacy | Cloud or hybrid | **100% local** |
 
-**Build tools by platform:**
+---
 
-| Platform | Command |
-|---|---|
-| **Windows** | Install [Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) (select "C++ build tools") or run `npm install --global windows-build-tools` in an admin terminal |
-| **macOS** | `xcode-select --install` |
-| **Linux (Debian/Ubuntu)** | `sudo apt install build-essential` |
-| **Linux (Fedora)** | `sudo dnf groupinstall "Development Tools"` |
+## Why Choose Huiyu Pi?
 
-> 💡 **No build tools?** The chat and file browser still work. Only the integrated terminal tab will fail to open.
+Built on pi and pi-forge, fixing their lack of a frontend WebUI and clunky interaction details. Huiyu Pi is a browser-based webui for the pi coding agent — it's blazing fast and feels great to use — that's why I'm sharing it.
+
+| | Advantage | Details |
+|---|---|---|
+| ⚡ | **Faster Performance** | Default context and prompts compressed from ~20K tokens to near zero. AI response time is dramatically shorter. |
+| 💰 | **Lower Token Consumption** | Most unused context stripped away, drastically reducing per-request API costs. |
+| 🎯 | **Less Context, More Focus** | Less context = AI stays focused on core instructions for more precise execution. |
+| 🔒 | **Local Deployment = Safe** | Fully local — API keys and data never leave your machine. Zero data leak risk. |
+| 🏗️ | **Build Your AI Empire** | Build your own Harness and Agent from scratch. Full control, fully customizable. |
+| 🛠️ | **Fixing the Original's Gaps** | Fixes pi's lack of WebUI and pi-forge's interaction issues. Blazing fast, incredibly smooth. |
 
 ---
 
@@ -82,23 +93,6 @@ npx huiyu-pi
 Open `http://localhost:9144` in your browser, go to **Settings → Providers**, enter your API key, and start chatting.
 
 *Also available as global npm install, manual clone, or platform scripts — see [Installation](#installation) below.*
-
----
-
-## Why ~80 Tokens?
-
-Most AI coding tools pack 15,000–28,000 tokens into every request — rules, tool definitions, role prompts, output formatting. The AI spends most of its attention reading boilerplate instead of solving your problem.
-
-Huiyu Pi takes the opposite approach: strip everything non-essential. 7 basic tools. Clean canvas. No baggage.
-
-| | Before (typical) | Huiyu Pi |
-|---|---|---|
-| System prompt overhead | 15K–28K tokens | **~80 tokens** |
-| First token response | 2–10 seconds | **~0.3 seconds** |
-| Per-request cost | $0.02–$0.10+ | **90%+ cheaper** |
-| Tool definitions | 10–24+ | **7 essentials** |
-| Client type | Heavy desktop / Electron | **Pure Web UI** |
-| Data privacy | Cloud or hybrid | **100% local** |
 
 ---
 
@@ -131,6 +125,8 @@ Dark and light themes controlled by CSS variables. Create your own skin without 
 ---
 
 ## Installation
+
+**Prerequisites:** Node.js ≥ 20 ([download](https://nodejs.org/)). Build tools required for terminal support: install [Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) (Windows), `xcode-select --install` (macOS), or `build-essential` (Linux). The chat and file browser work without build tools — only the terminal tab requires them.
 
 ### Option A: npx (no install, runs once)
 

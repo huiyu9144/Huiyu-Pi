@@ -29,16 +29,16 @@ async function prepareEnvironment(): Promise<void> {
     if (rootEl) {
       rootEl.innerHTML = `
         <main style="padding:2rem;font-family:monospace;color:#fca5a5;background:#0a0a0a;min-height:100vh">
-          <h1 style="color:#fff;margin-bottom:1rem">⚠ Huiyu Pi: 连接失败</h1>
-          <p style="color:#d4d4d4;margin-bottom:1rem">无法连接到服务器 (${err instanceof Error ? err.message : err})</p>
-          <p style="margin-bottom:1rem">请尝试以下步骤：</p>
+          <h1 style="color:#fff;margin-bottom:1rem">⚠ Huiyu Pi: connection failed</h1>
+          <p style="color:#d4d4d4;margin-bottom:1rem">Could not connect to the server (${err instanceof Error ? err.message : err})</p>
+          <p style="margin-bottom:1rem">Try these steps:</p>
           <ol style="color:#a3a3a3;padding-left:1.5rem;line-height:1.8">
-            <li>按 <kbd style="background:#333;padding:2px 6px;border-radius:3px">F12</kbd> 打开开发者工具 → Application → Storage → <b>Clear site data</b></li>
-            <li>禁用可能拦截请求的浏览器扩展（如图片嗅探、代理工具等）</li>
-            <li>按 <kbd style="background:#333;padding:2px 6px;border-radius:3px">Ctrl+Shift+R</kbd> 强制刷新页面</li>
+            <li>Open DevTools with <kbd style="background:#333;padding:2px 6px;border-radius:3px">F12</kbd> → Application → Storage → <b>Clear site data</b></li>
+            <li>Disable browser extensions that may block requests</li>
+            <li>Force-reload with <kbd style="background:#333;padding:2px 6px;border-radius:3px">Ctrl+Shift+R</kbd></li>
           </ol>
           <p style="margin-top:1rem;color:#71717a;font-size:12px">
-            如果服务器未运行，请先启动：<code style="background:#333;padding:2px 6px">npm run start</code>
+            If the server is not running, start it with: <code style="background:#333;padding:2px 6px">npm run start</code>
           </p>
         </main>`;
     }
