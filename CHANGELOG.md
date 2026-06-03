@@ -54,6 +54,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.6] — 2026-06-03
+
+### ✨ New Features
+
+- **Agent safety valve**: Added `maxToolCallsPerTurn` (default 50) to prevent the agent from entering an infinite tool-call loop in a single turn. The run is auto-aborted when the limit is reached, and the error is surfaced in chat.
+- **Session switching performance**: Implemented DOM caching (LRU, max 10 cached views) so switching sessions is instant — React preserves mounted ChatView instances and toggles them with CSS `display:none` instead of unmounting/remounting.
+- **Memo & Zustand optimization**: `ChatView`, `Message`, and `AssistantRenderSegmentView` wrapped with `React.memo`. `AssistantMessageBubble` removed from global Zustand subscriptions to eliminate unnecessary re-renders on large sessions.
+
+### 🐛 Bug Fixes
+
+- **Windows terminal (PTY) crash**: Fixed WebSocket 1006 error when clicking "New" terminal on Windows — `defaultShell()` now detects `process.platform === "win32"` and uses `COMSPEC` (cmd.exe) instead of the nonexistent `/bin/sh`.
+- **Snapshot cache dedup**: SSE snapshot updates that arrive with the same message count as the existing cache now preserve the old object reference, preventing a cascading re-render on session switch.
+
 ## [1.4.1] - 2026-06-02
 
 ### 🐛 Bug Fixes
