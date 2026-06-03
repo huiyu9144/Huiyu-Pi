@@ -178,6 +178,14 @@ export const ChatView = memo(function ChatView({ sessionId, hidden }: Props) {
   const setTreeOpen = useUiStore((s) => s.setTreeModalOpen);
 
   const scrollRef = useRef<HTMLDivElement>(null);
+  // Scroll position cache: when the session is hidden and later shown
+  // again, we restore the exact scrollTop so the user sees the same
+  // place they left off. This is NOT the same as the "sticky bottom"
+  // logic below — that one auto-scrolls during streaming. When we
+  // restore a cached position we also disable sticky-bottom follow so
+  // the auto-scroll effect doesn't override the restore.
+  const scrollPositionsRef = useRef<Map<string, number>>(new Map());
+
   // "Sticky bottom" scroll: track the user's INTENT in a ref via the
   // onScroll handler, then auto-scroll only when intent says "follow."
   //
@@ -195,7 +203,33 @@ export const ChatView = memo(function ChatView({ sessionId, hidden }: Props) {
     if (el === null) return;
     const distance = el.scrollHeight - el.scrollTop - el.clientHeight;
     isFollowingBottomRef.current = distance <= NEAR_BOTTOM_PX;
+    // Persist the raw scrollTop so we can restore it after a
+    // hide → show cycle. We always save the latest value regardless
+    // of follow-mode because the hidden session's scroll event
+    // won't fire again until it is shown.
+    scrollPositionsRef.current.set(sessionId, el.scrollTop);
   };
+
+  // Restore scroll position when the session becomes visible again
+  // after being hidden (DOM cached with display:none). This preserves
+  // the place the user left off, e.g. scrolled midway through a long
+  // conversation. We also unset follow-mode so the auto-scroll effect
+  // below doesn't yank the view back to the bottom.
+  //
+  // Runs on mount too — the DOM may already hold a stale scrollTop
+  // from a previous mount cycle, so we force the restore.
+  useEffect(() => {
+    if (!hidden) {
+      const saved = scrollPositionsRef.current.get(sessionId);
+      if (saved !== undefined) {
+        const el = scrollRef.current;
+        if (el !== null) {
+          el.scrollTop = saved;
+          isFollowingBottomRef.current = false;
+        }
+      }
+    }
+  }, [hidden, sessionId]);
 
   useEffect(() => {
     const el = scrollRef.current;
