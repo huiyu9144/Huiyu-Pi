@@ -29,7 +29,7 @@ import { processManager } from "./processes/manager.js";
  * stream" banner. The cap still bounds the wedged-tab case — at a
  * sustained 1 MB/s of events it fires within ~8s of zero consumption.
  */
-const BACKPRESSURE_LIMIT_BYTES = 8 * 1024 * 1024;
+const BACKPRESSURE_LIMIT_BYTES = 64 * 1024 * 1024;
 
 /**
  * Cadence at which we send an SSE keepalive on every open stream.

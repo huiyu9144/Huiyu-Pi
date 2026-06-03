@@ -319,6 +319,8 @@ function findLastAssistantErrorMessage(messages: readonly unknown[]): string | u
 
 function makeSubscribeHandler(live: LiveSession): () => void {
   const verbose = process.env.DEBUG_AGENT_EVENTS === "1";
+  const maxToolCalls = config.maxToolCallsPerTurn;
+  let turnToolCallCount = 0;
   return live.session.subscribe((event: AgentSessionEvent) => {
     live.lastActivityAt = new Date();
     if (event.type === "agent_start") {
@@ -326,6 +328,21 @@ function makeSubscribeHandler(live: LiveSession): () => void {
       // at the first message of the new turn (the user prompt or the
       // steered/follow-up entry).
       live.lastAgentStartIndex = live.session.messages.length;
+      turnToolCallCount = 0;
+    }
+
+    if (maxToolCalls > 0 && event.type === "tool_execution_start") {
+      turnToolCallCount++;
+      if (turnToolCallCount > maxToolCalls) {
+        logAgentEvent("warn", {
+          msg: "tool call limit exceeded — aborting agent turn",
+          sessionId: live.sessionId,
+          projectId: live.projectId,
+          toolCallCount: turnToolCallCount,
+          limit: maxToolCalls,
+        });
+        void live.session.abort().catch(() => undefined);
+      }
     }
 
     // Surface SDK-level provider errors to stderr. The pi SDK swallows

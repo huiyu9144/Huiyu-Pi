@@ -2731,7 +2731,7 @@ function BackupTab({ onError }: { onError: (msg: string | undefined) => void }) 
 interface McpDraft {
   name: string;
   /** Discriminator. The form picks the field set based on this. */
-  kind: "remote" | "stdio";
+  kind: "remote" | "stdio" | "json";
   enabled: boolean;
   // Remote fields
   url: string;
@@ -2740,10 +2740,8 @@ interface McpDraft {
   headers: { key: string; value: string }[];
   // Stdio fields
   command: string;
-  /** Args as a single textarea-friendly string; one arg per line.
-   *  Parsed at save time. Stored as a string (not string[]) so the
-   *  user can type freely without each newline reshuffling the
-   *  controlled component. */
+  /** Args as a single textarea-friendly string; space or newline separated,
+   *  with support for quoted args. Parsed at save time. */
   argsText: string;
   /** Env as a flat ordered list; same shape + redaction handling as
    *  headers, so the form reuses the same row UI. */
@@ -2751,6 +2749,8 @@ interface McpDraft {
   /** Optional cwd; blank ↦ default (project path for project
    *  servers, Huiyu Pi process cwd for global). */
   cwd: string;
+  /** JSON config text — paste a full { servers: {...} } block. */
+  jsonText: string;
 }
 
 const SECRET_PLACEHOLDER = "***REDACTED***";
@@ -2758,7 +2758,7 @@ const SECRET_PLACEHOLDER = "***REDACTED***";
 function emptyDraft(): McpDraft {
   return {
     name: "",
-    kind: "remote",
+    kind: "json",
     enabled: true,
     url: "",
     transport: "auto",
@@ -2767,17 +2767,38 @@ function emptyDraft(): McpDraft {
     argsText: "",
     env: [],
     cwd: "",
+    jsonText: "",
   };
 }
 
 /** Split the textarea-style args field into the array shape the
- *  server expects. Blank lines are dropped so a trailing newline
- *  doesn't produce a ghost empty arg. */
+ *  server expects. Supports newline-separated, space-separated,
+ *  and quoted args (e.g. `"hello world"` stays as one arg). */
 function parseArgs(text: string): string[] {
-  return text
-    .split("\n")
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0);
+  const result: string[] = [];
+  let current = "";
+  let inQuote: "'" | '"' | null = null;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (inQuote !== null) {
+      if (ch === inQuote) {
+        inQuote = null;
+      } else {
+        current += ch;
+      }
+    } else if (ch === "'" || ch === '"') {
+      inQuote = ch;
+    } else if (ch === "\n" || ch === " " || ch === "\t") {
+      if (current.length > 0) {
+        result.push(current);
+        current = "";
+      }
+    } else {
+      current += ch;
+    }
+  }
+  if (current.length > 0) result.push(current);
+  return result;
 }
 
 function McpTab({ onError }: { onError: (msg: string | undefined) => void }) {
@@ -2901,6 +2922,7 @@ function McpTab({ onError }: { onError: (msg: string | undefined) => void }) {
       argsText: (cfg.args ?? []).join("\n"),
       env: Object.entries(cfg.env ?? {}).map(([k, v]) => ({ key: k, value: v })),
       cwd: cfg.cwd ?? "",
+      jsonText: "",
     });
   };
 
@@ -2911,6 +2933,41 @@ function McpTab({ onError }: { onError: (msg: string | undefined) => void }) {
 
   const saveDraft = async (): Promise<void> => {
     if (draft === undefined) return;
+    if (draft.kind === "json") {
+      // Parse JSON config and save each server.
+      const trimmed = draft.jsonText.trim();
+      if (trimmed.length === 0) {
+        onError("Paste a JSON config before saving.");
+        return;
+      }
+      let parsed: { servers?: Record<string, McpServerConfig>; mcpServers?: Record<string, McpServerConfig> };
+      try {
+        parsed = JSON.parse(trimmed);
+      } catch {
+        onError("Invalid JSON — check for syntax errors.");
+        return;
+      }
+      const entries = parsed.servers ?? parsed.mcpServers ?? {};
+      const names = Object.keys(entries);
+      if (names.length === 0) {
+        onError("No servers found in JSON (expected a `servers` or `mcpServers` object).");
+        return;
+      }
+      setBusy(true);
+      try {
+        for (const name of names) {
+          await upsertServer(name, { enabled: true, ...entries[name] });
+        }
+        onError(undefined);
+        setDraft(undefined);
+        setEditingName(undefined);
+      } catch (err) {
+        onError(`Failed to save servers: ${errorCode(err)}`);
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
     if (draft.name.trim().length === 0) {
       onError("Name is required.");
       return;
@@ -3501,6 +3558,18 @@ function McpDraftForm(props: {
           <input
             type="radio"
             name="mcp-kind"
+            checked={draft.kind === "json"}
+            disabled={props.isEditing}
+            onChange={() => setField("kind", "json")}
+          />
+          <span>JSON config (paste)</span>
+        </label>
+        <label
+          className={`flex items-center gap-1.5 ${props.isEditing ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
+        >
+          <input
+            type="radio"
+            name="mcp-kind"
             checked={draft.kind === "remote"}
             disabled={props.isEditing}
             onChange={() => setField("kind", "remote")}
@@ -3527,14 +3596,18 @@ function McpDraftForm(props: {
       </div>
 
       <div className="grid grid-cols-[80px_1fr] items-center gap-2 text-xs">
-        <label className="text-neutral-500">Name</label>
-        <input
-          value={draft.name}
-          onChange={(e) => setField("name", e.target.value)}
-          disabled={props.isEditing}
-          placeholder="my-server"
-          className="rounded border border-neutral-700 bg-neutral-950 px-2 py-1 text-neutral-100 outline-none focus:border-neutral-500 disabled:opacity-50"
-        />
+        {draft.kind !== "json" && (
+          <>
+            <label className="text-neutral-500">Name</label>
+            <input
+              value={draft.name}
+              onChange={(e) => setField("name", e.target.value)}
+              disabled={props.isEditing}
+              placeholder="my-server"
+              className="rounded border border-neutral-700 bg-neutral-950 px-2 py-1 text-neutral-100 outline-none focus:border-neutral-500 disabled:opacity-50"
+            />
+          </>
+        )}
 
         {draft.kind === "remote" ? (
           <>
@@ -3556,7 +3629,7 @@ function McpDraftForm(props: {
               <option value="sse">sse</option>
             </select>
           </>
-        ) : (
+        ) : draft.kind === "stdio" ? (
           <>
             <label className="text-neutral-500">Command</label>
             <input
@@ -3569,7 +3642,7 @@ function McpDraftForm(props: {
             <textarea
               value={draft.argsText}
               onChange={(e) => setField("argsText", e.target.value)}
-              placeholder={"-y\n@modelcontextprotocol/server-everything"}
+              placeholder={"-y @modelcontextprotocol/server-everything"}
               rows={3}
               spellCheck={false}
               className="rounded border border-neutral-700 bg-neutral-950 px-2 py-1 font-mono text-[11px] text-neutral-100 outline-none focus:border-neutral-500"
@@ -3582,19 +3655,42 @@ function McpDraftForm(props: {
               className="rounded border border-neutral-700 bg-neutral-950 px-2 py-1 font-mono text-neutral-100 outline-none focus:border-neutral-500"
             />
           </>
+        ) : null}
+
+        {draft.kind === "json" && (
+          <div className="col-span-2 space-y-1">
+            <label className="text-neutral-500">JSON config</label>
+            <textarea
+              value={draft.jsonText}
+              onChange={(e) => setField("jsonText", e.target.value)}
+              placeholder={'{\n  "servers": {\n    "web-search": {\n      "command": "npx",\n      "args": ["-y", "open-websearch@latest"]\n    }\n  }\n}'}
+              rows={10}
+              spellCheck={false}
+              className="w-full rounded border border-neutral-700 bg-neutral-950 px-2 py-1 font-mono text-[11px] text-neutral-100 outline-none focus:border-neutral-500"
+            />
+            <p className="text-[10px] text-neutral-500">
+              Paste a <code className="font-mono">{'{ servers: {...} }'}</code> or{" "}
+              <code className="font-mono">{'{ mcpServers: {...} }'}</code> block. Each server will
+              be saved individually.
+            </p>
+          </div>
         )}
 
-        <label className="text-neutral-500">Enabled</label>
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={draft.enabled}
-            onChange={(e) => setField("enabled", e.target.checked)}
-          />
-          <span className="text-[11px] text-neutral-500">
-            Disabled servers don't connect or contribute tools.
-          </span>
-        </label>
+        {draft.kind !== "json" && (
+          <>
+            <label className="text-neutral-500">Enabled</label>
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={draft.enabled}
+                onChange={(e) => setField("enabled", e.target.checked)}
+              />
+              <span className="text-[11px] text-neutral-500">
+                Disabled servers don't connect or contribute tools.
+              </span>
+            </label>
+          </>
+        )}
       </div>
 
       {draft.kind === "remote" ? (
@@ -3606,7 +3702,7 @@ function McpDraftForm(props: {
           rows={draft.headers}
           onChange={(next) => setField("headers", next)}
         />
-      ) : (
+      ) : draft.kind === "stdio" ? (
         <SecretRowsEditor
           label="Env"
           emptyHint="No env. Add API keys / config your subprocess needs (PATH / HOME / locale are inherited automatically)."
@@ -3615,7 +3711,7 @@ function McpDraftForm(props: {
           rows={draft.env}
           onChange={(next) => setField("env", next)}
         />
-      )}
+      ) : null}
 
       <div className="mt-3 flex justify-end gap-2">
         <button

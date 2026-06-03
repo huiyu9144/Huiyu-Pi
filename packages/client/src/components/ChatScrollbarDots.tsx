@@ -91,11 +91,11 @@ export function ChatScrollbarDots({ messages, onScrollToMessage, onScrollToBotto
   }, []);
 
   useEffect(() => {
-    const track = trackRef.current;
-    if (track === null) return;
     const handleMouseMove = (e: MouseEvent) => {
       if (startupRef.current) return;
-      const rect = track.getBoundingClientRect();
+      const el = trackRef.current;
+      if (el === null) return;
+      const rect = el.getBoundingClientRect();
       const relY = e.clientY - rect.top;
       setMouseY(relY);
       const dx = Math.max(rect.left - e.clientX, 0, e.clientX - rect.right);

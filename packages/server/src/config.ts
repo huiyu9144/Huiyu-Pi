@@ -380,6 +380,21 @@ export const config = Object.freeze({
    * close becomes a hard kill); use that deliberately or not at all.
    */
   terminalIdleReapMs: readInt("PTY_IDLE_REAP_MS", 10 * 60 * 1000),
+  /**
+   * Safety valve: maximum number of tool calls the agent may execute
+   * in a single prompt turn before the run is forcibly aborted.
+   *
+   * Prevents runaway agent loops (e.g. a model generating hundreds
+   * of redundant search queries) from consuming unbounded resources
+   * and ballooning the session's JSONL file.
+   *
+   * 50 is generous enough for complex multi-file refactors while
+   * catching pathological keyword-search loops (which typically
+   * reach 200+ before the context window overflows).
+   *
+   * Set to 0 to disable the limit (not recommended).
+   */
+  maxToolCallsPerTurn: readInt("MAX_TOOL_CALLS_PER_TURN", 50),
 } as const);
 
 export function authEnabled(): boolean {

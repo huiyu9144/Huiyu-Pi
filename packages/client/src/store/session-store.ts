@@ -725,9 +725,6 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       sessionAbortCtrl.abort();
       sessionAbortCtrl = new AbortController();
       sessionVersion++;
-      set((s) => ({
-        activeToolBySession: { ...s.activeToolBySession, [prev]: undefined },
-      }));
       clearStreamingStart(prev);
       clearSnapshotGuard(prev);
     }
@@ -736,7 +733,13 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     set((s) => {
       const ue = sessionId ? { ...s.unacknowledgedEnds } : s.unacknowledgedEnds;
       if (sessionId) delete ue[sessionId];
-      return { activeSessionId: sessionId, unacknowledgedEnds: ue };
+      return {
+        activeSessionId: sessionId,
+        unacknowledgedEnds: ue,
+        ...(prev !== undefined && prev !== sessionId
+          ? { activeToolBySession: { ...s.activeToolBySession, [prev]: undefined } }
+          : {}),
+      };
     });
     if (sessionId !== undefined && sessionId !== prev) {
       void Promise.resolve().then(() => {
@@ -977,18 +980,24 @@ function applyEvent(
     // back online with fresh server state. Active-tool also resets:
     // tool execution events fire fresh after a reconnect; an old badge
     // would otherwise stick around indefinitely.
-    set((s) => ({
-      messagesBySession: {
-        ...s.messagesBySession,
-        [sessionId]: event.messages ?? [],
-      },
-      streamingBySession: {
-        ...s.streamingBySession,
-        [sessionId]: event.isStreaming ?? false,
-      },
-      bannerBySession: { ...s.bannerBySession, [sessionId]: undefined },
-      activeToolBySession: { ...s.activeToolBySession, [sessionId]: undefined },
-    }));
+    const incoming = event.messages ?? [];
+    set((s) => {
+      const existing = s.messagesBySession[sessionId];
+      const sameLength =
+        existing !== undefined && existing.length === incoming.length;
+      return {
+        messagesBySession: {
+          ...s.messagesBySession,
+          [sessionId]: sameLength ? existing : incoming,
+        },
+        streamingBySession: {
+          ...s.streamingBySession,
+          [sessionId]: event.isStreaming ?? false,
+        },
+        bannerBySession: { ...s.bannerBySession, [sessionId]: undefined },
+        activeToolBySession: { ...s.activeToolBySession, [sessionId]: undefined },
+      };
+    });
     // Snapshot-fed streaming guard: if the server reports isStreaming
     // but no real agent_start/agent_end follows within the window,
     // the server flag is probably stuck — force-clean below.
@@ -1490,6 +1499,11 @@ function applyEvent(
         [sessionId]: `Retrying (${attempt}/${max})…`,
       },
     }));
+    // Auto-abort if retry has exceeded 5 attempts — prevent the SDK
+    // from retrying indefinitely when the provider keeps failing.
+    if (typeof attempt === "number" && attempt > 5) {
+      void get().abortSession(sessionId);
+    }
     return;
   }
   if (event.type === "auto_retry_end") {

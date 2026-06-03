@@ -1,5 +1,6 @@
 import {
   createContext,
+  memo,
   useCallback,
   useContext,
   useEffect,
@@ -20,6 +21,7 @@ import {
   FileDiff,
   History,
   Rows2,
+  Square,
   Users,
   X,
 } from "lucide-react";
@@ -79,6 +81,7 @@ function readChatViewType(): ChatViewType {
 
 interface Props {
   sessionId: string;
+  hidden?: boolean;
 }
 
 /**
@@ -94,7 +97,7 @@ interface Props {
  * still render as their dedicated components (markdown is for prose
  * only).
  */
-export function ChatView({ sessionId }: Props) {
+export const ChatView = memo(function ChatView({ sessionId, hidden }: Props) {
   // EMPTY_* fallbacks are stable module-level constants — using `?? []` here
   // would return a new ref each render and trip React 18's
   // useSyncExternalStore infinite-loop guard. See session-store.ts.
@@ -123,6 +126,39 @@ export function ChatView({ sessionId }: Props) {
     () => allRuns.filter((r) => r.sessionId === sessionId),
     [allRuns, sessionId],
   );
+
+  const toolResultsById = useMemo(() => {
+    const map = new Map<string, AgentMessageLike>();
+    for (const m of messages) {
+      if (m.role === "toolResult" && typeof m.toolCallId === "string") {
+        map.set(m.toolCallId, m);
+      }
+    }
+    return map;
+  }, [messages]);
+
+  const pairedIds = useMemo(() => {
+    const set = new Set<string>();
+    for (const m of messages) {
+      if (m.role !== "assistant" || !Array.isArray(m.content)) continue;
+      for (const block of m.content as Record<string, unknown>[]) {
+        if (block.type === "toolCall" && typeof block.id === "string") {
+          set.add(block.id);
+        }
+      }
+    }
+    return set;
+  }, [messages]);
+
+  const compactionsAt = useMemo(() => {
+    const map = new Map<number, CompactionEvent[]>();
+    for (const ev of compactions) {
+      const list = map.get(ev.insertBeforeIndex) ?? [];
+      list.push(ev);
+      map.set(ev.insertBeforeIndex, list);
+    }
+    return map;
+  }, [compactions]);
 
   const [chatViewType, setChatViewType] = useState<ChatViewType>(readChatViewType);
   const setAndPersistChatViewType = (next: ChatViewType): void => {
@@ -224,7 +260,10 @@ export function ChatView({ sessionId }: Props) {
     <ChatDiffViewContext.Provider
       value={{ viewType: chatViewType, setViewType: setAndPersistChatViewType }}
     >
-      <div className="relative flex flex-1 flex-col overflow-hidden">
+      <div
+        className="relative flex flex-1 flex-col overflow-hidden"
+        style={hidden ? { display: "none" } : undefined}
+      >
         {/* Banner — floating overlay on top of the chat area so it
             doesn't squeeze the scroll container. Centred horizontally
             with a small gap from the top edge. Pointer-events are
@@ -234,6 +273,21 @@ export function ChatView({ sessionId }: Props) {
           <div className="pointer-events-none absolute inset-x-0 top-0 z-50 flex justify-center pt-3">
             <div className="pointer-events-auto flex items-start gap-2 rounded-lg border border-amber-700/40 bg-amber-900/90 px-4 py-2 text-xs text-amber-200 shadow-lg backdrop-blur-sm light:border-amber-300 light:bg-amber-50/95 light:text-amber-800">
               <div className="flex-1">{banner}</div>
+              {banner.startsWith("Retrying (") && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    clearBanner(sessionId);
+                    useSessionStore.getState().abortSession(sessionId);
+                  }}
+                  className="shrink-0 rounded px-2 py-0.5 text-amber-200 hover:bg-amber-800/60 hover:text-amber-50 light:text-amber-700 light:hover:bg-amber-200 light:hover:text-amber-900"
+                  title="Stop retrying"
+                  aria-label="Stop retrying"
+                >
+                  <Square size={12} className="mr-1 inline-block" />
+                  Stop
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => clearBanner(sessionId)}
@@ -260,42 +314,9 @@ export function ChatView({ sessionId }: Props) {
           )}
           <div className="chat-message-list mx-auto max-w-3xl space-y-4">
             {(() => {
-              // Pair toolCall blocks (in assistant messages) with their
-              // matching toolResult messages (by toolCallId) so each
-              // tool invocation renders as one collapsed entry instead
-              // of two separate boxes. Loose toolResults — orphans
-              // from older sessions, or results whose call we never
-              // saw — still render via the standalone path.
-              const toolResultsById = new Map<string, AgentMessageLike>();
-              const pairedIds = new Set<string>();
-              for (const m of messages) {
-                if (m.role === "toolResult" && typeof m.toolCallId === "string") {
-                  toolResultsById.set(m.toolCallId, m);
-                }
-              }
-              for (const m of messages) {
-                if (m.role !== "assistant" || !Array.isArray(m.content)) continue;
-                for (const block of m.content as Record<string, unknown>[]) {
-                  if (block.type === "toolCall" && typeof block.id === "string") {
-                    pairedIds.add(block.id);
-                  }
-                }
-              }
-              // Group compactions by `insertBeforeIndex` so each
-              // render-loop tick can ask "any cards land here?" in O(1).
-              // Multiple compactions can share insertBeforeIndex=0 —
-              // those are the older events whose kept window has
-              // itself been re-archived; render them stacked at the
-              // top in chronological order.
-              const compactionsAt = new Map<number, CompactionEvent[]>();
-              for (const ev of compactions) {
-                const list = compactionsAt.get(ev.insertBeforeIndex) ?? [];
-                list.push(ev);
-                compactionsAt.set(ev.insertBeforeIndex, list);
-              }
               const renderArchived = (ev: CompactionEvent): React.ReactNode =>
                 ev.archivedMessages.map((am, i) => (
-                  <Message key={i} message={am} toolResultsById={toolResultsById} />
+                  <Message key={i} message={am} toolResultsById={toolResultsById} sessionId={sessionId} />
                 ));
               const out: React.ReactNode[] = [];
               let pendingBatch: ToolBatchEntry[] = [];
@@ -438,6 +459,8 @@ export function ChatView({ sessionId }: Props) {
                             toolResultsById={toolResultsById}
                             showRaw={undefined}
                             setShowRaw={undefined}
+                            isDone={(m as { stopReason?: unknown }).stopReason !== undefined || !isStreaming}
+                            sessionId={sessionId}
                           />
                         </div>,
                       );
@@ -454,6 +477,7 @@ export function ChatView({ sessionId }: Props) {
                       toolResultsById={toolResultsById}
                       msgIndex={i}
                       sessionId={sessionId}
+                      isDone={(m as { stopReason?: unknown }).stopReason !== undefined || !isStreaming}
                     />
                   </div>,
                 );
@@ -501,7 +525,7 @@ export function ChatView({ sessionId }: Props) {
       )}
     </ChatDiffViewContext.Provider>
   );
-}
+});
 
 /**
  * Inline badge listing messages the user has queued during the
@@ -798,16 +822,18 @@ function FileRefBadge({ ref: r }: { ref: FileRef }) {
   );
 }
 
-function Message({
+const Message = memo(function Message({
   message,
   toolResultsById,
   msgIndex,
   sessionId,
+  isDone,
 }: {
   message: AgentMessageLike;
   toolResultsById?: Map<string, AgentMessageLike>;
   msgIndex?: number;
-  sessionId?: string;
+  sessionId: string | undefined;
+  isDone?: boolean;
 }) {
   // Per-message toggle: rendered markdown (default) ↔ raw plaintext.
   // Useful when the user wants to copy a literal `**bold**` or see
@@ -945,6 +971,8 @@ function Message({
               toolResultsById={toolResultsById}
               showRaw={showRaw}
               setShowRaw={setShowRaw}
+              isDone={isDone ?? false}
+              sessionId={sessionId}
             />
           ))}
         </div>
@@ -957,6 +985,8 @@ function Message({
         toolResultsById={toolResultsById}
         showRaw={showRaw}
         setShowRaw={setShowRaw}
+        isDone={isDone ?? false}
+        sessionId={sessionId}
       />
     );
   }
@@ -990,7 +1020,7 @@ function Message({
       </pre>
     </details>
   );
-}
+});
 
 function TurnDiffFooter({ sessionId }: { sessionId: string }) {
   const agentEndCount = useSessionStore((s) => s.agentEndCountBySession[sessionId] ?? 0);
@@ -1029,12 +1059,16 @@ function AssistantMessageBubble({
   toolResultsById,
   showRaw,
   setShowRaw,
+  isDone,
+  sessionId,
 }: {
   message: AgentMessageLike;
   content: Record<string, unknown>[];
   toolResultsById: Map<string, AgentMessageLike> | undefined;
   showRaw: boolean;
   setShowRaw: (next: boolean) => void;
+  isDone: boolean;
+  sessionId: string | undefined;
 }) {
   const [collapsed, setCollapsed] = useState(false);
   // Show the raw toggle only when the message has at least one
@@ -1056,13 +1090,6 @@ function AssistantMessageBubble({
     !shouldSuppressCodexProviderError(message, errorMessage)
       ? errorMessage
       : undefined;
-  // Determine if the agent has finished its turn. When the session is
-  // no longer streaming, the last assistant response is complete.
-  const sessionId = useSessionStore((s) => s.activeSessionId);
-  const isStreaming = useSessionStore((s) =>
-    sessionId !== undefined ? (s.streamingBySession[sessionId] ?? false) : false,
-  );
-  const isDone = stopReason !== undefined || !isStreaming;
   return (
     <div
       className="message-bubble group rounded-lg border-[0.5px] border-neutral-800 light:border-transparent bg-neutral-900 pl-0 pr-4 py-3"
@@ -1126,18 +1153,22 @@ type AssistantRenderSegment =
   | { kind: "assistant"; content: Record<string, unknown>[] }
   | { kind: "tools"; entries: ToolBatchEntry[]; batchable: boolean };
 
-function AssistantRenderSegmentView({
+const AssistantRenderSegmentView = memo(function AssistantRenderSegmentView({
   segment,
   message,
   toolResultsById,
   showRaw,
   setShowRaw,
+  isDone,
+  sessionId,
 }: {
   segment: AssistantRenderSegment;
   message: AgentMessageLike;
   toolResultsById: Map<string, AgentMessageLike> | undefined;
   showRaw: boolean | undefined;
   setShowRaw: ((next: boolean) => void) | undefined;
+  isDone: boolean;
+  sessionId: string | undefined;
 }) {
   const [localShowRaw, setLocalShowRaw] = useState(false);
   const effectiveShowRaw = showRaw ?? localShowRaw;
@@ -1151,6 +1182,8 @@ function AssistantRenderSegmentView({
         toolResultsById={toolResultsById}
         showRaw={effectiveShowRaw}
         setShowRaw={effectiveSetShowRaw}
+        isDone={isDone}
+        sessionId={sessionId}
       />
     );
   }
@@ -1184,7 +1217,7 @@ function AssistantRenderSegmentView({
   }
 
   return <ToolCallBatchCard entries={segment.entries} />;
-}
+});
 
 /**
  * Split collapsible tool-call runs out of assistant prose bubbles.

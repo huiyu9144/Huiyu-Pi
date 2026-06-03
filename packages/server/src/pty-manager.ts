@@ -91,6 +91,11 @@ interface Entry {
 const ptys = new Map<string, Entry>();
 
 function defaultShell(): string {
+  if (process.platform === "win32") {
+    // Windows 没有 SHELL 环境变量，使用 COMSPEC（通常指向 cmd.exe）。
+    // node-pty 在 Windows 上需要 Windows 原生的可执行文件。
+    return process.env.COMSPEC ?? "cmd.exe";
+  }
   return process.env.SHELL ?? "/bin/sh";
 }
 
