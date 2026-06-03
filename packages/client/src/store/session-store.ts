@@ -983,8 +983,7 @@ function applyEvent(
     const incoming = event.messages ?? [];
     set((s) => {
       const existing = s.messagesBySession[sessionId];
-      const sameLength =
-        existing !== undefined && existing.length === incoming.length;
+      const sameLength = existing !== undefined && existing.length === incoming.length;
       return {
         messagesBySession: {
           ...s.messagesBySession,

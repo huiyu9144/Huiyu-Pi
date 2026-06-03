@@ -2940,7 +2940,10 @@ function McpTab({ onError }: { onError: (msg: string | undefined) => void }) {
         onError("Paste a JSON config before saving.");
         return;
       }
-      let parsed: { servers?: Record<string, McpServerConfig>; mcpServers?: Record<string, McpServerConfig> };
+      let parsed: {
+        servers?: Record<string, McpServerConfig>;
+        mcpServers?: Record<string, McpServerConfig>;
+      };
       try {
         parsed = JSON.parse(trimmed);
       } catch {
@@ -3663,14 +3666,16 @@ function McpDraftForm(props: {
             <textarea
               value={draft.jsonText}
               onChange={(e) => setField("jsonText", e.target.value)}
-              placeholder={'{\n  "servers": {\n    "web-search": {\n      "command": "npx",\n      "args": ["-y", "open-websearch@latest"]\n    }\n  }\n}'}
+              placeholder={
+                '{\n  "servers": {\n    "web-search": {\n      "command": "npx",\n      "args": ["-y", "open-websearch@latest"]\n    }\n  }\n}'
+              }
               rows={10}
               spellCheck={false}
               className="w-full rounded border border-neutral-700 bg-neutral-950 px-2 py-1 font-mono text-[11px] text-neutral-100 outline-none focus:border-neutral-500"
             />
             <p className="text-[10px] text-neutral-500">
-              Paste a <code className="font-mono">{'{ servers: {...} }'}</code> or{" "}
-              <code className="font-mono">{'{ mcpServers: {...} }'}</code> block. Each server will
+              Paste a <code className="font-mono">{"{ servers: {...} }"}</code> or{" "}
+              <code className="font-mono">{"{ mcpServers: {...} }"}</code> block. Each server will
               be saved individually.
             </p>
           </div>

@@ -316,7 +316,12 @@ export const ChatView = memo(function ChatView({ sessionId, hidden }: Props) {
             {(() => {
               const renderArchived = (ev: CompactionEvent): React.ReactNode =>
                 ev.archivedMessages.map((am, i) => (
-                  <Message key={i} message={am} toolResultsById={toolResultsById} sessionId={sessionId} />
+                  <Message
+                    key={i}
+                    message={am}
+                    toolResultsById={toolResultsById}
+                    sessionId={sessionId}
+                  />
                 ));
               const out: React.ReactNode[] = [];
               let pendingBatch: ToolBatchEntry[] = [];
@@ -459,7 +464,10 @@ export const ChatView = memo(function ChatView({ sessionId, hidden }: Props) {
                             toolResultsById={toolResultsById}
                             showRaw={undefined}
                             setShowRaw={undefined}
-                            isDone={(m as { stopReason?: unknown }).stopReason !== undefined || !isStreaming}
+                            isDone={
+                              (m as { stopReason?: unknown }).stopReason !== undefined ||
+                              !isStreaming
+                            }
                             sessionId={sessionId}
                           />
                         </div>,
@@ -477,7 +485,9 @@ export const ChatView = memo(function ChatView({ sessionId, hidden }: Props) {
                       toolResultsById={toolResultsById}
                       msgIndex={i}
                       sessionId={sessionId}
-                      isDone={(m as { stopReason?: unknown }).stopReason !== undefined || !isStreaming}
+                      isDone={
+                        (m as { stopReason?: unknown }).stopReason !== undefined || !isStreaming
+                      }
                     />
                   </div>,
                 );
