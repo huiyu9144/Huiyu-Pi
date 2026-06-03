@@ -61,9 +61,9 @@ const ERROR_PREVIEW_LIMIT = 200;
  */
 const RESERVED_HEADERS = new Set([
   "content-type",
-  "x-huiyu-pi-event",
-  "x-huiyu-pi-delivery",
-  "x-huiyu-pi-signature",
+  "x-pi-forge-event",
+  "x-pi-forge-delivery",
+  "x-pi-forge-signature",
   "user-agent",
 ]);
 
