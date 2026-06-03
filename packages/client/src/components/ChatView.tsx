@@ -278,7 +278,7 @@ export const ChatView = memo(function ChatView({ sessionId, hidden }: Props) {
                   type="button"
                   onClick={() => {
                     clearBanner(sessionId);
-                    useSessionStore.getState().abortSession(sessionId);
+                    void useSessionStore.getState().abortSession(sessionId);
                   }}
                   className="shrink-0 rounded px-2 py-0.5 text-amber-200 hover:bg-amber-800/60 hover:text-amber-50 light:text-amber-700 light:hover:bg-amber-200 light:hover:text-amber-900"
                   title="Stop retrying"
