@@ -569,11 +569,11 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     try {
       const { sessions } = await api.listSessions(projectId);
       const sorted = [...sessions].sort((a, b) => {
-        const byCreated = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-        if (byCreated !== 0) return byCreated;
-        // Same createdAt → tie-break by sessionId so the order is
-        // fully deterministic across restarts.
-        return b.sessionId.localeCompare(a.sessionId);
+        const dt = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        if (dt !== 0) return dt;
+        const la = new Date(b.lastActivityAt).getTime() - new Date(a.lastActivityAt).getTime();
+        if (la !== 0) return la;
+        return a.sessionId.localeCompare(b.sessionId);
       });
       set((s) => ({
         byProject: { ...s.byProject, [projectId]: sorted },
