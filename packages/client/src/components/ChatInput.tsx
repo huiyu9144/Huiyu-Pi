@@ -325,6 +325,7 @@ export function ChatInput({ sessionId }: Props) {
   // block at send time — see file-references.ts).
   const project = useActiveProject();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const isDraggingRef = useRef(false);
   const isMobile = useIsMobile();
 
   /**
@@ -372,13 +373,14 @@ export function ChatInput({ sessionId }: Props) {
     const startY = e.clientY;
     const startHeight = textareaRef.current?.getBoundingClientRect().height ?? 60;
     const { min, max } = heightBounds();
+    isDraggingRef.current = true;
 
     const onMove = (ev: PointerEvent): void => {
-      // Inverted: dragging UP (clientY decreases) should grow the
-      // textarea, since the handle sits ABOVE the composer.
       const delta = startY - ev.clientY;
       const next = Math.max(min, Math.min(max, startHeight + delta));
       setTextareaHeight(next);
+      const ta = textareaRef.current;
+      if (ta !== null) ta.style.height = `${next}px`;
     };
     const onUp = (ev: PointerEvent): void => {
       target.removeEventListener("pointermove", onMove);
@@ -389,6 +391,7 @@ export function ChatInput({ sessionId }: Props) {
       } catch {
         // capture may already be released; ignore
       }
+      isDraggingRef.current = false;
       // Persist whatever height the textarea actually has now —
       // reads from the live element, not from React state, so a
       // mid-drag re-render won't desync the saved value.
@@ -1887,32 +1890,25 @@ export function ChatInput({ sessionId }: Props) {
     };
   }, [attachMenuOpen]);
 
-  // Mobile-only auto-grow: the textarea has a comfortable minimum
-  // height (matches the attach + send buttons' 44 px height so the
-  // composer row reads as one unified bar) and grows with input up
-  // to a 30vh cap, after which it scrolls internally. Measuring:
-  // collapse height to "auto" first (otherwise scrollHeight reports
-  // the previously-set expanded value and we can never shrink),
-  // measure, then store clamped to [min, max]. Desktop opts out —
-  // the drag handle owns textarea sizing there.
+  // Auto-grow textarea height: collapses to "auto" first (otherwise
+  // scrollHeight reports the previously-set expanded value and we
+  // can never shrink), measures, then clamps to [min, max].
+  // Desktop max is either the user's drag-chosen height or 40vh.
+  // Mobile max is 30vh. Absolute hard cap: 50vh.
   useEffect(() => {
-    if (!isMobile) {
-      if (autoHeight !== undefined) setAutoHeight(undefined);
-      return;
-    }
     const ta = textareaRef.current;
     if (ta === null) return;
+    if (isDraggingRef.current) return;
     ta.style.height = "auto";
     const measured = ta.scrollHeight;
-    const min = 44; // matches min-h-11 on attach/send buttons
-    const max = Math.round(window.innerHeight * 0.3);
+    const min = 44;
+    const dragMax = textareaHeight ?? Math.round(window.innerHeight * (isMobile ? 0.3 : 0.4));
+    const max = Math.min(dragMax, Math.round(window.innerHeight * 0.5));
     const next = Math.max(min, Math.min(measured, max));
-    // Write the clamped height directly to avoid the forced reflow
-    // of restoring and re-setting through React state.
     ta.style.height = `${next}px`;
-    if (next !== autoHeight) setAutoHeight(next);
+    if (isMobile && next !== autoHeight) setAutoHeight(next);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [text, isMobile]);
+  }, [text, isMobile, textareaHeight]);
 
   return (
     <div
@@ -2045,14 +2041,8 @@ export function ChatInput({ sessionId }: Props) {
                 ? "The agent is auto-retrying after a provider error. New messages are queued and delivered when the retry succeeds."
                 : undefined
             }
-            rows={isMobile ? 2 : 2}
-            style={
-              isMobile && autoHeight !== undefined
-                ? { height: `${autoHeight}px`, maxHeight: "30vh" }
-                : !isMobile && textareaHeight !== undefined
-                  ? { height: `${textareaHeight}px` }
-                  : undefined
-            }
+            rows={2}
+            style={{ maxHeight: isMobile ? "30vh" : "50vh" }}
             className={`block w-full resize-none rounded-md border-[0.5px] border-neutral-800 bg-neutral-900 px-3 py-2 pr-12 pb-10 text-sm text-neutral-100 outline-none chat-input-scrollbar ${"min-h-11 md:min-h-0 "}${
               bangMode === "local"
                 ? "border-amber-500 focus:border-amber-400"

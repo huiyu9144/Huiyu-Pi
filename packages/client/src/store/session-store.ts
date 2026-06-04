@@ -568,13 +568,9 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     set({ loadingList: true, error: undefined });
     try {
       const { sessions } = await api.listSessions(projectId);
-      const sorted = [...sessions].sort((a, b) => {
-        const dt = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-        if (dt !== 0) return dt;
-        const la = new Date(b.lastActivityAt).getTime() - new Date(a.lastActivityAt).getTime();
-        if (la !== 0) return la;
-        return a.sessionId.localeCompare(b.sessionId);
-      });
+      const sorted = [...sessions].sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
       set((s) => ({
         byProject: { ...s.byProject, [projectId]: sorted },
         loadingList: false,
