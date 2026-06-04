@@ -3,6 +3,7 @@ node_modules
 **/dev-dist
 **/.vite
 package-lock.json
+pnpm-lock.yaml
 *.md
 
 # Generated GitHub Pages output — emitted by `npm run build:site`
