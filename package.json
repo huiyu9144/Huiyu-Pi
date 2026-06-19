@@ -79,7 +79,7 @@
     "marked": "^18.0.4",
     "playwright": "^1.60.0",
     "prettier": "^3.5.3",
-    "tsx": "^4.22.3",
+    "tsx": "^4.22.4",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.60.0"
   }
